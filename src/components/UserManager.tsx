@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { showError, showSuccess } from '@/utils/toast';
 import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
+import { useUserManager } from '@/hooks/useUserManager'; // Import the new hook
 
 interface Profile {
   id: string;
@@ -18,60 +19,7 @@ interface Profile {
 }
 
 const UserManager: React.FC = () => {
-  const [users, setUsers] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    setLoading(true);
-    // Fetch profiles and join with auth.users to get email
-    const { data, error } = await supabase
-      .from('profiles')
-      .select(`
-        id,
-        first_name,
-        last_name,
-        is_admin,
-        auth_users:auth.users(email)
-      `);
-
-    if (error) {
-      console.error("Error fetching users:", error);
-      showError("Failed to load user list.");
-    } else {
-      const usersWithEmail: Profile[] = data.map(profile => ({
-        ...profile,
-        email: profile.auth_users?.email || 'N/A',
-      }));
-      setUsers(usersWithEmail || []);
-    }
-    setLoading(false);
-  };
-
-  const handleToggleAdmin = async (userId: string, currentIsAdmin: boolean) => {
-    setUpdatingUserId(userId);
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_admin: !currentIsAdmin })
-      .eq('id', userId);
-
-    if (error) {
-      console.error("Error updating admin status:", error);
-      showError(`Failed to update admin status for user ${userId}.`);
-    } else {
-      showSuccess("Admin status updated successfully!");
-      setUsers(prevUsers =>
-        prevUsers.map(user =>
-          user.id === userId ? { ...user, is_admin: !currentIsAdmin } : user
-        )
-      );
-    }
-    setUpdatingUserId(null);
-  };
+  const { users, loading, updatingUserId, toggleAdminStatus } = useUserManager();
 
   return (
     <Card className="w-full max-w-4xl mx-auto mt-8">
@@ -119,7 +67,7 @@ const UserManager: React.FC = () => {
                       <Switch
                         id={`admin-switch-${user.id}`}
                         checked={user.is_admin}
-                        onCheckedChange={() => handleToggleAdmin(user.id, user.is_admin)}
+                        onCheckedChange={() => toggleAdminStatus(user.id, user.is_admin)}
                         disabled={updatingUserId === user.id}
                       />
                       <Label htmlFor={`admin-switch-${user.id}`}>
