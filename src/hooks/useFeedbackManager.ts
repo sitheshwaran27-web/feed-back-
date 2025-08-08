@@ -20,7 +20,7 @@ export const useFeedbackManager = () => {
         comment,
         admin_response,
         created_at,
-        classes (name, period_number),
+        classes (name, period),
         profiles (first_name, last_name)
       `)
       .order('created_at', { ascending: false });
@@ -64,11 +64,29 @@ export const useFeedbackManager = () => {
     }
   };
 
+  const deleteFeedback = async (feedbackId: string) => {
+    const { error } = await supabase
+      .from('feedback')
+      .delete()
+      .eq('id', feedbackId);
+
+    if (error) {
+      console.error("Error deleting feedback:", error);
+      showError("Failed to delete feedback entry.");
+      return false;
+    } else {
+      showSuccess("Feedback entry deleted successfully!");
+      setFeedbackEntries(prevEntries => prevEntries.filter(entry => entry.id !== feedbackId));
+      return true;
+    }
+  };
+
   return {
     feedbackEntries,
     loading,
     isSubmittingResponse,
     fetchFeedback, // Expose for manual refresh if needed
     updateAdminResponse,
+    deleteFeedback, // Expose the new delete function
   };
 };

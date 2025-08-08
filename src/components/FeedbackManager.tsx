@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { showError, showSuccess } from '@/utils/toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Star, MessageSquare, Loader2 } from 'lucide-react';
+import { Star, MessageSquare, Loader2, Trash2 } from 'lucide-react'; // Import Trash2 icon
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useFeedbackManager } from '@/hooks/useFeedbackManager';
 import { Feedback } from '@/types/supabase'; // Import Feedback
 import RatingStars from './RatingStars'; // Import the new component
+import ConfirmAlertDialog from './ConfirmAlertDialog'; // Import ConfirmAlertDialog
 
 const formSchema = z.object({
   admin_response: z.string().max(500, "Response cannot exceed 500 characters").optional(),
@@ -76,7 +77,7 @@ const FeedbackResponseForm: React.FC<FeedbackResponseFormProps> = ({ initialData
 
 
 const FeedbackManager: React.FC = () => {
-  const { feedbackEntries, loading, isSubmittingResponse, updateAdminResponse } = useFeedbackManager();
+  const { feedbackEntries, loading, isSubmittingResponse, updateAdminResponse, deleteFeedback } = useFeedbackManager();
   const [isResponseFormOpen, setIsResponseFormOpen] = useState(false);
   const [respondingToFeedback, setRespondingToFeedback] = useState<Feedback | null>(null);
 
@@ -87,6 +88,10 @@ const FeedbackManager: React.FC = () => {
       setIsResponseFormOpen(false);
       setRespondingToFeedback(null);
     }
+  };
+
+  const handleDeleteFeedback = async (feedbackId: string) => {
+    await deleteFeedback(feedbackId);
   };
 
   const openResponseForm = (feedback: Feedback) => {
@@ -157,7 +162,7 @@ const FeedbackManager: React.FC = () => {
                   <TableCell className="text-right">
                     <Dialog open={isResponseFormOpen && respondingToFeedback?.id === feedback.id} onOpenChange={setIsResponseFormOpen}>
                       <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" onClick={() => openResponseForm(feedback)}>
+                        <Button variant="outline" size="sm" onClick={() => openResponseForm(feedback)} className="mr-2">
                           <MessageSquare className="h-4 w-4" />
                         </Button>
                       </DialogTrigger>
@@ -179,6 +184,15 @@ const FeedbackManager: React.FC = () => {
                         />
                       </DialogContent>
                     </Dialog>
+                    <ConfirmAlertDialog
+                      title="Are you absolutely sure?"
+                      description="This action cannot be undone. This will permanently delete this feedback entry."
+                      onConfirm={() => handleDeleteFeedback(feedback.id)}
+                    >
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </ConfirmAlertDialog>
                   </TableCell>
                 </TableRow>
               ))}
