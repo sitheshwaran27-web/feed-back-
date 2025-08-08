@@ -1,18 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { showError, showSuccess } from '@/utils/toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import ClassForm from './ClassForm';
 import { Trash2, Edit } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import ConfirmAlertDialog from './ConfirmAlertDialog'; // Import the new component
+import ConfirmAlertDialog from './ConfirmAlertDialog';
+import { useClasses } from '@/hooks/useClasses'; // Import the new hook
 
-interface Class {
+interface Class { // This interface is still needed for type consistency with ClassForm
   id: string;
   name: string;
   period_number: number;
@@ -21,87 +20,28 @@ interface Class {
 }
 
 const ClassManager: React.FC = () => {
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { classes, loading, isSubmitting, addClass, updateClass, deleteClass } = useClasses();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    fetchClasses();
-  }, []);
-
-  const fetchClasses = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('classes')
-      .select('*')
-      .order('period_number', { ascending: true })
-      .order('start_time', { ascending: true });
-
-    if (error) {
-      console.error("Error fetching classes:", error);
-      showError("Failed to load classes.");
-    } else {
-      setClasses(data || []);
-    }
-    setLoading(false);
-  };
 
   const handleAddClass = async (values: Omit<Class, 'id'>) => {
-    setIsSubmitting(true);
-    const { data, error } = await supabase
-      .from('classes')
-      .insert(values)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error adding class:", error);
-      showError("Failed to add class.");
-    } else {
-      showSuccess("Class added successfully!");
-      setClasses([...classes, data]);
+    const newClass = await addClass(values);
+    if (newClass) {
       setIsFormOpen(false);
     }
-    setIsSubmitting(false);
   };
 
   const handleUpdateClass = async (values: Omit<Class, 'id'>) => {
     if (!editingClass) return;
-    setIsSubmitting(true);
-    const { data, error } = await supabase
-      .from('classes')
-      .update(values)
-      .eq('id', editingClass.id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error updating class:", error);
-      showError("Failed to update class.");
-    } else {
-      showSuccess("Class updated successfully!");
-      setClasses(classes.map(cls => cls.id === data.id ? data : cls));
+    const updatedClass = await updateClass(editingClass.id, values);
+    if (updatedClass) {
       setIsFormOpen(false);
       setEditingClass(null);
     }
-    setIsSubmitting(false);
   };
 
   const handleDeleteClass = async (id: string) => {
-    const { error } = await supabase
-      .from('classes')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error("Error deleting class:", error);
-      showError("Failed to delete class.");
-    } else {
-      showSuccess("Class deleted successfully!");
-      setClasses(classes.filter(cls => cls.id !== id));
-    }
+    await deleteClass(id);
   };
 
   const openEditForm = (cls: Class) => {
@@ -126,7 +66,7 @@ const ClassManager: React.FC = () => {
             <DialogHeader>
               <DialogTitle>{editingClass ? "Edit Class" : "Add New Class"}</DialogTitle>
             </DialogHeader>
-            {isFormOpen && ( // Conditionally render ClassForm to ensure it resets on close/open
+            {isFormOpen && (
               <ClassForm
                 initialData={editingClass || undefined}
                 onSubmit={editingClass ? handleUpdateClass : handleAddClass}
