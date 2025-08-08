@@ -39,8 +39,8 @@ const ProfilePage: React.FC = () => {
 
         if (error) {
           console.error("Error fetching profile:", error);
-          showError("Failed to load profile.");
-          setProfile(null);
+          showError("Failed to load profile. Please update your details.");
+          setProfile(null); // Ensure profile is null if fetch fails
         } else {
           setProfile(data);
         }
@@ -89,7 +89,6 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleCancel = () => {
-    // Optionally reset form or navigate back
     navigate(-1); // Go back to the previous page
   };
 
@@ -112,29 +111,17 @@ const ProfilePage: React.FC = () => {
           <CardTitle className="text-2xl">Your Profile</CardTitle>
         </CardHeader>
         <CardContent>
-          {profile ? (
-            <ProfileForm
-              initialData={{
-                first_name: profile.first_name || "",
-                last_name: profile.last_name || "",
-                avatar_url: profile.avatar_url || "",
-              }}
-              onSubmit={handleUpdateProfile}
-              onCancel={handleCancel}
-              isSubmitting={isSubmitting}
-              email={session.user.email || "N/A"}
-            />
-          ) : (
-            <p className="text-center text-gray-600 dark:text-gray-400">
-              No profile data found. Please update your details.
-              <ProfileForm
-                onSubmit={handleUpdateProfile}
-                onCancel={handleCancel}
-                isSubmitting={isSubmitting}
-                email={session.user.email || "N/A"}
-              />
-            </p>
-          )}
+          <ProfileForm
+            initialData={{
+              first_name: profile?.first_name || "",
+              last_name: profile?.last_name || "",
+              avatar_url: profile?.avatar_url || "",
+            }}
+            onSubmit={handleUpdateProfile}
+            onCancel={handleCancel}
+            isSubmitting={isSubmitting}
+            email={session.user.email || "N/A"}
+          />
         </CardContent>
       </Card>
       <MadeWithDyad />
