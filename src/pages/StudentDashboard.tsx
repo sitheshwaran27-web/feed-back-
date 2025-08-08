@@ -10,6 +10,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import FeedbackForm from '@/components/FeedbackForm';
+import { Link } from 'react-router-dom'; // Import Link
 
 interface Class {
   id: string;
@@ -127,9 +128,14 @@ const StudentDashboard = () => {
         <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
           Welcome, {session.user.email}!
         </p>
-        <Button onClick={handleSignOut} variant="destructive" className="mb-8">
-          Sign Out
-        </Button>
+        <div className="flex space-x-4 mb-8">
+          <Button onClick={handleSignOut} variant="destructive">
+            Sign Out
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/profile">Manage Profile</Link>
+          </Button>
+        </div>
       </div>
 
       <Card className="w-full max-w-4xl mx-auto mb-8">

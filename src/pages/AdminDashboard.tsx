@@ -8,7 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import { showError } from '@/utils/toast';
 import TimetableManager from '@/components/TimetableManager';
-import FeedbackManager from '@/components/FeedbackManager'; // Import FeedbackManager
+import FeedbackManager from '@/components/FeedbackManager';
+import { Link } from 'react-router-dom'; // Import Link
 
 const AdminDashboard = () => {
   const { session, isLoading } = useSession();
@@ -71,12 +72,17 @@ const AdminDashboard = () => {
         <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
           Welcome, Administrator {session?.user.email}!
         </p>
-        <Button onClick={handleSignOut} variant="destructive">
-          Sign Out
-        </Button>
+        <div className="flex space-x-4 mb-8">
+          <Button onClick={handleSignOut} variant="destructive">
+            Sign Out
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/profile">Manage Profile</Link>
+          </Button>
+        </div>
       </div>
       <TimetableManager />
-      <FeedbackManager /> {/* Integrate the FeedbackManager component */}
+      <FeedbackManager />
       <MadeWithDyad />
     </div>
   );
