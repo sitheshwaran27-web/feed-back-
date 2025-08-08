@@ -7,7 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import { showError } from '@/utils/toast';
-import TimetableManager from '@/components/TimetableManager'; // Import TimetableManager
+import TimetableManager from '@/components/TimetableManager';
+import FeedbackManager from '@/components/FeedbackManager'; // Import FeedbackManager
 
 const AdminDashboard = () => {
   const { session, isLoading } = useSession();
@@ -74,7 +75,8 @@ const AdminDashboard = () => {
           Sign Out
         </Button>
       </div>
-      <TimetableManager /> {/* Integrate the TimetableManager component */}
+      <TimetableManager />
+      <FeedbackManager /> {/* Integrate the FeedbackManager component */}
       <MadeWithDyad />
     </div>
   );
