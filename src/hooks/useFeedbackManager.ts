@@ -1,0 +1,91 @@
+"use client";
+
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { showError, showSuccess } from '@/utils/toast';
+
+interface Feedback {
+  id: string;
+  class_id: string;
+  student_id: string;
+  rating: number;
+  comment: string | null;
+  admin_response: string | null;
+  created_at: string;
+  classes: {
+    name: string;
+    period_number: number;
+  };
+  profiles: {
+    first_name: string | null;
+    last_name: string | null;
+  };
+}
+
+export const useFeedbackManager = () => {
+  const [feedbackEntries, setFeedbackEntries] = useState<Feedback[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSubmittingResponse, setIsSubmittingResponse] = useState(false);
+
+  const fetchFeedback = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('feedback')
+      .select(`
+        id,
+        rating,
+        comment,
+        admin_response,
+        created_at,
+        classes (name, period_number),
+        profiles (first_name, last_name)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching feedback:", error);
+      showError("Failed to load feedback entries.");
+    } else {
+      setFeedbackEntries(data || []);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchFeedback();
+  }, [fetchFeedback]);
+
+  const updateAdminResponse = async (feedbackId: string, response: string | null) => {
+    setIsSubmittingResponse(true);
+    const { data, error } = await supabase
+      .from('feedback')
+      .update({ admin_response: response })
+      .eq('id', feedbackId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating feedback response:", error);
+      showError("Failed to update feedback response.");
+      setIsSubmittingResponse(false);
+      return null;
+    } else {
+      showSuccess("Feedback response updated successfully!");
+      setFeedbackEntries(prevEntries =>
+        prevEntries.map(entry =>
+          entry.id === data.id ? { ...entry, admin_response: data.admin_response } : entry
+        )
+      );
+      setIsSubmittingResponse(false);
+      return data;
+    }
+  };
+
+  return {
+    feedbackEntries,
+    loading,
+    isSubmittingResponse,
+    fetchFeedback, // Expose for manual refresh if needed
+    updateAdminResponse,
+  };
+};

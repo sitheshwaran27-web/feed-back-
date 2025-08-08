@@ -14,8 +14,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
+import { useFeedbackManager } from '@/hooks/useFeedbackManager'; // Import the new hook
 
-interface Feedback {
+interface Feedback { // This interface is still needed for type consistency with FeedbackResponseForm
   id: string;
   class_id: string;
   student_id: string;
@@ -86,60 +87,17 @@ const FeedbackResponseForm: React.FC<FeedbackResponseFormProps> = ({ initialData
 
 
 const FeedbackManager: React.FC = () => {
-  const [feedbackEntries, setFeedbackEntries] = useState<Feedback[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { feedbackEntries, loading, isSubmittingResponse, updateAdminResponse } = useFeedbackManager();
   const [isResponseFormOpen, setIsResponseFormOpen] = useState(false);
   const [respondingToFeedback, setRespondingToFeedback] = useState<Feedback | null>(null);
-  const [isSubmittingResponse, setIsSubmittingResponse] = useState(false);
-
-  useEffect(() => {
-    fetchFeedback();
-  }, []);
-
-  const fetchFeedback = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('feedback')
-      .select(`
-        id,
-        rating,
-        comment,
-        admin_response,
-        created_at,
-        classes (name, period_number),
-        profiles (first_name, last_name)
-      `)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error("Error fetching feedback:", error);
-      showError("Failed to load feedback entries.");
-    } else {
-      setFeedbackEntries(data || []);
-    }
-    setLoading(false);
-  };
 
   const handleUpdateResponse = async (values: FeedbackResponseFormValues) => {
     if (!respondingToFeedback) return;
-    setIsSubmittingResponse(true);
-    const { data, error } = await supabase
-      .from('feedback')
-      .update({ admin_response: values.admin_response })
-      .eq('id', respondingToFeedback.id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error updating feedback response:", error);
-      showError("Failed to update feedback response.");
-    } else {
-      showSuccess("Feedback response updated successfully!");
-      setFeedbackEntries(feedbackEntries.map(entry => entry.id === data.id ? { ...entry, admin_response: data.admin_response } : entry));
+    const updated = await updateAdminResponse(respondingToFeedback.id, values.admin_response || null);
+    if (updated) {
       setIsResponseFormOpen(false);
       setRespondingToFeedback(null);
     }
-    setIsSubmittingResponse(false);
   };
 
   const openResponseForm = (feedback: Feedback) => {
@@ -230,7 +188,7 @@ const FeedbackManager: React.FC = () => {
                           <strong>Comment:</strong> {feedback.comment || 'N/A'}
                         </p>
                         <FeedbackResponseForm
-                          initialData={{ admin_response: feedback.admin_response || "" }}
+                          initialData={{ admin_response: respondingToFeedback?.admin_response || "" }}
                           onSubmit={handleUpdateResponse}
                           onCancel={closeResponseForm}
                           isSubmitting={isSubmittingResponse}
