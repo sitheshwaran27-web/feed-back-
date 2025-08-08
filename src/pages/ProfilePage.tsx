@@ -113,7 +113,7 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="flex flex-col items-center p-4"> {/* Removed min-h-screen and background */}
       <Card className="w-full max-w-md mx-auto mt-8">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Your Profile</CardTitle>
