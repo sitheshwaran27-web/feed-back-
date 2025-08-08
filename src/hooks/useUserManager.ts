@@ -12,26 +12,16 @@ export const useUserManager = () => {
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
-    // Fetch profiles and join with auth.users to get email
+    // Fetch from the new secure view
     const { data, error } = await supabase
-      .from('profiles')
-      .select(`
-        id,
-        first_name,
-        last_name,
-        is_admin,
-        auth_users:auth.users(email)
-      `);
+      .from('user_profiles_with_email')
+      .select('*');
 
     if (error) {
       console.error("Error fetching users:", error);
       showError("Failed to load user list.");
     } else {
-      const usersWithEmail: Profile[] = data.map(profile => ({
-        ...profile,
-        email: profile.auth_users?.email || 'N/A',
-      }));
-      setUsers(usersWithEmail || []);
+      setUsers(data || []);
     }
     setLoading(false);
   }, []);
@@ -82,11 +72,8 @@ export const useUserManager = () => {
       return null;
     } else {
       showSuccess("User profile updated successfully!");
-      setUsers(prevUsers =>
-        prevUsers.map(user =>
-          user.id === data.id ? { ...user, ...data } : user
-        )
-      );
+      // Refetch all users to ensure data consistency from the view
+      fetchUsers();
       setUpdatingUserId(null);
       return data;
     }
@@ -95,18 +82,17 @@ export const useUserManager = () => {
   const deleteUser = async (userId: string) => {
     setUpdatingUserId(userId); // Indicate that this user is being processed
     try {
-      const response = await fetch(`https://kptxngsdfpmdejprefjd.supabase.co/functions/v1/delete-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.currentSession?.access_token}`,
-        },
-        body: JSON.stringify({ userId }),
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        throw new Error("Authentication error. Please sign in again.");
+      }
+      
+      const response = await supabase.functions.invoke('delete-user', {
+        body: { userId },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete user via Edge Function.');
+      if (response.error) {
+        throw response.error;
       }
 
       showSuccess("User deleted successfully!");
