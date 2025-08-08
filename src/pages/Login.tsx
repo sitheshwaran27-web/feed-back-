@@ -4,14 +4,14 @@ import { Auth } from '@supabase/auth-ui-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSession } from '@/components/SessionContextProvider';
-import { customAuthTheme } from '@/lib/supabaseAuthTheme'; // Import the custom theme
+import { customAuthTheme } from '@/lib/supabaseAuthTheme';
 
 function Login() {
   const { session, isLoading } = useSession();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+      <div className="flex items-center justify-center h-full"> {/* Use h-full to fill Layout's main area */}
         <p className="text-lg text-gray-700 dark:text-gray-300">Loading...</p>
       </div>
     );
@@ -23,7 +23,7 @@ function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="flex items-center justify-center h-full p-4"> {/* Use h-full to fill Layout's main area */}
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Welcome to the Feedback Portal</CardTitle>
