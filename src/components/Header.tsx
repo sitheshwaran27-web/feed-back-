@@ -6,7 +6,18 @@ import { Button } from '@/components/ui/button';
 import { useSession } from '@/components/SessionContextProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { LogOut, User, LayoutDashboard } from 'lucide-react';
-import { ThemeToggle } from './ThemeToggle'; // Import ThemeToggle
+import { ThemeToggle } from './ThemeToggle';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'; // Import AlertDialog components
 
 const Header: React.FC = () => {
   const { session, isLoading, isAdmin, isProfileIncompleteRedirect } = useSession();
@@ -51,10 +62,26 @@ const Header: React.FC = () => {
               <User className="mr-2 h-4 w-4" /> Profile
             </Link>
           </Button>
-          <ThemeToggle /> {/* Add ThemeToggle here */}
-          <Button onClick={handleSignOut} variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
-            <LogOut className="mr-2 h-4 w-4" /> Sign Out
-          </Button>
+          <ThemeToggle />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
+                <LogOut className="mr-2 h-4 w-4" /> Sign Out
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure you want to sign out?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You will be logged out of your account. You can always sign back in later.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleSignOut}>Sign Out</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </nav>
       </div>
     </header>
