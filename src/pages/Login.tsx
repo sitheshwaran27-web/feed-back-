@@ -1,12 +1,12 @@
 "use client";
 
 import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSession } from '@/components/SessionContextProvider';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { customAuthTheme } from '@/lib/supabaseAuthTheme'; // Import the custom theme
 
 function Login() {
   const { session, isLoading } = useSession();
@@ -43,17 +43,9 @@ function Login() {
             supabaseClient={supabase}
             providers={[]} // No third-party providers unless specified
             appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: 'hsl(var(--primary))',
-                    brandAccent: 'hsl(var(--primary-foreground))',
-                  },
-                },
-              },
+              theme: customAuthTheme, // Use the custom theme
             }}
-            theme="light" // Use light theme by default
+            // theme="light" // Remove hardcoded theme, customAuthTheme handles colors
             redirectTo={window.location.origin} // Redirect to root after auth, SessionContextProvider handles further redirect
           />
         </CardContent>
