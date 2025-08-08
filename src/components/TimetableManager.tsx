@@ -171,7 +171,8 @@ const TimetableManager: React.FC = () => {
                 <TableHead>Day of Week</TableHead>
                 <TableHead>Class Name</TableHead>
                 <TableHead>Period</TableHead>
-                <TableHead>Time</TableHead>
+                <TableHead>Start Time</TableHead> {/* Added Start Time header */}
+                <TableHead>End Time</TableHead> {/* Added End Time header */}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -181,7 +182,8 @@ const TimetableManager: React.FC = () => {
                   <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-12" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-24" /></TableCell> {/* Skeleton for Start Time */}
+                  <TableCell><Skeleton className="h-6 w-24" /></TableCell> {/* Skeleton for End Time */}
                   <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                 </TableRow>
               ))}
@@ -196,7 +198,8 @@ const TimetableManager: React.FC = () => {
                 <TableHead>Day of Week</TableHead>
                 <TableHead>Class Name</TableHead>
                 <TableHead>Period</TableHead>
-                <TableHead>Time</TableHead>
+                <TableHead>Start Time</TableHead> {/* Added Start Time header */}
+                <TableHead>End Time</TableHead> {/* Added End Time header */}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -206,7 +209,8 @@ const TimetableManager: React.FC = () => {
                   <TableCell>{getDayLabel(entry.day_of_week)}</TableCell>
                   <TableCell>{entry.classes?.name}</TableCell>
                   <TableCell>{entry.classes?.period_number}</TableCell>
-                  <TableCell>{entry.classes?.start_time} - {entry.classes?.end_time}</TableCell>
+                  <TableCell>{entry.classes?.start_time}</TableCell> {/* Display Start Time */}
+                  <TableCell>{entry.classes?.end_time}</TableCell> {/* Display End Time */}
                   <TableCell className="text-right">
                     <ConfirmAlertDialog
                       title="Are you absolutely sure?"
