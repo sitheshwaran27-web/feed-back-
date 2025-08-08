@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { showError } from '@/utils/toast';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
 interface ClassFeedbackStats {
   class_id: string;
@@ -82,7 +83,7 @@ const FeedbackAnalytics: React.FC = () => {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="text-center">Loading analytics...</p>
+          <Skeleton className="h-[300px] w-full" />
         ) : feedbackStats.length === 0 ? (
           <p className="text-center">No feedback data available for analytics yet.</p>
         ) : (
