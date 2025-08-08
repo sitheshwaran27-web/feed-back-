@@ -15,7 +15,7 @@ export const useClasses = () => {
     const { data, error } = await supabase
       .from('classes')
       .select('*')
-      .order('period_number', { ascending: true })
+      .order('period', { ascending: true })
       .order('start_time', { ascending: true });
 
     if (error) {

@@ -16,7 +16,7 @@ export const useFeedbackAnalytics = () => {
       .select(`
         class_id,
         rating,
-        classes (name, period_number)
+        classes (name, period)
       `);
 
     if (feedbackError) {
@@ -38,7 +38,7 @@ export const useFeedbackAnalytics = () => {
     feedbackData.forEach(entry => {
       const classId = entry.class_id;
       const className = entry.classes?.name || 'Unknown Class';
-      const periodNumber = entry.classes?.period_number || 0;
+      const period = entry.classes?.period || 0;
       const rating = entry.rating;
 
       if (classMap.has(classId)) {
@@ -46,17 +46,17 @@ export const useFeedbackAnalytics = () => {
         existing.totalRating += rating;
         existing.count += 1;
       } else {
-        classMap.set(classId, { totalRating: rating, count: 1, name: className, period: periodNumber });
+        classMap.set(classId, { totalRating: rating, count: 1, name: className, period: period });
       }
     });
 
     const aggregatedStats: ClassFeedbackStats[] = Array.from(classMap.entries()).map(([class_id, data]) => ({
       class_id,
       class_name: data.name,
-      period_number: data.period,
+      period: data.period,
       average_rating: parseFloat((data.totalRating / data.count).toFixed(2)),
       feedback_count: data.count,
-    })).sort((a, b) => a.period_number - b.period_number); // Sort by period number
+    })).sort((a, b) => a.period - b.period); // Sort by period number
 
     setFeedbackStats(aggregatedStats);
     setLoading(false);

@@ -21,7 +21,7 @@ export const useStudentFeedbackHistory = () => {
         comment,
         admin_response,
         created_at,
-        classes (name, period_number)
+        classes (name, period)
       `)
       .eq('student_id', userId)
       .order('created_at', { ascending: false });

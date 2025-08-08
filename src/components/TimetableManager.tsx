@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } => 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -95,7 +95,7 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ availableClasses, onSubmi
                 </FormControl>
                 <SelectContent>
                   {availableClasses.map((cls) => (
-                    <SelectItem key={cls.id} value={cls.id}>{cls.name} (P{cls.period_number})</SelectItem>
+                    <SelectItem key={cls.id} value={cls.id}>{cls.name} (P{cls.period})</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -208,7 +208,7 @@ const TimetableManager: React.FC = () => {
                 <TableRow key={entry.id}>
                   <TableCell>{getDayLabel(entry.day_of_week)}</TableCell>
                   <TableCell>{entry.classes?.name}</TableCell>
-                  <TableCell>{entry.classes?.period_number}</TableCell>
+                  <TableCell>{entry.classes?.period}</TableCell>
                   <TableCell>{entry.classes?.start_time}</TableCell> {/* Display Start Time */}
                   <TableCell>{entry.classes?.end_time}</TableCell> {/* Display End Time */}
                   <TableCell className="text-right">

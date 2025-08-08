@@ -43,10 +43,10 @@ export const useDailyClasses = () => {
       .from('timetables')
       .select(`
         class_id,
-        classes (id, name, period_number, start_time, end_time)
+        classes (id, name, period, start_time, end_time)
       `)
       .eq('day_of_week', supabaseDayOfWeek)
-      .order('classes.period_number', { ascending: true })
+      .order('classes.period', { ascending: true })
       .order('classes.start_time', { ascending: true });
 
     if (timetableError) {

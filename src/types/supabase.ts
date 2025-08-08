@@ -11,7 +11,7 @@ export interface Profile {
 export interface Class {
   id: string;
   name: string;
-  period_number: number;
+  period: number; // Changed from period_number to period
   start_time: string;
   end_time: string;
   created_at: string;
@@ -35,7 +35,7 @@ export interface Feedback {
   created_at: string;
   classes: { // Simplified for feedback join, as only name and period are used
     name: string;
-    period_number: number;
+    period: number; // Changed from period_number to period
   };
   profiles?: { // Simplified for feedback join, as only first/last name are used
     first_name: string | null;
@@ -51,14 +51,14 @@ export interface DailyClass extends Class {
 export interface FeedbackHistoryEntry extends Feedback {
   classes: {
     name: string;
-    period_number: number;
+    period: number; // Changed from period_number to period
   };
 }
 
 export interface ClassFeedbackStats {
   class_id: string;
   class_name: string;
-  period_number: number;
+  period: number; // Changed from period_number to period
   average_rating: number;
   feedback_count: number;
 }

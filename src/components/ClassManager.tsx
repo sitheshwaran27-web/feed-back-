@@ -115,7 +115,7 @@ const ClassManager: React.FC = () => {
             <TableBody>
               {classes.map((cls: Class) => (
                 <TableRow key={cls.id}>
-                  <TableCell>{cls.period_number}</TableCell>
+                  <TableCell>{cls.period}</TableCell>
                   <TableCell>{cls.name}</TableCell>
                   <TableCell>{cls.start_time}</TableCell>
                   <TableCell>{cls.end_time}</TableCell>

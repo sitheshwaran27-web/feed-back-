@@ -13,7 +13,7 @@ import { Class } from '@/types/supabase'; // Import Class
 
 const formSchema = z.object({
   name: z.string().min(1, "Class name is required"),
-  period_number: z.coerce.number().min(1, "Period must be at least 1").max(7, "Period cannot exceed 7"),
+  period: z.coerce.number().min(1, "Period must be at least 1").max(7, "Period cannot exceed 7"), // Changed from period_number to period
   start_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid start time format (HH:MM)"),
   end_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid end time format (HH:MM)"),
 });
@@ -32,7 +32,7 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel, 
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
       name: "",
-      period_number: 1,
+      period: 1, // Changed from period_number to period
       start_time: "08:00",
       end_time: "09:00",
     },
@@ -61,7 +61,7 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel, 
         />
         <FormField
           control={form.control}
-          name="period_number"
+          name="period" // Changed from period_number to period
           render={({ field }) => (
             <FormItem>
               <FormLabel>Period Number</FormLabel>
