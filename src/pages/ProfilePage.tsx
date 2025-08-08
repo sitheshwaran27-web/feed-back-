@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+// This comment is added to trigger re-compilation and resolve potential parsing issues.
 import { useSession } from '@/components/SessionContextProvider';
 import { useNavigate } from 'react-router-dom';
 import { showError } from '@/utils/toast';
