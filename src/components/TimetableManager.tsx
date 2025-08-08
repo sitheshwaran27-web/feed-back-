@@ -14,6 +14,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
 interface Class {
   id: string;
@@ -262,7 +263,11 @@ const TimetableManager: React.FC = () => {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="text-center">Loading timetable...</p>
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
         ) : timetableEntries.length === 0 ? (
           <p className="text-center">No timetable entries added yet. Click "Add Timetable Entry" to get started.</p>
         ) : (
