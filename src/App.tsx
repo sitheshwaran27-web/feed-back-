@@ -11,37 +11,40 @@ import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProfilePage from "./pages/ProfilePage";
 import Layout from "./components/Layout";
-import { MadeWithDyad } from "./components/made-with-dyad"; // Import MadeWithDyad
+import { MadeWithDyad } from "./components/made-with-dyad";
+import { ThemeProvider } from "./components/ThemeProvider"; // Import ThemeProvider
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <SessionContextProvider>
-          <div> {/* Removed min-h-screen flex flex-col */}
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/not-found" element={<NotFound />} />
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme"> {/* Wrap with ThemeProvider */}
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <SessionContextProvider>
+            <div>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/not-found" element={<NotFound />} />
 
-              {/* Authenticated Routes - wrapped with Layout */}
-              <Route path="/student/dashboard" element={<Layout><StudentDashboard /></Layout>} />
-              <Route path="/admin/dashboard" element={<Layout><AdminDashboard /></Layout>} />
-              <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
+                {/* Authenticated Routes - wrapped with Layout */}
+                <Route path="/student/dashboard" element={<Layout><StudentDashboard /></Layout>} />
+                <Route path="/admin/dashboard" element={<Layout><AdminDashboard /></Layout>} />
+                <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
 
-              {/* Catch-all for any other undefined routes, redirect to NotFound */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <MadeWithDyad /> {/* Global footer */}
-          </div>
-        </SessionContextProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+                {/* Catch-all for any other undefined routes, redirect to NotFound */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <MadeWithDyad />
+            </div>
+          </SessionContextProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider> {/* Close ThemeProvider */}
   </QueryClientProvider>
 );
 

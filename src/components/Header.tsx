@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useSession } from '@/components/SessionContextProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { LogOut, User, LayoutDashboard } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle'; // Import ThemeToggle
 
 const Header: React.FC = () => {
   const { session, isLoading, isAdmin, isProfileIncompleteRedirect } = useSession();
@@ -50,6 +51,7 @@ const Header: React.FC = () => {
               <User className="mr-2 h-4 w-4" /> Profile
             </Link>
           </Button>
+          <ThemeToggle /> {/* Add ThemeToggle here */}
           <Button onClick={handleSignOut} variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
             <LogOut className="mr-2 h-4 w-4" /> Sign Out
           </Button>
