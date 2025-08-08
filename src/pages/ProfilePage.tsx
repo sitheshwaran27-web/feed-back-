@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-// This comment is added to trigger re-compilation and resolve potential parsing issues.
 import { useSession } from '@/components/SessionContextProvider';
 import { useNavigate } from 'react-router-dom';
 import { showError } from '@/utils/toast';
@@ -85,7 +84,7 @@ const ProfilePage: React.FC = () => {
             onCancel={handleCancel}
             isSubmitting={isSubmitting}
             email={session.user.email || "N/A"}
-            userId={session.user.id} {/* Pass userId here */}
+            userId={session.user.id}
           />
         </CardContent>
       </Card>
