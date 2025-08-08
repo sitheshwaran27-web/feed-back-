@@ -8,7 +8,8 @@ import { showError } from '@/utils/toast';
 import TimetableManager from '@/components/TimetableManager';
 import FeedbackManager from '@/components/FeedbackManager';
 import UserManager from '@/components/UserManager';
-import FeedbackAnalytics from '@/components/FeedbackAnalytics'; // Import the new component
+import FeedbackAnalytics from '@/components/FeedbackAnalytics';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Import Tabs components
 
 const AdminDashboard = () => {
   const { session, isLoading, isAdmin } = useSession();
@@ -49,10 +50,27 @@ const AdminDashboard = () => {
           Welcome, Administrator {session?.user.email}!
         </p>
       </div>
-      <TimetableManager />
-      <FeedbackManager />
-      <UserManager />
-      <FeedbackAnalytics /> {/* Add the new component here */}
+
+      <Tabs defaultValue="classes" className="w-full max-w-4xl">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="classes">Classes</TabsTrigger>
+          <TabsTrigger value="feedback">Feedback</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
+        <TabsContent value="classes">
+          <TimetableManager />
+        </TabsContent>
+        <TabsContent value="feedback">
+          <FeedbackManager />
+        </TabsContent>
+        <TabsContent value="users">
+          <UserManager />
+        </TabsContent>
+        <TabsContent value="analytics">
+          <FeedbackAnalytics />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
