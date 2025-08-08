@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { showError, showSuccess } from '@/utils/toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } = '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -170,6 +170,28 @@ const TimetableManager: React.FC = () => {
 
   const handleAddTimetableEntry = async (values: TimetableFormValues) => {
     setIsSubmitting(true);
+
+    // Check for existing entry
+    const { data: existingEntry, error: checkError } = await supabase
+      .from('timetables')
+      .select('id')
+      .eq('day_of_week', values.day_of_week)
+      .eq('class_id', values.class_id)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows found
+      console.error("Error checking for existing timetable entry:", checkError);
+      showError("Failed to check for existing timetable entry.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (existingEntry) {
+      showError("This class is already scheduled for this day.");
+      setIsSubmitting(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from('timetables')
       .insert(values)
@@ -183,7 +205,7 @@ const TimetableManager: React.FC = () => {
 
     if (error) {
       console.error("Error adding timetable entry:", error);
-      showError("Failed to add timetable entry. It might already exist for this day and class.");
+      showError("Failed to add timetable entry.");
     } else {
       showSuccess("Timetable entry added successfully!");
       setTimetableEntries([...timetableEntries, data]);
