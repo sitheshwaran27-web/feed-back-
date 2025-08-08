@@ -5,11 +5,12 @@ import { useSession } from '@/components/SessionContextProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { showError } from '@/utils/toast';
-import ClassManager from '@/components/ClassManager'; // Updated import
+import ClassManager from '@/components/ClassManager';
 import FeedbackManager from '@/components/FeedbackManager';
 import UserManager from '@/components/UserManager';
 import FeedbackAnalytics from '@/components/FeedbackAnalytics';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Import Tabs components
+import TimetableManager from '@/components/TimetableManager'; // Import the new TimetableManager
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AdminDashboard = () => {
   const { session, isLoading, isAdmin } = useSession();
@@ -52,14 +53,18 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="classes" className="w-full max-w-4xl">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5"> {/* Increased grid columns for new tab */}
           <TabsTrigger value="classes">Classes</TabsTrigger>
+          <TabsTrigger value="timetable">Timetable</TabsTrigger> {/* New Timetable tab */}
           <TabsTrigger value="feedback">Feedback</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
         <TabsContent value="classes">
           <ClassManager />
+        </TabsContent>
+        <TabsContent value="timetable"> {/* New Timetable content */}
+          <TimetableManager />
         </TabsContent>
         <TabsContent value="feedback">
           <FeedbackManager />
