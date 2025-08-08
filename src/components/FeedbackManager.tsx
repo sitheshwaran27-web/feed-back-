@@ -92,7 +92,7 @@ const FeedbackManager: React.FC = () => {
 
   const openResponseForm = (feedback: Feedback) => {
     setRespondingToFeedback(feedback);
-    setIsFormOpen(true); // Use setIsFormOpen to control the dialog
+    setIsResponseFormOpen(true);
   };
 
   const closeResponseForm = () => {
