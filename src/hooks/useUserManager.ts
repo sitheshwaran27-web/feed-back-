@@ -61,11 +61,43 @@ export const useUserManager = () => {
     setUpdatingUserId(null);
   };
 
+  const updateUser = async (userId: string, values: { first_name?: string; last_name?: string; is_admin?: boolean }) => {
+    setUpdatingUserId(userId);
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({
+        first_name: values.first_name || null,
+        last_name: values.last_name || null,
+        is_admin: values.is_admin,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating user profile:", error);
+      showError("Failed to update user profile.");
+      setUpdatingUserId(null);
+      return null;
+    } else {
+      showSuccess("User profile updated successfully!");
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === data.id ? { ...user, ...data } : user
+        )
+      );
+      setUpdatingUserId(null);
+      return data;
+    }
+  };
+
   return {
     users,
     loading,
     updatingUserId,
     fetchUsers, // Expose for manual refresh if needed
     toggleAdminStatus,
+    updateUser, // Expose the new update function
   };
 };

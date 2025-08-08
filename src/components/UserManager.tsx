@@ -10,9 +10,34 @@ import { showError, showSuccess } from '@/utils/toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUserManager } from '@/hooks/useUserManager';
 import { Profile } from '@/types/supabase'; // Import Profile
+import { Button } from '@/components/ui/button';
+import { Edit } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import EditUserForm from './EditUserForm'; // Import the new form
 
 const UserManager: React.FC = () => {
-  const { users, loading, updatingUserId, toggleAdminStatus } = useUserManager();
+  const { users, loading, updatingUserId, toggleAdminStatus, updateUser } = useUserManager();
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<Profile | null>(null);
+
+  const handleUpdateUser = async (values: { first_name?: string; last_name?: string; is_admin?: boolean }) => {
+    if (!editingUser) return;
+    const updated = await updateUser(editingUser.id, values);
+    if (updated) {
+      setIsEditFormOpen(false);
+      setEditingUser(null);
+    }
+  };
+
+  const openEditForm = (user: Profile) => {
+    setEditingUser(user);
+    setIsEditFormOpen(true);
+  };
+
+  const closeEditForm = () => {
+    setIsEditFormOpen(false);
+    setEditingUser(null);
+  };
 
   return (
     <Card className="w-full max-w-4xl mx-auto mt-8">
@@ -27,6 +52,7 @@ const UserManager: React.FC = () => {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead className="text-center">Admin</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -35,6 +61,7 @@ const UserManager: React.FC = () => {
                   <TableCell><Skeleton className="h-6 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-48" /></TableCell>
                   <TableCell className="text-center"><Skeleton className="h-6 w-16 mx-auto" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -48,6 +75,7 @@ const UserManager: React.FC = () => {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead className="text-center">Admin</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -68,12 +96,37 @@ const UserManager: React.FC = () => {
                       </Label>
                     </div>
                   </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm" onClick={() => openEditForm(user)} disabled={updatingUserId === user.id}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         )}
       </CardContent>
+      <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit User Profile</DialogTitle>
+          </DialogHeader>
+          {editingUser && (
+            <EditUserForm
+              initialData={{
+                first_name: editingUser.first_name || "",
+                last_name: editingUser.last_name || "",
+                is_admin: editingUser.is_admin,
+              }}
+              onSubmit={handleUpdateUser}
+              onCancel={closeEditForm}
+              isSubmitting={updatingUserId === editingUser.id}
+              email={editingUser.email || "N/A"}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
