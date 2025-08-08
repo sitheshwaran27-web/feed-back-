@@ -2,51 +2,34 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSession } from '@/components/SessionContextProvider';
-import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { MadeWithDyad } from '@/components/made-with-dyad';
 import { showError } from '@/utils/toast';
 import TimetableManager from '@/components/TimetableManager';
 import FeedbackManager from '@/components/FeedbackManager';
-import { Link } from 'react-router-dom'; // Import Link
 
 const AdminDashboard = () => {
-  const { session, isLoading } = useSession();
+  const { session, isLoading, isAdmin } = useSession(); // Use isAdmin from context
   const navigate = useNavigate();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true); // Keep for initial profile check if needed
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (session) {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', session.user.id)
-          .single();
+    // If session is loading, do nothing yet
+    if (isLoading) return;
 
-        if (error) {
-          console.error("Error fetching admin profile:", error);
-          showError("Failed to verify admin status.");
-          setIsAdmin(false);
-          navigate("/login"); // Redirect if profile fetch fails
-        } else if (profile && profile.is_admin) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-          navigate("/student/dashboard"); // Redirect non-admins to student dashboard
-        }
-      }
-      setProfileLoading(false);
-    };
-
-    if (!isLoading && session) {
-      checkAdminStatus();
-    } else if (!isLoading && !session) {
+    // If no session, redirect to login
+    if (!session) {
       navigate("/login");
+      return;
     }
-  }, [session, isLoading, navigate]);
+
+    // If session exists, but user is not an admin, redirect to student dashboard
+    // This check is now more direct using isAdmin from context
+    if (!isAdmin) {
+      navigate("/student/dashboard");
+    }
+    setProfileLoading(false); // Profile status determined by isAdmin from context
+  }, [session, isLoading, isAdmin, navigate]);
 
   if (isLoading || profileLoading) {
     return (
@@ -56,34 +39,21 @@ const AdminDashboard = () => {
     );
   }
 
+  // If not admin, the useEffect will navigate, so render nothing here
   if (!isAdmin) {
-    return null; // Redirect handled by useEffect
+    return null;
   }
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    // SessionContextProvider will handle the redirect to /login
-  };
-
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="flex flex-col items-center p-4">
       <div className="w-full max-w-4xl text-center mb-8">
         <h1 className="text-4xl font-bold mb-4 text-gray-800 dark:text-gray-200">Admin Dashboard</h1>
         <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
           Welcome, Administrator {session?.user.email}!
         </p>
-        <div className="flex space-x-4 mb-8">
-          <Button onClick={handleSignOut} variant="destructive">
-            Sign Out
-          </Button>
-          <Button asChild variant="outline">
-            <Link to="/profile">Manage Profile</Link>
-          </Button>
-        </div>
       </div>
       <TimetableManager />
       <FeedbackManager />
-      <MadeWithDyad />
     </div>
   );
 };

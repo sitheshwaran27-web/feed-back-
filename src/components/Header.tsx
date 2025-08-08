@@ -1,0 +1,56 @@
+"use client";
+
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useSession } from '@/components/SessionContextProvider';
+import { supabase } from '@/integrations/supabase/client';
+import { LogOut, User, LayoutDashboard } from 'lucide-react';
+
+const Header: React.FC = () => {
+  const { session, isLoading, isAdmin } = useSession();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    // SessionContextProvider will handle the redirect to /login
+  };
+
+  if (isLoading || !session) {
+    return null; // Don't render header if loading or not authenticated
+  }
+
+  return (
+    <header className="bg-primary text-primary-foreground p-4 shadow-md w-full">
+      <div className="container mx-auto flex justify-between items-center">
+        <Link to={isAdmin ? "/admin/dashboard" : "/student/dashboard"} className="text-2xl font-bold">
+          Feedback Portal
+        </Link>
+        <nav className="flex items-center space-x-4">
+          {isAdmin ? (
+            <Button asChild variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
+              <Link to="/admin/dashboard">
+                <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Dashboard
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
+              <Link to="/student/dashboard">
+                <LayoutDashboard className="mr-2 h-4 w-4" /> Student Dashboard
+              </Link>
+            </Button>
+          )}
+          <Button asChild variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
+            <Link to="/profile">
+              <User className="mr-2 h-4 w-4" /> Profile
+            </Link>
+          </Button>
+          <Button onClick={handleSignOut} variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
+            <LogOut className="mr-2 h-4 w-4" /> Sign Out
+          </Button>
+        </nav>
+      </div>
+    </header>
+  );
+};
+
+export default Header;

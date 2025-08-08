@@ -9,7 +9,8 @@ import { SessionContextProvider } from "./components/SessionContextProvider";
 import Login from "./pages/Login";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import ProfilePage from "./pages/ProfilePage"; // Import ProfilePage
+import ProfilePage from "./pages/ProfilePage";
+import Layout from "./components/Layout"; // Import Layout
 
 const queryClient = new QueryClient();
 
@@ -21,13 +22,15 @@ const App = () => (
       <BrowserRouter>
         <SessionContextProvider>
           <Routes>
-            <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/student/dashboard" element={<StudentDashboard />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/profile" element={<ProfilePage />} /> {/* Add ProfilePage route */}
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<Layout><Routes> {/* Wrap authenticated routes with Layout */}
+              <Route path="/" element={<Index />} /> {/* Index page can be a landing or redirect */}
+              <Route path="/student/dashboard" element={<StudentDashboard />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes></Layout>} />
           </Routes>
         </SessionContextProvider>
       </BrowserRouter>

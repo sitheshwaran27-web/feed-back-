@@ -2,15 +2,12 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSession } from '@/components/SessionContextProvider';
-import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { MadeWithDyad } from '@/components/made-with-dyad';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import FeedbackForm from '@/components/FeedbackForm';
-import { Link } from 'react-router-dom'; // Import Link
 
 interface Class {
   id: string;
@@ -21,7 +18,7 @@ interface Class {
 }
 
 const StudentDashboard = () => {
-  const { session, isLoading } = useSession();
+  const { session, isLoading, isAdmin } = useSession(); // Use isAdmin from context
   const navigate = useNavigate();
   const [dailyClasses, setDailyClasses] = useState<Class[]>([]);
   const [classesLoading, setClassesLoading] = useState(true);
@@ -62,27 +59,30 @@ const StudentDashboard = () => {
   }, [checkFeedbackWindow]);
 
   useEffect(() => {
-    if (!isLoading && !session) {
+    // If session is loading, do nothing yet
+    if (isLoading) return;
+
+    // If no session, redirect to login
+    if (!session) {
       navigate("/login");
       return;
     }
 
-    if (session) {
-      fetchDailyClasses();
-      // Set up an interval to check for feedback window every minute
-      const interval = setInterval(() => {
-        const currentActive = dailyClasses.find(checkFeedbackWindow);
-        setActiveFeedbackClass(currentActive || null);
-      }, 60 * 1000); // Check every minute
-
-      return () => clearInterval(interval);
+    // If session exists and user is an admin, redirect to admin dashboard
+    if (isAdmin) {
+      navigate("/admin/dashboard");
+      return;
     }
-  }, [session, isLoading, navigate, fetchDailyClasses, dailyClasses, checkFeedbackWindow]);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    // SessionContextProvider will handle the redirect to /login
-  };
+    // For students, fetch classes and set up interval
+    fetchDailyClasses();
+    const interval = setInterval(() => {
+      const currentActive = dailyClasses.find(checkFeedbackWindow);
+      setActiveFeedbackClass(currentActive || null);
+    }, 60 * 1000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [session, isLoading, isAdmin, navigate, fetchDailyClasses, dailyClasses, checkFeedbackWindow]);
 
   const handleFeedbackSubmit = async (values: { rating: number; comment?: string }) => {
     if (!session?.user.id || !activeFeedbackClass?.id) {
@@ -117,25 +117,18 @@ const StudentDashboard = () => {
     );
   }
 
-  if (!session) {
-    return null; // Redirect handled by useEffect
+  // If not session or is admin, the useEffect will navigate, so render nothing here
+  if (!session || isAdmin) {
+    return null;
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="flex flex-col items-center p-4">
       <div className="w-full max-w-4xl text-center mb-8">
         <h1 className="text-4xl font-bold mb-4 text-gray-800 dark:text-gray-200">Student Dashboard</h1>
         <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
           Welcome, {session.user.email}!
         </p>
-        <div className="flex space-x-4 mb-8">
-          <Button onClick={handleSignOut} variant="destructive">
-            Sign Out
-          </Button>
-          <Button asChild variant="outline">
-            <Link to="/profile">Manage Profile</Link>
-          </Button>
-        </div>
       </div>
 
       <Card className="w-full max-w-4xl mx-auto mb-8">
@@ -183,8 +176,6 @@ const StudentDashboard = () => {
           </CardContent>
         </Card>
       )}
-
-      <MadeWithDyad />
     </div>
   );
 };
