@@ -27,13 +27,9 @@ const ProfilePage: React.FC = () => {
   const [wasIncomplete, setWasIncomplete] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !session) {
-      navigate("/login");
-      return;
-    }
-
-    const fetchProfile = async () => {
-      if (session?.user.id) {
+    // SessionContextProvider handles redirection if not authenticated
+    if (!isLoading && session?.user.id) {
+      const fetchProfile = async () => {
         const { data, error } = await supabase
           .from('profiles')
           .select('id, first_name, last_name, avatar_url, is_admin')
@@ -53,14 +49,13 @@ const ProfilePage: React.FC = () => {
             setWasIncomplete(false);
           }
         }
-      }
-      setLoadingProfile(false);
-    };
-
-    if (session) {
+        setLoadingProfile(false);
+      };
       fetchProfile();
+    } else if (!isLoading && !session) {
+      setLoadingProfile(false); // Ensure loading state is false if no session
     }
-  }, [session, isLoading, navigate]);
+  }, [session, isLoading]);
 
   const handleUpdateProfile = async (values: { first_name?: string; last_name?: string; avatar_url?: string }) => {
     if (!session?.user.id) {
@@ -122,7 +117,7 @@ const ProfilePage: React.FC = () => {
   }
 
   if (!session) {
-    return null;
+    return null; // SessionContextProvider handles redirect to login
   }
 
   return (

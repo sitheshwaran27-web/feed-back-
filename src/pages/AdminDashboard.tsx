@@ -1,10 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useSession } from '@/components/SessionContextProvider';
-import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { showError } from '@/utils/toast';
 import ClassManager from '@/components/ClassManager';
 import FeedbackManager from '@/components/FeedbackManager';
 import UserManager from '@/components/UserManager';
@@ -14,24 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AdminDashboard = () => {
   const { session, isLoading, isAdmin } = useSession();
-  const navigate = useNavigate();
-  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true); // Keep this for initial profile fetch status
 
-  useEffect(() => {
-    if (isLoading) return;
-
-    if (!session) {
-      navigate("/login");
-      return;
-    }
-
-    if (!isAdmin) {
-      navigate("/student/dashboard");
-    }
-    setProfileLoading(false);
-  }, [session, isLoading, isAdmin, navigate]);
-
-  if (isLoading || profileLoading) {
+  // SessionContextProvider handles redirection if not authenticated or if not admin
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <p className="text-lg text-gray-700 dark:text-gray-300">Loading admin dashboard...</p>
@@ -39,8 +22,8 @@ const AdminDashboard = () => {
     );
   }
 
-  if (!isAdmin) {
-    return null;
+  if (!session || !isAdmin) {
+    return null; // SessionContextProvider handles redirect
   }
 
   return (

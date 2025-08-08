@@ -4,20 +4,10 @@ import { Auth } from '@supabase/auth-ui-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSession } from '@/components/SessionContextProvider';
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { customAuthTheme } from '@/lib/supabaseAuthTheme'; // Import the custom theme
 
 function Login() {
   const { session, isLoading } = useSession();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isLoading && session) {
-      // Redirect handled by SessionContextProvider based on admin status
-      // This component will only render if session is null or loading
-    }
-  }, [session, isLoading, navigate]);
 
   if (isLoading) {
     return (
@@ -28,7 +18,8 @@ function Login() {
   }
 
   if (session) {
-    return null; // SessionContextProvider will handle redirect
+    // SessionContextProvider will handle redirect if session exists
+    return null;
   }
 
   return (
@@ -45,7 +36,6 @@ function Login() {
             appearance={{
               theme: customAuthTheme, // Use the custom theme
             }}
-            // theme="light" // Remove hardcoded theme, customAuthTheme handles colors
             redirectTo={window.location.origin} // Redirect to root after auth, SessionContextProvider handles further redirect
           />
         </CardContent>

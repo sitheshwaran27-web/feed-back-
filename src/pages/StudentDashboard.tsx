@@ -1,17 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useSession } from '@/components/SessionContextProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import FeedbackForm from '@/components/FeedbackForm';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Star } from 'lucide-react';
 import { useDailyClasses } from '@/hooks/useDailyClasses'; // Import the new hook
 import { useStudentFeedbackHistory } from '@/hooks/useStudentFeedbackHistory'; // Import the new hook
 import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton for table loading
+import { showError, showSuccess } from '@/utils/toast';
 
 interface Class {
   id: string;
@@ -24,37 +23,35 @@ interface Class {
 
 const StudentDashboard = () => {
   const { session, isLoading, isAdmin } = useSession();
-  const navigate = useNavigate();
 
   const {
     dailyClasses,
     activeFeedbackClass,
     hasSubmittedFeedbackForActiveClass,
     loading: classesLoading,
-    fetchDailyClasses // Keep this if you need to manually trigger a refresh
+    fetchDailyClasses
   } = useDailyClasses();
 
   const {
     feedbackHistory,
     loading: feedbackHistoryLoading,
-    fetchFeedbackHistory // Keep this if you need to manually trigger a refresh
+    fetchFeedbackHistory
   } = useStudentFeedbackHistory();
 
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
-  useEffect(() => {
-    if (isLoading) return;
+  // SessionContextProvider handles redirection if not authenticated or if admin
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+        <p className="text-lg text-gray-700 dark:text-gray-300">Loading dashboard...</p>
+      </div>
+    );
+  }
 
-    if (!session) {
-      navigate("/login");
-      return;
-    }
-
-    if (isAdmin) {
-      navigate("/admin/dashboard");
-      return;
-    }
-  }, [session, isLoading, isAdmin, navigate]);
+  if (!session || isAdmin) {
+    return null; // SessionContextProvider handles redirect
+  }
 
   const handleFeedbackSubmit = async (values: { rating: number; comment?: string }) => {
     if (!session?.user.id || !activeFeedbackClass?.id) {
@@ -81,18 +78,6 @@ const StudentDashboard = () => {
     }
     setIsSubmittingFeedback(false);
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <p className="text-lg text-gray-700 dark:text-gray-300">Loading dashboard...</p>
-      </div>
-    );
-  }
-
-  if (!session || isAdmin) {
-    return null;
-  }
 
   return (
     <div className="flex flex-col items-center p-4">
