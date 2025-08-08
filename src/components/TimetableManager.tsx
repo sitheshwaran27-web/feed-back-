@@ -4,18 +4,13 @@ import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { showError, showSuccess } from '@/utils/toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Loader2, Edit } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Trash2, Edit } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import ConfirmAlertDialog from './ConfirmAlertDialog';
 import { useTimetable } from '@/hooks/useTimetable';
-import { Class, TimetableEntry } from '@/types/supabase'; // Import Class and TimetableEntry
+import { TimetableEntry } from '@/types/supabase';
+import TimetableForm from './TimetableForm'; // Import the standalone form
 
 const daysOfWeek = [
   { value: 1, label: 'Monday' },
@@ -27,109 +22,19 @@ const daysOfWeek = [
   { value: 7, label: 'Sunday' },
 ];
 
-const formSchema = z.object({
-  day_of_week: z.coerce.number().min(1, "Day of week is required").max(7, "Invalid day of week"),
-  class_id: z.string().min(1, "Class is required"),
-});
-
-type TimetableFormValues = z.infer<typeof formSchema>;
-
-interface TimetableFormProps {
-  initialData?: TimetableFormValues; // Added for editing
-  availableClasses: Class[];
-  onSubmit: (data: TimetableFormValues) => void;
-  onCancel: () => void;
-  isSubmitting: boolean;
-}
-
-const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableClasses, onSubmit, onCancel, isSubmitting }) => {
-  const form = useForm<TimetableFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: initialData || {
-      day_of_week: 1,
-      class_id: "",
-    },
-  });
-
-  const handleCancel = () => {
-    form.reset(); // Reset form fields on cancel
-    onCancel();
-  };
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="day_of_week"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Day of Week</FormLabel>
-              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value.toString()}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a day" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {daysOfWeek.map((day) => (
-                    <SelectItem key={day.value} value={day.value.toString()}>{day.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="class_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Class</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a class" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {availableClasses.map((cls) => (
-                    <SelectItem key={cls.id} value={cls.id}>{cls.name} (P{cls.period})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {initialData ? "Update Entry" : "Add to Timetable"}
-          </Button>
-        </div>
-      </form>
-    </Form>
-  );
-};
-
 const TimetableManager: React.FC = () => {
   const { timetableEntries, availableClasses, loading, isSubmitting, addTimetableEntry, updateTimetableEntry, deleteTimetableEntry } = useTimetable();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
 
-  const handleAddTimetableEntry = async (values: TimetableFormValues) => {
+  const handleAddTimetableEntry = async (values: { day_of_week: number; class_id: string }) => {
     const newEntry = await addTimetableEntry(values);
     if (newEntry) {
       setIsFormOpen(false);
     }
   };
 
-  const handleUpdateTimetableEntry = async (values: TimetableFormValues) => {
+  const handleUpdateTimetableEntry = async (values: { day_of_week: number; class_id: string }) => {
     if (!editingEntry) return;
     const updated = await updateTimetableEntry(editingEntry.id, values);
     if (updated) {
@@ -150,10 +55,6 @@ const TimetableManager: React.FC = () => {
   const closeForm = () => {
     setIsFormOpen(false);
     setEditingEntry(null);
-  };
-
-  const getDayLabel = (dayValue: number) => {
-    return daysOfWeek.find(day => day.value === dayValue)?.label || 'Unknown';
   };
 
   const groupedTimetable = useMemo(() => {
