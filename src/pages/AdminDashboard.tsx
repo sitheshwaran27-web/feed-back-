@@ -7,7 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { showError } from '@/utils/toast';
 import TimetableManager from '@/components/TimetableManager';
 import FeedbackManager from '@/components/FeedbackManager';
-import UserManager from '@/components/UserManager'; // Import the new component
+import UserManager from '@/components/UserManager';
+import FeedbackAnalytics from '@/components/FeedbackAnalytics'; // Import the new component
 
 const AdminDashboard = () => {
   const { session, isLoading, isAdmin } = useSession();
@@ -50,7 +51,8 @@ const AdminDashboard = () => {
       </div>
       <TimetableManager />
       <FeedbackManager />
-      <UserManager /> {/* Add the new component here */}
+      <UserManager />
+      <FeedbackAnalytics /> {/* Add the new component here */}
     </div>
   );
 };
