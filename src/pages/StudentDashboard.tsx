@@ -8,6 +8,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import FeedbackForm from '@/components/FeedbackForm';
+import StudentFeedbackHistory from '@/components/StudentFeedbackHistory'; // Import the new component
 
 interface Class {
   id: string;
@@ -164,7 +165,7 @@ const StudentDashboard = () => {
       </Card>
 
       {activeFeedbackClass && (
-        <Card className="w-full max-w-md mx-auto">
+        <Card className="w-full max-w-md mx-auto mb-8">
           <CardHeader>
             <CardTitle>Feedback for {activeFeedbackClass.name} (Period {activeFeedbackClass.period_number})</CardTitle>
           </CardHeader>
@@ -176,6 +177,8 @@ const StudentDashboard = () => {
           </CardContent>
         </Card>
       )}
+
+      <StudentFeedbackHistory /> {/* Add the new component here */}
     </div>
   );
 };
