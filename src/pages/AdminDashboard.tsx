@@ -5,7 +5,7 @@ import { useSession } from '@/components/SessionContextProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { showError } from '@/utils/toast';
-import TimetableManager from '@/components/TimetableManager';
+import ClassManager from '@/components/ClassManager'; // Updated import
 import FeedbackManager from '@/components/FeedbackManager';
 import UserManager from '@/components/UserManager';
 import FeedbackAnalytics from '@/components/FeedbackAnalytics';
@@ -59,7 +59,7 @@ const AdminDashboard = () => {
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
         <TabsContent value="classes">
-          <TimetableManager />
+          <ClassManager />
         </TabsContent>
         <TabsContent value="feedback">
           <FeedbackManager />
