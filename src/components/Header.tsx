@@ -22,7 +22,8 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip'; // Removed TooltipProvider import
+} from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils'; // Import cn utility for conditional class names
 
 const Header: React.FC = () => {
   const { session, isLoading, isAdmin, isProfileIncompleteRedirect } = useSession();
@@ -45,9 +46,12 @@ const Header: React.FC = () => {
       <div className="container mx-auto flex justify-between items-center">
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
-            <Link to={isAdmin ? "/admin/dashboard" : "/student/dashboard"} className="text-2xl font-bold"
+            <Link to={isAdmin ? "/admin/dashboard" : "/student/dashboard"}
+              className={cn(
+                "text-2xl font-bold",
+                disableNavigation && "opacity-60 cursor-not-allowed"
+              )}
               onClick={(e) => disableNavigation && e.preventDefault()} // Prevent navigation if disabled
-              style={{ pointerEvents: disableNavigation ? 'none' : 'auto', opacity: disableNavigation ? 0.6 : 1 }} // Visual cue
             >
               Feedback Portal
             </Link>
@@ -58,7 +62,10 @@ const Header: React.FC = () => {
         <nav className="flex items-center space-x-4">
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <Button asChild variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10" disabled={disableNavigation}>
+              <Button asChild variant="ghost" className={cn(
+                "text-primary-foreground hover:bg-primary-foreground/10",
+                disableNavigation && "opacity-60 cursor-not-allowed"
+              )} disabled={disableNavigation}>
                 <Link to={isAdmin ? "/admin/dashboard" : "/student/dashboard"}>
                   <LayoutDashboard className="mr-2 h-4 w-4" /> {isAdmin ? "Admin Dashboard" : "Student Dashboard"}
                 </Link>
@@ -69,7 +76,10 @@ const Header: React.FC = () => {
 
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <Button asChild variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10" disabled={disableNavigation}>
+              <Button asChild variant="ghost" className={cn(
+                "text-primary-foreground hover:bg-primary-foreground/10",
+                disableNavigation && "opacity-60 cursor-not-allowed"
+              )} disabled={disableNavigation}>
                 <Link to="/profile">
                   <User className="mr-2 h-4 w-4" /> Profile
                 </Link>
@@ -82,7 +92,10 @@ const Header: React.FC = () => {
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10" disabled={disableNavigation}>
+              <Button variant="ghost" className={cn(
+                "text-primary-foreground hover:bg-primary-foreground/10",
+                disableNavigation && "opacity-60 cursor-not-allowed"
+              )} disabled={disableNavigation}>
                 <LogOut className="mr-2 h-4 w-4" /> Sign Out
               </Button>
             </AlertDialogTrigger>
