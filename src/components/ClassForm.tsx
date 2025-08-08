@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2 } from 'lucide-react'; // Import Loader2 icon
 
 const formSchema = z.object({
   name: z.string().min(1, "Class name is required"),
@@ -105,7 +106,8 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel, 
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : (initialData ? "Update Class" : "Add Class")}
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {initialData ? "Update Class" : "Add Class"}
           </Button>
         </div>
       </form>

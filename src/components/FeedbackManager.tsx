@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { showError, showSuccess } from '@/utils/toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Star, MessageSquare } from 'lucide-react';
+import { Star, MessageSquare, Loader2 } from 'lucide-react'; // Import Loader2 icon
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -75,6 +75,7 @@ const FeedbackResponseForm: React.FC<FeedbackResponseFormProps> = ({ initialData
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isSubmitting ? "Saving..." : "Save Response"}
           </Button>
         </div>

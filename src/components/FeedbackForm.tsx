@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Star } from 'lucide-react';
+import { Star, Loader2 } from 'lucide-react'; // Import Loader2 icon
 import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
@@ -91,6 +91,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSubmit, isSubmitting }) =
           )}
         />
         <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isSubmitting ? "Submitting..." : "Submit Feedback"}
         </Button>
       </form>
