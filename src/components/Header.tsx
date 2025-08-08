@@ -21,9 +21,8 @@ import {
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'; // Import Tooltip components
+} from '@/components/ui/tooltip'; // Removed TooltipProvider import
 
 const Header: React.FC = () => {
   const { session, isLoading, isAdmin, isProfileIncompleteRedirect } = useSession();
@@ -44,46 +43,40 @@ const Header: React.FC = () => {
   return (
     <header className="bg-primary text-primary-foreground p-4 shadow-md w-full">
       <div className="container mx-auto flex justify-between items-center">
-        <TooltipProvider>
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <Link to={isAdmin ? "/admin/dashboard" : "/student/dashboard"} className="text-2xl font-bold"
+              onClick={(e) => disableNavigation && e.preventDefault()} // Prevent navigation if disabled
+              style={{ pointerEvents: disableNavigation ? 'none' : 'auto', opacity: disableNavigation ? 0.6 : 1 }} // Visual cue
+            >
+              Feedback Portal
+            </Link>
+          </TooltipTrigger>
+          {disableNavigation && <TooltipContent>{disabledTooltipContent}</TooltipContent>}
+        </Tooltip>
+
+        <nav className="flex items-center space-x-4">
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <Link to={isAdmin ? "/admin/dashboard" : "/student/dashboard"} className="text-2xl font-bold"
-                onClick={(e) => disableNavigation && e.preventDefault()} // Prevent navigation if disabled
-                style={{ pointerEvents: disableNavigation ? 'none' : 'auto', opacity: disableNavigation ? 0.6 : 1 }} // Visual cue
-              >
-                Feedback Portal
-              </Link>
+              <Button asChild variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10" disabled={disableNavigation}>
+                <Link to={isAdmin ? "/admin/dashboard" : "/student/dashboard"}>
+                  <LayoutDashboard className="mr-2 h-4 w-4" /> {isAdmin ? "Admin Dashboard" : "Student Dashboard"}
+                </Link>
+              </Button>
             </TooltipTrigger>
             {disableNavigation && <TooltipContent>{disabledTooltipContent}</TooltipContent>}
           </Tooltip>
-        </TooltipProvider>
 
-        <nav className="flex items-center space-x-4">
-          <TooltipProvider>
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <Button asChild variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10" disabled={disableNavigation}>
-                  <Link to={isAdmin ? "/admin/dashboard" : "/student/dashboard"}>
-                    <LayoutDashboard className="mr-2 h-4 w-4" /> {isAdmin ? "Admin Dashboard" : "Student Dashboard"}
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              {disableNavigation && <TooltipContent>{disabledTooltipContent}</TooltipContent>}
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <Button asChild variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10" disabled={disableNavigation}>
-                  <Link to="/profile">
-                    <User className="mr-2 h-4 w-4" /> Profile
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              {disableNavigation && <TooltipContent>{disabledTooltipContent}</TooltipContent>}
-            </Tooltip>
-          </TooltipProvider>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <Button asChild variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10" disabled={disableNavigation}>
+                <Link to="/profile">
+                  <User className="mr-2 h-4 w-4" /> Profile
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            {disableNavigation && <TooltipContent>{disabledTooltipContent}</TooltipContent>}
+          </Tooltip>
 
           <ThemeToggle />
 

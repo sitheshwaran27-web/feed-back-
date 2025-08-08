@@ -10,8 +10,8 @@ interface SessionContextType {
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
-  isProfileIncompleteRedirect: boolean; // New state
-  setIsProfileIncompleteRedirect: (value: boolean) => void; // New setter
+  isProfileIncompleteRedirect: boolean;
+  setIsProfileIncompleteRedirect: (value: boolean) => void;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -20,7 +20,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isProfileIncompleteRedirect, setIsProfileIncompleteRedirect] = useState(false); // Initialize new state
+  const [isProfileIncompleteRedirect, setIsProfileIncompleteRedirect] = useState(false);
   const navigate = useNavigate();
 
   const handleSession = async (currentSession: Session | null) => {
@@ -33,31 +33,25 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
         .eq('id', currentSession.user.id)
         .single();
 
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        showError("Failed to load user profile. Please complete your profile.");
-        setIsAdmin(false);
-        setIsProfileIncompleteRedirect(true); // Set to true if profile fetch fails
+      if (profileError || !profile?.first_name || !profile?.last_name) {
+        console.error("Profile incomplete or error fetching profile:", profileError);
+        showError("Please complete your profile details.");
+        setIsAdmin(profile?.is_admin || false); // Still set admin status if profile exists but is incomplete
+        setIsProfileIncompleteRedirect(true);
         navigate("/profile");
       } else {
-        setIsAdmin(profile?.is_admin || false);
-        if (!profile?.first_name || !profile?.last_name) {
-          showError("Please complete your profile details.");
-          setIsProfileIncompleteRedirect(true); // Set to true if profile is incomplete
-          navigate("/profile");
+        setIsAdmin(profile.is_admin);
+        setIsProfileIncompleteRedirect(false);
+        if (profile.is_admin) {
+          navigate("/admin/dashboard");
         } else {
-          setIsProfileIncompleteRedirect(false); // Reset if profile is complete
-          if (profile?.is_admin) {
-            navigate("/admin/dashboard");
-          } else {
-            navigate("/student/dashboard");
-          }
+          navigate("/student/dashboard");
         }
       }
     } else {
       setSession(null);
       setIsAdmin(false);
-      setIsProfileIncompleteRedirect(false); // Reset on sign out
+      setIsProfileIncompleteRedirect(false);
       navigate("/login");
     }
     setIsLoading(false);
@@ -68,7 +62,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
       if (event === 'SIGNED_OUT') {
         setSession(null);
         setIsAdmin(false);
-        setIsProfileIncompleteRedirect(false); // Reset on sign out
+        setIsProfileIncompleteRedirect(false);
         navigate("/login");
         showError("You have been signed out.");
       } else if (currentSession) {
@@ -76,7 +70,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
       } else {
         setSession(null);
         setIsAdmin(false);
-        setIsProfileIncompleteRedirect(false); // Reset if no session
+        setIsProfileIncompleteRedirect(false);
         navigate("/login");
       }
     });
