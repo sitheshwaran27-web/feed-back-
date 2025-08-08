@@ -53,6 +53,7 @@ const ProfilePage: React.FC = () => {
         <p className="text-lg text-gray-700 dark:text-gray-300">Loading profile...</p>
       </div>
     );
+  );
   }
 
   if (!session) {
