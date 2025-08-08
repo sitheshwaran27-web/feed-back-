@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { showError } from '@/utils/toast';
 import { Star } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
 interface FeedbackEntry {
   id: string;
@@ -55,26 +56,19 @@ const StudentFeedbackHistory: React.FC = () => {
     setLoading(false);
   };
 
-  if (loading) {
-    return (
-      <Card className="w-full max-w-4xl mx-auto mt-8">
-        <CardHeader>
-          <CardTitle>Your Feedback History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center">Loading feedback history...</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card className="w-full max-w-4xl mx-auto mt-8">
       <CardHeader>
         <CardTitle>Your Feedback History</CardTitle>
       </CardHeader>
       <CardContent>
-        {feedbackHistory.length === 0 ? (
+        {loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        ) : feedbackHistory.length === 0 ? (
           <p className="text-center">You haven't submitted any feedback yet.</p>
         ) : (
           <Table>
