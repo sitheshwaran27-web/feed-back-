@@ -16,6 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFeedbackManager } from '@/hooks/useFeedbackManager';
 import { Feedback } from '@/types/supabase'; // Import Feedback
+import RatingStars from './RatingStars'; // Import the new component
 
 const formSchema = z.object({
   admin_response: z.string().max(500, "Response cannot exceed 500 characters").optional(),
@@ -143,13 +144,8 @@ const FeedbackManager: React.FC = () => {
                 <TableRow key={feedback.id}>
                   <TableCell>{feedback.classes?.name} (P{feedback.classes?.period_number})</TableCell>
                   <TableCell>{feedback.profiles?.first_name} {feedback.profiles?.last_name}</TableCell>
-                  <TableCell className="flex items-center">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${i < feedback.rating ? 'fill-yellow-500 text-yellow-500' : 'text-gray-300'}`}
-                      />
-                    ))}
+                  <TableCell>
+                    <RatingStars rating={feedback.rating} />
                   </TableCell>
                   <TableCell className="max-w-[200px] truncate">{feedback.comment || 'N/A'}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{feedback.admin_response || 'No response yet'}</TableCell>

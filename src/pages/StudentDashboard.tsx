@@ -12,6 +12,7 @@ import { useStudentFeedbackHistory } from '@/hooks/useStudentFeedbackHistory';
 import { Skeleton } from '@/components/ui/skeleton';
 import { showError, showSuccess } from '@/utils/toast';
 import { DailyClass, FeedbackHistoryEntry } from '@/types/supabase'; // Import DailyClass and FeedbackHistoryEntry
+import RatingStars from '@/components/RatingStars'; // Import the new component
 
 const StudentDashboard = () => {
   const { session, isLoading, isAdmin } = useSession();
@@ -209,13 +210,8 @@ const StudentDashboard = () => {
                 {feedbackHistory.map((feedback: FeedbackHistoryEntry) => (
                   <TableRow key={feedback.id}>
                     <TableCell>{feedback.classes?.name} (P{feedback.classes?.period_number})</TableCell>
-                    <TableCell className="flex items-center">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${i < feedback.rating ? 'fill-yellow-500 text-yellow-500' : 'text-gray-300'}`}
-                        />
-                      ))}
+                    <TableCell>
+                      <RatingStars rating={feedback.rating} />
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">{feedback.comment || 'N/A'}</TableCell>
                     <TableCell className="max-w-[200px] truncate">{feedback.admin_response || 'No response yet'}</TableCell>
