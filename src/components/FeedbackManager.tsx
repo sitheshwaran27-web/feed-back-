@@ -18,6 +18,7 @@ import RatingStars from './RatingStars';
 import ConfirmAlertDialog from './ConfirmAlertDialog';
 import { useClasses } from '@/hooks/useClasses';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
   admin_response: z.string().max(500, "Response cannot exceed 500 characters").optional(),
@@ -53,7 +54,7 @@ const FeedbackResponseForm: React.FC<FeedbackResponseFormProps> = ({ initialData
           name="admin_response"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Admin Response</FormLabel>
+              <FormLabel>Your Response</FormLabel>
               <FormControl>
                 <Textarea placeholder="Type your response here..." {...field} />
               </FormControl>
@@ -192,28 +193,41 @@ const FeedbackManager: React.FC = () => {
                   <TableCell className="max-w-[200px] truncate">{feedback.comment || 'N/A'}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{feedback.admin_response || 'No response yet'}</TableCell>
                   <TableCell className="text-right">
-                    <Dialog open={isResponseFormOpen && respondingToFeedback?.id === feedback.id} onOpenChange={setIsResponseFormOpen}>
+                    <Dialog open={isResponseFormOpen && respondingToFeedback?.id === feedback.id} onOpenChange={(isOpen) => !isOpen && closeResponseForm()}>
                       <DialogTrigger asChild>
                         <Button variant="outline" size="sm" onClick={() => openResponseForm(feedback)} className="mr-2">
                           <MessageSquare className="h-4 w-4" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="sm:max-w-[425px]">
+                      <DialogContent className="sm:max-w-md">
                         <DialogHeader>
                           <DialogTitle>Respond to Feedback</DialogTitle>
                         </DialogHeader>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                          <strong>Class:</strong> {feedback.classes?.name} (P{feedback.classes?.period})<br />
-                          <strong>Student:</strong> {feedback.profiles?.first_name} {feedback.profiles?.last_name}<br />
-                          <strong>Rating:</strong> <RatingStars rating={feedback.rating} /> <br />
-                          <strong>Comment:</strong> {feedback.comment || 'N/A'}
-                        </p>
-                        <FeedbackResponseForm
-                          initialData={{ admin_response: respondingToFeedback?.admin_response || "" }}
-                          onSubmit={handleUpdateResponse}
-                          onCancel={closeResponseForm}
-                          isSubmitting={isSubmittingResponse}
-                        />
+                        {respondingToFeedback && (
+                          <>
+                            <div className="space-y-3 rounded-md border bg-muted/50 p-4">
+                              <div className="flex justify-between items-center">
+                                <span className="font-medium">{respondingToFeedback.profiles?.first_name} {respondingToFeedback.profiles?.last_name}</span>
+                                <span className="text-sm text-muted-foreground">{respondingToFeedback.classes?.name} (P{respondingToFeedback.classes?.period})</span>
+                              </div>
+                              <RatingStars rating={respondingToFeedback.rating} />
+                              {respondingToFeedback.comment ? (
+                                <blockquote className="mt-2 border-l-2 pl-4 italic text-foreground">
+                                  {respondingToFeedback.comment}
+                                </blockquote>
+                              ) : (
+                                <p className="text-sm text-muted-foreground italic">No comment provided.</p>
+                              )}
+                            </div>
+                            <Separator />
+                            <FeedbackResponseForm
+                              initialData={{ admin_response: respondingToFeedback?.admin_response || "" }}
+                              onSubmit={handleUpdateResponse}
+                              onCancel={closeResponseForm}
+                              isSubmitting={isSubmittingResponse}
+                            />
+                          </>
+                        )}
                       </DialogContent>
                     </Dialog>
                     <ConfirmAlertDialog
