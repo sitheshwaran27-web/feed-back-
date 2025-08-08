@@ -15,16 +15,16 @@ interface Profile {
   first_name: string | null;
   last_name: string | null;
   avatar_url: string | null;
-  is_admin: boolean; // Add is_admin to profile interface
+  is_admin: boolean;
 }
 
 const ProfilePage: React.FC = () => {
-  const { session, isLoading, isAdmin } = useSession();
+  const { session, isLoading, isAdmin, setIsProfileIncompleteRedirect } = useSession(); // Get setIsProfileIncompleteRedirect
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [wasIncomplete, setWasIncomplete] = useState(false); // New state to track if profile was incomplete
+  const [wasIncomplete, setWasIncomplete] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !session) {
@@ -36,7 +36,7 @@ const ProfilePage: React.FC = () => {
       if (session?.user.id) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, first_name, last_name, avatar_url, is_admin') // Fetch is_admin as well
+          .select('id, first_name, last_name, avatar_url, is_admin')
           .eq('id', session.user.id)
           .single();
 
@@ -44,10 +44,9 @@ const ProfilePage: React.FC = () => {
           console.error("Error fetching profile:", error);
           showError("Failed to load profile. Please update your details.");
           setProfile(null);
-          setWasIncomplete(true); // Assume incomplete if fetch fails or data is null
+          setWasIncomplete(true);
         } else {
           setProfile(data);
-          // Check if profile was incomplete on initial load
           if (!data?.first_name || !data?.last_name) {
             setWasIncomplete(true);
           } else {
@@ -85,7 +84,6 @@ const ProfilePage: React.FC = () => {
       showError("Failed to update profile.");
     } else {
       showSuccess("Profile updated successfully!");
-      // Re-fetch profile to ensure UI is updated with latest data
       const { data: updatedProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, avatar_url, is_admin')
@@ -94,25 +92,25 @@ const ProfilePage: React.FC = () => {
 
       if (!fetchError) {
         setProfile(updatedProfile);
-        // If profile was incomplete and is now complete, redirect to dashboard
         if (wasIncomplete && updatedProfile?.first_name && updatedProfile?.last_name) {
+          setIsProfileIncompleteRedirect(false); // Reset the incomplete redirect state
           if (updatedProfile.is_admin) {
             navigate("/admin/dashboard");
           } else {
             navigate("/student/dashboard");
           }
         } else {
-          navigate(-1); // Go back to the previous page
+          navigate(-1);
         }
       } else {
-        navigate(-1); // Go back even if re-fetch fails
+        navigate(-1);
       }
     }
     setIsSubmitting(false);
   };
 
   const handleCancel = () => {
-    navigate(-1); // Go back to the previous page
+    navigate(-1);
   };
 
   if (isLoading || loadingProfile) {
@@ -124,7 +122,7 @@ const ProfilePage: React.FC = () => {
   }
 
   if (!session) {
-    return null; // Redirect handled by useEffect
+    return null;
   }
 
   return (

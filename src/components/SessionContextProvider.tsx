@@ -10,6 +10,8 @@ interface SessionContextType {
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
+  isProfileIncompleteRedirect: boolean; // New state
+  setIsProfileIncompleteRedirect: (value: boolean) => void; // New setter
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -18,6 +20,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isProfileIncompleteRedirect, setIsProfileIncompleteRedirect] = useState(false); // Initialize new state
   const navigate = useNavigate();
 
   const handleSession = async (currentSession: Session | null) => {
@@ -26,7 +29,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
       setSession(currentSession);
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('is_admin, first_name, last_name') // Fetch first_name and last_name
+        .select('is_admin, first_name, last_name')
         .eq('id', currentSession.user.id)
         .single();
 
@@ -34,15 +37,16 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
         console.error("Error fetching profile:", profileError);
         showError("Failed to load user profile. Please complete your profile.");
         setIsAdmin(false);
-        navigate("/profile"); // Redirect to profile page to allow user to complete it.
+        setIsProfileIncompleteRedirect(true); // Set to true if profile fetch fails
+        navigate("/profile");
       } else {
         setIsAdmin(profile?.is_admin || false);
-        // Check if first_name or last_name are missing
         if (!profile?.first_name || !profile?.last_name) {
           showError("Please complete your profile details.");
+          setIsProfileIncompleteRedirect(true); // Set to true if profile is incomplete
           navigate("/profile");
         } else {
-          // If user is authenticated and profile loaded, navigate to appropriate dashboard
+          setIsProfileIncompleteRedirect(false); // Reset if profile is complete
           if (profile?.is_admin) {
             navigate("/admin/dashboard");
           } else {
@@ -53,6 +57,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
     } else {
       setSession(null);
       setIsAdmin(false);
+      setIsProfileIncompleteRedirect(false); // Reset on sign out
       navigate("/login");
     }
     setIsLoading(false);
@@ -63,6 +68,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
       if (event === 'SIGNED_OUT') {
         setSession(null);
         setIsAdmin(false);
+        setIsProfileIncompleteRedirect(false); // Reset on sign out
         navigate("/login");
         showError("You have been signed out.");
       } else if (currentSession) {
@@ -70,11 +76,11 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
       } else {
         setSession(null);
         setIsAdmin(false);
+        setIsProfileIncompleteRedirect(false); // Reset if no session
         navigate("/login");
       }
     });
 
-    // Initial session check on component mount
     supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
       handleSession(initialSession);
     });
@@ -83,7 +89,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
   }, [navigate]);
 
   return (
-    <SessionContext.Provider value={{ session, isLoading, isAdmin }}>
+    <SessionContext.Provider value={{ session, isLoading, isAdmin, isProfileIncompleteRedirect, setIsProfileIncompleteRedirect }}>
       {children}
     </SessionContext.Provider>
   );
