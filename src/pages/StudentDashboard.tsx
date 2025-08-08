@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSession } from '@/components/SessionContextProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } => 'react-router-dom';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -29,6 +29,8 @@ const StudentDashboard = () => {
   const [hasSubmittedFeedbackForActiveClass, setHasSubmittedFeedbackForActiveClass] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
+  const FEEDBACK_GRACE_PERIOD_MINUTES = 15; // Allow feedback for 15 minutes after class ends
+
   const checkFeedbackWindow = useCallback((classItem: Class) => {
     const now = new Date();
     const [startHour, startMinute] = classItem.start_time.split(':').map(Number);
@@ -37,9 +39,10 @@ const StudentDashboard = () => {
     const classStartTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startHour, startMinute);
     const classEndTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHour, endMinute);
 
-    const fiveMinutesBeforeEnd = new Date(classEndTime.getTime() - 5 * 60 * 1000);
+    // Feedback window is from class start time until end time + grace period
+    const feedbackWindowEndTime = new Date(classEndTime.getTime() + FEEDBACK_GRACE_PERIOD_MINUTES * 60 * 1000);
 
-    return now >= fiveMinutesBeforeEnd && now <= classEndTime;
+    return now >= classStartTime && now <= feedbackWindowEndTime;
   }, []);
 
   const fetchDailyClasses = useCallback(async () => {
