@@ -111,10 +111,7 @@ const TimetableManager: React.FC = () => {
   const closeForm = () => {
     setIsFormOpen(false);
     setEditingClass(null);
-    form.reset(); // Reset form fields when closing
   };
-
-  const form = ClassForm.useForm; // Access the useForm hook from ClassForm
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -128,12 +125,14 @@ const TimetableManager: React.FC = () => {
             <DialogHeader>
               <DialogTitle>{editingClass ? "Edit Class" : "Add New Class"}</DialogTitle>
             </DialogHeader>
-            <ClassForm
-              initialData={editingClass || undefined}
-              onSubmit={editingClass ? handleUpdateClass : handleAddClass}
-              onCancel={closeForm}
-              isSubmitting={isSubmitting}
-            />
+            {isFormOpen && ( // Conditionally render ClassForm to ensure it resets on close/open
+              <ClassForm
+                initialData={editingClass || undefined}
+                onSubmit={editingClass ? handleUpdateClass : handleAddClass}
+                onCancel={closeForm}
+                isSubmitting={isSubmitting}
+              />
+            )}
           </DialogContent>
         </Dialog>
       </CardHeader>
