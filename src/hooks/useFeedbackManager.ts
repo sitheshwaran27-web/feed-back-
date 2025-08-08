@@ -3,16 +3,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
-import { Feedback } from '@/types/supabase'; // Import Feedback
+import { Feedback } from '@/types/supabase';
 
 export const useFeedbackManager = () => {
   const [feedbackEntries, setFeedbackEntries] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmittingResponse, setIsSubmittingResponse] = useState(false);
+  const [classIdFilter, setClassIdFilter] = useState<string>('all'); // Filter state
 
   const fetchFeedback = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    let query = supabase
       .from('feedback')
       .select(`
         id,
@@ -25,6 +26,12 @@ export const useFeedbackManager = () => {
       `)
       .order('created_at', { ascending: false });
 
+    if (classIdFilter !== 'all') {
+      query = query.eq('class_id', classIdFilter);
+    }
+
+    const { data, error } = await query;
+
     if (error) {
       console.error("Error fetching feedback:", error);
       showError("Failed to load feedback entries.");
@@ -32,7 +39,7 @@ export const useFeedbackManager = () => {
       setFeedbackEntries(data || []);
     }
     setLoading(false);
-  }, []);
+  }, [classIdFilter]);
 
   useEffect(() => {
     fetchFeedback();
@@ -85,8 +92,10 @@ export const useFeedbackManager = () => {
     feedbackEntries,
     loading,
     isSubmittingResponse,
-    fetchFeedback, // Expose for manual refresh if needed
+    fetchFeedback,
     updateAdminResponse,
-    deleteFeedback, // Expose the new delete function
+    deleteFeedback,
+    classIdFilter,
+    setClassIdFilter,
   };
 };
