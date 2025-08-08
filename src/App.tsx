@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom"; // Remove BrowserRouter import
+import { Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -9,8 +9,7 @@ import Layout from "./components/Layout";
 import { MadeWithDyad } from "./components/made-with-dyad";
 
 const App = () => (
-  <div>
-    {/* BrowserRouter is now in main.tsx */}
+  <div className="flex flex-col min-h-screen"> {/* Added flex-col and min-h-screen */}
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Index />} />
@@ -25,7 +24,7 @@ const App = () => (
       {/* Catch-all for any other undefined routes, redirect to NotFound */}
       <Route path="*" element={<NotFound />} />
     </Routes>
-    <MadeWithDyad />
+    <MadeWithDyad /> {/* This will now be pushed to the bottom */}
   </div>
 );
 
