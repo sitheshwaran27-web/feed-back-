@@ -122,7 +122,7 @@ const StudentDashboard = () => {
               <TableBody>
                 {dailyClasses.map((cls: DailyClass) => (
                   <TableRow key={cls.id}>
-                    <TableCell>{cls.period_number}</TableCell>
+                    <TableCell>{cls.period}</TableCell>
                     <TableCell>{cls.name}</TableCell>
                     <TableCell>{cls.start_time} - {cls.end_time}</TableCell>
                     <TableCell>
@@ -145,7 +145,7 @@ const StudentDashboard = () => {
       {activeFeedbackClass && (
         <Card className="w-full max-w-md mx-auto mb-8">
           <CardHeader>
-            <CardTitle>Feedback for {activeFeedbackClass.name} (Period {activeFeedbackClass.period_number})</CardTitle>
+            <CardTitle>Feedback for {activeFeedbackClass.name} (Period {activeFeedbackClass.period})</CardTitle>
           </CardHeader>
           <CardContent>
             {hasSubmittedFeedbackForActiveClass ? (
@@ -209,7 +209,7 @@ const StudentDashboard = () => {
               <TableBody>
                 {feedbackHistory.map((feedback: FeedbackHistoryEntry) => (
                   <TableRow key={feedback.id}>
-                    <TableCell>{feedback.classes?.name} (P{feedback.classes?.period_number})</TableCell>
+                    <TableCell>{feedback.classes?.name} (P{feedback.classes?.period})</TableCell>
                     <TableCell>
                       <RatingStars rating={feedback.rating} />
                     </TableCell>
