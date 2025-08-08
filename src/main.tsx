@@ -6,6 +6,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { Toaster } from "./components/ui/toaster";
 import { SessionContextProvider } from "./components/SessionContextProvider";
+import { BrowserRouter } from "react-router-dom"; // Import BrowserRouter
 
 const queryClient = new QueryClient();
 
@@ -14,9 +15,11 @@ createRoot(document.getElementById("root")!).render(
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <TooltipProvider>
         <Toaster />
-        <SessionContextProvider>
-          <App />
-        </SessionContextProvider>
+        <BrowserRouter> {/* BrowserRouter now wraps SessionContextProvider and App */}
+          <SessionContextProvider>
+            <App />
+          </SessionContextProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
