@@ -29,10 +29,9 @@ interface FeedbackResponseFormProps {
   onSubmit: (data: FeedbackResponseFormValues) => void;
   onCancel: () => void;
   isSubmitting: boolean;
-  feedbackRating: number; // Added prop for displaying rating in the form
 }
 
-const FeedbackResponseForm: React.FC<FeedbackResponseFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting, feedbackRating }) => {
+const FeedbackResponseForm: React.FC<FeedbackResponseFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting }) => {
   const form = useForm<FeedbackResponseFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
@@ -177,7 +176,6 @@ const FeedbackManager: React.FC = () => {
                           onSubmit={handleUpdateResponse}
                           onCancel={closeResponseForm}
                           isSubmitting={isSubmittingResponse}
-                          feedbackRating={feedback.rating}
                         />
                       </DialogContent>
                     </Dialog>
