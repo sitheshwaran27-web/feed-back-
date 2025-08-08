@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ProfileForm from '@/components/ProfileForm';
-import { MadeWithDyad } from '@/components/made-with-dyad';
 
 interface Profile {
   id: string;
@@ -124,7 +123,6 @@ const ProfilePage: React.FC = () => {
           />
         </CardContent>
       </Card>
-      <MadeWithDyad />
     </div>
   );
 };

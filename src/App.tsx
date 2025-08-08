@@ -10,7 +10,8 @@ import Login from "./pages/Login";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProfilePage from "./pages/ProfilePage";
-import Layout from "./components/Layout"; // Import Layout
+import Layout from "./components/Layout";
+import { MadeWithDyad } from "./components/made-with-dyad"; // Import MadeWithDyad
 
 const queryClient = new QueryClient();
 
@@ -21,17 +22,23 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <SessionContextProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="*" element={<Layout><Routes> {/* Wrap authenticated routes with Layout */}
-              <Route path="/" element={<Index />} /> {/* Index page can be a landing or redirect */}
-              <Route path="/student/dashboard" element={<StudentDashboard />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <div className="min-h-screen flex flex-col"> {/* Flex column for content + footer */}
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/not-found" element={<NotFound />} />
+
+              {/* Authenticated Routes - wrapped with Layout */}
+              <Route path="/student/dashboard" element={<Layout><StudentDashboard /></Layout>} />
+              <Route path="/admin/dashboard" element={<Layout><AdminDashboard /></Layout>} />
+              <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
+
+              {/* Catch-all for any other undefined routes, redirect to NotFound */}
               <Route path="*" element={<NotFound />} />
-            </Routes></Layout>} />
-          </Routes>
+            </Routes>
+            <MadeWithDyad /> {/* Global footer */}
+          </div>
         </SessionContextProvider>
       </BrowserRouter>
     </TooltipProvider>
