@@ -20,7 +20,7 @@ interface Class {
   end_time: string;
 }
 
-const TimetableManager: React.FC = () => {
+const ClassManager: React.FC = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -200,4 +200,4 @@ const TimetableManager: React.FC = () => {
   );
 };
 
-export default TimetableManager;
+export default ClassManager;
