@@ -84,6 +84,7 @@ const ProfilePage: React.FC = () => {
             onCancel={handleCancel}
             isSubmitting={isSubmitting}
             email={session.user.email || "N/A"}
+            userId={session.user.id} {/* Pass userId here */}
           />
         </CardContent>
       </Card>

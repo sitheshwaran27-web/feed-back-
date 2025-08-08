@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Loader2 } from 'lucide-react';
 import { Profile } from '@/types/supabase'; // Import Profile
+import AvatarUpload from './AvatarUpload'; // Import the new AvatarUpload component
 
 const formSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
@@ -25,9 +26,10 @@ interface ProfileFormProps {
   onCancel: () => void;
   isSubmitting: boolean;
   email: string;
+  userId: string; // Add userId prop for AvatarUpload
 }
 
-const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting, email }) => {
+const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting, email, userId }) => {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
@@ -42,6 +44,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCanc
     onCancel();
   };
 
+  const handleAvatarUploadSuccess = (url: string) => {
+    form.setValue("avatar_url", url, { shouldDirty: true, shouldValidate: true });
+  };
+
+  const handleAvatarRemoveSuccess = () => {
+    form.setValue("avatar_url", null, { shouldDirty: true, shouldValidate: true });
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -53,6 +63,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCanc
             </AvatarFallback>
           </Avatar>
           <p className="text-lg font-medium text-gray-700 dark:text-gray-300">{email}</p>
+          <AvatarUpload
+            userId={userId}
+            currentAvatarUrl={form.watch("avatar_url")}
+            onUploadSuccess={handleAvatarUploadSuccess}
+            onRemoveSuccess={handleAvatarRemoveSuccess}
+            disabled={isSubmitting}
+          />
         </div>
         <FormField
           control={form.control}
@@ -80,19 +97,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCanc
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="avatar_url"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Avatar URL</FormLabel>
-              <FormControl>
-                <Input placeholder="URL to your avatar image" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Removed direct avatar_url input as it's now handled by AvatarUpload */}
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
             Cancel

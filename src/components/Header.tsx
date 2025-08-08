@@ -24,17 +24,20 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils'; // Import cn utility for conditional class names
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Import Avatar components
+import { useProfile } from '@/hooks/useProfile'; // Import useProfile hook
 
 const Header: React.FC = () => {
   const { session, isLoading, isAdmin, isProfileIncompleteRedirect } = useSession();
+  const { profile, loading: profileLoading } = useProfile(); // Fetch profile for avatar
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     // SessionContextProvider will handle the redirect to /login
   };
 
-  if (isLoading || !session) {
-    return null; // Don't render header if loading or not authenticated
+  if (isLoading || !session || profileLoading) {
+    return null; // Don't render header if loading or not authenticated or profile is loading
   }
 
   // Disable navigation if profile is incomplete and user was redirected
@@ -60,6 +63,21 @@ const Header: React.FC = () => {
         </Tooltip>
 
         <nav className="flex items-center space-x-4">
+          {profile?.avatar_url ? (
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={profile.avatar_url} alt="User Avatar" />
+              <AvatarFallback>
+                <User className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <Avatar className="h-8 w-8">
+              <AvatarFallback>
+                <User className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+          )}
+
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <Button asChild variant="ghost" className={cn(
