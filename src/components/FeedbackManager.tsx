@@ -29,9 +29,10 @@ interface FeedbackResponseFormProps {
   onSubmit: (data: FeedbackResponseFormValues) => void;
   onCancel: () => void;
   isSubmitting: boolean;
+  feedbackRating: number; // Added prop for displaying rating in the form
 }
 
-const FeedbackResponseForm: React.FC<FeedbackResponseFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting }) => {
+const FeedbackResponseForm: React.FC<FeedbackResponseFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting, feedbackRating }) => {
   const form = useForm<FeedbackResponseFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
@@ -91,7 +92,7 @@ const FeedbackManager: React.FC = () => {
 
   const openResponseForm = (feedback: Feedback) => {
     setRespondingToFeedback(feedback);
-    setIsResponseFormOpen(true);
+    setIsFormOpen(true); // Use setIsFormOpen to control the dialog
   };
 
   const closeResponseForm = () => {
@@ -168,7 +169,7 @@ const FeedbackManager: React.FC = () => {
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                           <strong>Class:</strong> {feedback.classes?.name} (P{feedback.classes?.period_number})<br />
                           <strong>Student:</strong> {feedback.profiles?.first_name} {feedback.profiles?.last_name}<br />
-                          <strong>Rating:</strong> {feedback.rating} <Star className="inline h-4 w-4 fill-yellow-500 text-yellow-500" /><br />
+                          <strong>Rating:</strong> <RatingStars rating={feedback.rating} /> <br />
                           <strong>Comment:</strong> {feedback.comment || 'N/A'}
                         </p>
                         <FeedbackResponseForm
@@ -176,6 +177,7 @@ const FeedbackManager: React.FC = () => {
                           onSubmit={handleUpdateResponse}
                           onCancel={closeResponseForm}
                           isSubmitting={isSubmittingResponse}
+                          feedbackRating={feedback.rating}
                         />
                       </DialogContent>
                     </Dialog>
