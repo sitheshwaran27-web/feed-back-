@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import { showError } from '@/utils/toast';
+import TimetableManager from '@/components/TimetableManager'; // Import TimetableManager
 
 const AdminDashboard = () => {
   const { session, isLoading } = useSession();
@@ -63,19 +64,17 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-      <div className="text-center">
+    <div className="min-h-screen flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-4">
+      <div className="w-full max-w-4xl text-center mb-8">
         <h1 className="text-4xl font-bold mb-4 text-gray-800 dark:text-gray-200">Admin Dashboard</h1>
         <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
           Welcome, Administrator {session?.user.email}!
-        </p>
-        <p className="text-lg text-gray-700 dark:text-gray-300 mb-8">
-          Here you can manage timetables, classes, students, and view/respond to feedback.
         </p>
         <Button onClick={handleSignOut} variant="destructive">
           Sign Out
         </Button>
       </div>
+      <TimetableManager /> {/* Integrate the TimetableManager component */}
       <MadeWithDyad />
     </div>
   );
