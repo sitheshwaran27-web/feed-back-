@@ -34,10 +34,9 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
 
         if (profileError) {
           console.error("Error fetching profile:", profileError);
-          showError("Failed to load user profile.");
-          // Optionally sign out if profile cannot be fetched
-          await supabase.auth.signOut();
-          navigate("/login");
+          showError("Failed to load user profile. Please complete your profile.");
+          // Do NOT sign out. Instead, redirect to profile page to allow user to complete it.
+          navigate("/profile");
           return;
         }
 
