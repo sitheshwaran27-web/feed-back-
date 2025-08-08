@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { showError, showSuccess } from '@/utils/toast';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
 interface Profile {
   id: string;
@@ -79,7 +80,11 @@ const UserManager: React.FC = () => {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="text-center">Loading users...</p>
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
         ) : users.length === 0 ? (
           <p className="text-center">No users found.</p>
         ) : (
