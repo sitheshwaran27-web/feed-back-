@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react'; // Import Loader2 icon
+import { Loader2 } from 'lucide-react';
+import { Class } from '@/types/supabase'; // Import Class
 
 const formSchema = z.object({
   name: z.string().min(1, "Class name is required"),
@@ -20,7 +21,7 @@ const formSchema = z.object({
 type ClassFormValues = z.infer<typeof formSchema>;
 
 interface ClassFormProps {
-  initialData?: ClassFormValues;
+  initialData?: Omit<Class, 'id' | 'created_at'>; // Use Omit to exclude id and created_at
   onSubmit: (data: ClassFormValues) => void;
   onCancel: () => void;
   isSubmitting: boolean;

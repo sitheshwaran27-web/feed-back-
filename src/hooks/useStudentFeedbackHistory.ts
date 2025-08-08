@@ -4,22 +4,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/components/SessionContextProvider';
 import { showError } from '@/utils/toast';
-
-interface FeedbackEntry {
-  id: string;
-  rating: number;
-  comment: string | null;
-  admin_response: string | null;
-  created_at: string;
-  classes: {
-    name: string;
-    period_number: number;
-  };
-}
+import { FeedbackHistoryEntry } from '@/types/supabase'; // Import FeedbackHistoryEntry
 
 export const useStudentFeedbackHistory = () => {
   const { session, isLoading: isSessionLoading } = useSession();
-  const [feedbackHistory, setFeedbackHistory] = useState<FeedbackEntry[]>([]);
+  const [feedbackHistory, setFeedbackHistory] = useState<FeedbackHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchFeedbackHistory = async (userId: string) => {

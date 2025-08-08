@@ -4,26 +4,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/components/SessionContextProvider';
 import { showError } from '@/utils/toast';
-
-interface Class {
-  id: string;
-  name: string;
-  period_number: number;
-  start_time: string;
-  end_time: string;
-  hasSubmittedFeedback?: boolean;
-}
+import { DailyClass } from '@/types/supabase'; // Import DailyClass
 
 const FEEDBACK_GRACE_PERIOD_MINUTES = 15;
 
 export const useDailyClasses = () => {
   const { session, isLoading: isSessionLoading } = useSession();
-  const [dailyClasses, setDailyClasses] = useState<Class[]>([]);
-  const [activeFeedbackClass, setActiveFeedbackClass] = useState<Class | null>(null);
+  const [dailyClasses, setDailyClasses] = useState<DailyClass[]>([]);
+  const [activeFeedbackClass, setActiveFeedbackClass] = useState<DailyClass | null>(null);
   const [hasSubmittedFeedbackForActiveClass, setHasSubmittedFeedbackForActiveClass] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const checkFeedbackWindow = useCallback((classItem: Class) => {
+  const checkFeedbackWindow = useCallback((classItem: DailyClass) => {
     const now = new Date();
     const [startHour, startMinute] = classItem.start_time.split(':').map(Number);
     const [endHour, endMinute] = classItem.end_time.split(':').map(Number);
@@ -64,9 +56,9 @@ export const useDailyClasses = () => {
       return;
     }
 
-    const dailyScheduledClasses: Class[] = (timetableEntries || [])
+    const dailyScheduledClasses: DailyClass[] = (timetableEntries || [])
       .map(entry => entry.classes)
-      .filter((cls): cls is Class => cls !== null);
+      .filter((cls): cls is DailyClass => cls !== null);
 
     const { data: feedbackData, error: feedbackError } = await supabase
       .from('feedback')

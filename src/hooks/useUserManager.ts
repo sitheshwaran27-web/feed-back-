@@ -3,14 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
-
-interface Profile {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  is_admin: boolean;
-  email: string; // Assuming email can be fetched or joined
-}
+import { Profile } from '@/types/supabase'; // Import Profile
 
 export const useUserManager = () => {
   const [users, setUsers] = useState<Profile[]>([]);

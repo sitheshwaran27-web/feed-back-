@@ -5,16 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { showError } from '@/utils/toast';
-import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
-import { useFeedbackAnalytics } from '@/hooks/useFeedbackAnalytics'; // Import the new hook
-
-interface ClassFeedbackStats { // This interface is still needed for type consistency with the chart data
-  class_id: string;
-  class_name: string;
-  period_number: number;
-  average_rating: number;
-  feedback_count: number;
-}
+import { Skeleton } from '@/components/ui/skeleton';
+import { useFeedbackAnalytics } from '@/hooks/useFeedbackAnalytics';
+import { ClassFeedbackStats } from '@/types/supabase'; // Import ClassFeedbackStats
 
 const FeedbackAnalytics: React.FC = () => {
   const { feedbackStats, loading } = useFeedbackAnalytics();

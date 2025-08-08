@@ -8,31 +8,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { showError, showSuccess } from '@/utils/toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Star, MessageSquare, Loader2 } from 'lucide-react'; // Import Loader2 icon
+import { Star, MessageSquare, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
-import { useFeedbackManager } from '@/hooks/useFeedbackManager'; // Import the new hook
-
-interface Feedback { // This interface is still needed for type consistency with FeedbackResponseForm
-  id: string;
-  class_id: string;
-  student_id: string;
-  rating: number;
-  comment: string | null;
-  admin_response: string | null;
-  created_at: string;
-  classes: {
-    name: string;
-    period_number: number;
-  };
-  profiles: {
-    first_name: string | null;
-    last_name: string | null;
-  };
-}
+import { Skeleton } from '@/components/ui/skeleton';
+import { useFeedbackManager } from '@/hooks/useFeedbackManager';
+import { Feedback } from '@/types/supabase'; // Import Feedback
 
 const formSchema = z.object({
   admin_response: z.string().max(500, "Response cannot exceed 500 characters").optional(),
@@ -156,7 +139,7 @@ const FeedbackManager: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {feedbackEntries.map((feedback) => (
+              {feedbackEntries.map((feedback: Feedback) => (
                 <TableRow key={feedback.id}>
                   <TableCell>{feedback.classes?.name} (P{feedback.classes?.period_number})</TableCell>
                   <TableCell>{feedback.profiles?.first_name} {feedback.profiles?.last_name}</TableCell>

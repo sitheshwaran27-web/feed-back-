@@ -3,14 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
-
-interface Class {
-  id: string;
-  name: string;
-  period_number: number;
-  start_time: string;
-  end_time: string;
-}
+import { Class } from '@/types/supabase'; // Import Class
 
 export const useClasses = () => {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -38,7 +31,7 @@ export const useClasses = () => {
     fetchClasses();
   }, [fetchClasses]);
 
-  const addClass = async (values: Omit<Class, 'id'>) => {
+  const addClass = async (values: Omit<Class, 'id' | 'created_at'>) => { // Adjusted Omit to exclude 'created_at'
     setIsSubmitting(true);
     const { data, error } = await supabase
       .from('classes')
@@ -59,7 +52,7 @@ export const useClasses = () => {
     }
   };
 
-  const updateClass = async (id: string, values: Omit<Class, 'id'>) => {
+  const updateClass = async (id: string, values: Omit<Class, 'id' | 'created_at'>) => { // Adjusted Omit to exclude 'created_at'
     setIsSubmitting(true);
     const { data, error } = await supabase
       .from('classes')

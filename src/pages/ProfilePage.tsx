@@ -9,17 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ProfileForm from '@/components/ProfileForm';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
-
-interface Profile {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  avatar_url: string | null;
-  is_admin: boolean;
-}
+import { Profile } from '@/types/supabase'; // Import Profile
 
 const ProfilePage: React.FC = () => {
-  const { session, isLoading, isAdmin, setIsProfileIncompleteRedirect } = useSession(); // Get setIsProfileIncompleteRedirect
+  const { session, isLoading, isAdmin, setIsProfileIncompleteRedirect } = useSession();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -27,12 +20,11 @@ const ProfilePage: React.FC = () => {
   const [wasIncomplete, setWasIncomplete] = useState(false);
 
   useEffect(() => {
-    // SessionContextProvider handles redirection if not authenticated
     if (!isLoading && session?.user.id) {
       const fetchProfile = async () => {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, first_name, last_name, avatar_url, is_admin')
+          .select('id, first_name, last_name, avatar_url, is_admin, updated_at') // Select all fields from Profile
           .eq('id', session.user.id)
           .single();
 
@@ -53,7 +45,7 @@ const ProfilePage: React.FC = () => {
       };
       fetchProfile();
     } else if (!isLoading && !session) {
-      setLoadingProfile(false); // Ensure loading state is false if no session
+      setLoadingProfile(false);
     }
   }, [session, isLoading]);
 
@@ -81,14 +73,14 @@ const ProfilePage: React.FC = () => {
       showSuccess("Profile updated successfully!");
       const { data: updatedProfile, error: fetchError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, avatar_url, is_admin')
+        .select('id, first_name, last_name, avatar_url, is_admin, updated_at') // Select all fields from Profile
         .eq('id', session.user.id)
         .single();
 
       if (!fetchError) {
         setProfile(updatedProfile);
         if (wasIncomplete && updatedProfile?.first_name && updatedProfile?.last_name) {
-          setIsProfileIncompleteRedirect(false); // Reset the incomplete redirect state
+          setIsProfileIncompleteRedirect(false);
           if (updatedProfile.is_admin) {
             navigate("/admin/dashboard");
           } else {
@@ -117,7 +109,7 @@ const ProfilePage: React.FC = () => {
   }
 
   if (!session) {
-    return null; // SessionContextProvider handles redirect to login
+    return null;
   }
 
   return (

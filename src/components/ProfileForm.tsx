@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Loader2 } from 'lucide-react'; // Import Loader2 icon
+import { User, Loader2 } from 'lucide-react';
+import { Profile } from '@/types/supabase'; // Import Profile
 
 const formSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
@@ -19,11 +20,11 @@ const formSchema = z.object({
 type ProfileFormValues = z.infer<typeof formSchema>;
 
 interface ProfileFormProps {
-  initialData?: ProfileFormValues;
+  initialData?: Omit<Profile, 'id' | 'is_admin' | 'updated_at' | 'email'>; // Use Omit to exclude other fields
   onSubmit: (data: ProfileFormValues) => void;
   onCancel: () => void;
   isSubmitting: boolean;
-  email: string; // To display user's email
+  email: string;
 }
 
 const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting, email }) => {

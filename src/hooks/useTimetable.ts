@@ -3,21 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
-
-interface Class {
-  id: string;
-  name: string;
-  period_number: number;
-  start_time: string;
-  end_time: string;
-}
-
-interface TimetableEntry {
-  id: string;
-  day_of_week: number;
-  class_id: string;
-  classes: Class; // Joined class data
-}
+import { Class, TimetableEntry } from '@/types/supabase'; // Import Class and TimetableEntry
 
 export const useTimetable = () => {
   const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>([]);

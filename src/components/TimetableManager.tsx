@@ -14,16 +14,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Skeleton } from '@/components/ui/skeleton';
-import ConfirmAlertDialog from './ConfirmAlertDialog'; // Import the new component
-import { useTimetable } from '@/hooks/useTimetable'; // Import the new hook
-
-interface Class { // This interface is still needed for type consistency with TimetableForm
-  id: string;
-  name: string;
-  period_number: number;
-  start_time: string;
-  end_time: string;
-}
+import ConfirmAlertDialog from './ConfirmAlertDialog';
+import { useTimetable } from '@/hooks/useTimetable';
+import { Class } from '@/types/supabase'; // Import Class
 
 const daysOfWeek = [
   { value: 1, label: 'Monday' },

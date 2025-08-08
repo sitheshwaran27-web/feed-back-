@@ -3,24 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
-
-interface Feedback {
-  id: string;
-  class_id: string;
-  student_id: string;
-  rating: number;
-  comment: string | null;
-  admin_response: string | null;
-  created_at: string;
-  classes: {
-    name: string;
-    period_number: number;
-  };
-  profiles: {
-    first_name: string | null;
-    last_name: string | null;
-  };
-}
+import { Feedback } from '@/types/supabase'; // Import Feedback
 
 export const useFeedbackManager = () => {
   const [feedbackEntries, setFeedbackEntries] = useState<Feedback[]>([]);

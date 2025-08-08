@@ -3,14 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError } from '@/utils/toast';
-
-interface ClassFeedbackStats {
-  class_id: string;
-  class_name: string;
-  period_number: number;
-  average_rating: number;
-  feedback_count: number;
-}
+import { ClassFeedbackStats } from '@/types/supabase'; // Import ClassFeedbackStats
 
 export const useFeedbackAnalytics = () => {
   const [feedbackStats, setFeedbackStats] = useState<ClassFeedbackStats[]>([]);

@@ -7,16 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { showError, showSuccess } from '@/utils/toast';
-import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
-import { useUserManager } from '@/hooks/useUserManager'; // Import the new hook
-
-interface Profile {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  is_admin: boolean;
-  email: string; // Assuming email can be fetched or joined
-}
+import { Skeleton } from '@/components/ui/skeleton';
+import { useUserManager } from '@/hooks/useUserManager';
+import { Profile } from '@/types/supabase'; // Import Profile
 
 const UserManager: React.FC = () => {
   const { users, loading, updatingUserId, toggleAdminStatus } = useUserManager();
@@ -58,7 +51,7 @@ const UserManager: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {users.map((user: Profile) => (
                 <TableRow key={user.id}>
                   <TableCell>{user.first_name || 'N/A'} {user.last_name || 'N/A'}</TableCell>
                   <TableCell>{user.email}</TableCell>

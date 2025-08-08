@@ -7,19 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import FeedbackForm from '@/components/FeedbackForm';
 import { CheckCircle, Star } from 'lucide-react';
-import { useDailyClasses } from '@/hooks/useDailyClasses'; // Import the new hook
-import { useStudentFeedbackHistory } from '@/hooks/useStudentFeedbackHistory'; // Import the new hook
-import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton for table loading
+import { useDailyClasses } from '@/hooks/useDailyClasses';
+import { useStudentFeedbackHistory } from '@/hooks/useStudentFeedbackHistory';
+import { Skeleton } from '@/components/ui/skeleton';
 import { showError, showSuccess } from '@/utils/toast';
-
-interface Class {
-  id: string;
-  name: string;
-  period_number: number;
-  start_time: string;
-  end_time: string;
-  hasSubmittedFeedback?: boolean;
-}
+import { DailyClass, FeedbackHistoryEntry } from '@/types/supabase'; // Import DailyClass and FeedbackHistoryEntry
 
 const StudentDashboard = () => {
   const { session, isLoading, isAdmin } = useSession();
@@ -127,7 +119,7 @@ const StudentDashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {dailyClasses.map((cls) => (
+                {dailyClasses.map((cls: DailyClass) => (
                   <TableRow key={cls.id}>
                     <TableCell>{cls.period_number}</TableCell>
                     <TableCell>{cls.name}</TableCell>
@@ -214,7 +206,7 @@ const StudentDashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {feedbackHistory.map((feedback) => (
+                {feedbackHistory.map((feedback: FeedbackHistoryEntry) => (
                   <TableRow key={feedback.id}>
                     <TableCell>{feedback.classes?.name} (P{feedback.classes?.period_number})</TableCell>
                     <TableCell className="flex items-center">

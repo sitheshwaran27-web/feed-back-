@@ -9,29 +9,22 @@ import ClassForm from './ClassForm';
 import { Trash2, Edit } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import ConfirmAlertDialog from './ConfirmAlertDialog';
-import { useClasses } from '@/hooks/useClasses'; // Import the new hook
-
-interface Class { // This interface is still needed for type consistency with ClassForm
-  id: string;
-  name: string;
-  period_number: number;
-  start_time: string;
-  end_time: string;
-}
+import { useClasses } from '@/hooks/useClasses';
+import { Class } from '@/types/supabase'; // Import Class
 
 const ClassManager: React.FC = () => {
   const { classes, loading, isSubmitting, addClass, updateClass, deleteClass } = useClasses();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
 
-  const handleAddClass = async (values: Omit<Class, 'id'>) => {
+  const handleAddClass = async (values: Omit<Class, 'id' | 'created_at'>) => {
     const newClass = await addClass(values);
     if (newClass) {
       setIsFormOpen(false);
     }
   };
 
-  const handleUpdateClass = async (values: Omit<Class, 'id'>) => {
+  const handleUpdateClass = async (values: Omit<Class, 'id' | 'created_at'>) => {
     if (!editingClass) return;
     const updatedClass = await updateClass(editingClass.id, values);
     if (updatedClass) {
@@ -120,27 +113,25 @@ const ClassManager: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {classes.map((cls) => (
+              {classes.map((cls: Class) => (
                 <TableRow key={cls.id}>
                   <TableCell>{cls.period_number}</TableCell>
                   <TableCell>{cls.name}</TableCell>
                   <TableCell>{cls.start_time}</TableCell>
                   <TableCell>{cls.end_time}</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="outline" size="sm" onClick={() => openEditForm(cls)}>
-                        <Edit className="h-4 w-4" />
+                    <Button variant="outline" size="sm" onClick={() => openEditForm(cls)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <ConfirmAlertDialog
+                      title="Are you absolutely sure?"
+                      description="This action cannot be undone. This will permanently delete the class and any associated feedback."
+                      onConfirm={() => handleDeleteClass(cls.id)}
+                    >
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                      <ConfirmAlertDialog
-                        title="Are you absolutely sure?"
-                        description="This action cannot be undone. This will permanently delete the class and any associated feedback."
-                        onConfirm={() => handleDeleteClass(cls.id)}
-                      >
-                        <Button variant="destructive" size="sm">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </ConfirmAlertDialog>
-                    </div>
+                    </ConfirmAlertDialog>
                   </TableCell>
                 </TableRow>
               ))}
