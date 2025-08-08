@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import ClassForm from './ClassForm';
 import { Trash2, Edit } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
 interface Class {
   id: string;
@@ -138,7 +139,11 @@ const TimetableManager: React.FC = () => {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="text-center">Loading classes...</p>
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
         ) : classes.length === 0 ? (
           <p className="text-center">No classes added yet. Click "Add New Class" to get started.</p>
         ) : (
