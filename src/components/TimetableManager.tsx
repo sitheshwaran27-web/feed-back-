@@ -15,20 +15,14 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Skeleton } from '@/components/ui/skeleton';
 import ConfirmAlertDialog from './ConfirmAlertDialog'; // Import the new component
+import { useTimetable } from '@/hooks/useTimetable'; // Import the new hook
 
-interface Class {
+interface Class { // This interface is still needed for type consistency with TimetableForm
   id: string;
   name: string;
   period_number: number;
   start_time: string;
   end_time: string;
-}
-
-interface TimetableEntry {
-  id: string;
-  day_of_week: number;
-  class_id: string;
-  classes: Class; // Joined class data
 }
 
 const daysOfWeek = [
@@ -126,109 +120,18 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ availableClasses, onSubmi
 };
 
 const TimetableManager: React.FC = () => {
-  const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>([]);
-  const [availableClasses, setAvailableClasses] = useState<Class[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { timetableEntries, availableClasses, loading, isSubmitting, addTimetableEntry, deleteTimetableEntry } = useTimetable();
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    setLoading(true);
-    const { data: classesData, error: classesError } = await supabase
-      .from('classes')
-      .select('*')
-      .order('period_number', { ascending: true });
-
-    if (classesError) {
-      console.error("Error fetching classes:", classesError);
-      showError("Failed to load classes for timetable.");
-    } else {
-      setAvailableClasses(classesData || []);
-    }
-
-    const { data: timetableData, error: timetableError } = await supabase
-      .from('timetables')
-      .select(`
-        id,
-        day_of_week,
-        class_id,
-        classes (id, name, period_number, start_time, end_time)
-      `)
-      .order('day_of_week', { ascending: true })
-      .order('classes.period_number', { ascending: true });
-
-    if (timetableError) {
-      console.error("Error fetching timetable entries:", timetableError);
-      showError("Failed to load timetable entries.");
-    } else {
-      setTimetableEntries(timetableData || []);
-    }
-    setLoading(false);
-  };
 
   const handleAddTimetableEntry = async (values: TimetableFormValues) => {
-    setIsSubmitting(true);
-
-    // Check for existing entry
-    const { data: existingEntry, error: checkError } = await supabase
-      .from('timetables')
-      .select('id')
-      .eq('day_of_week', values.day_of_week)
-      .eq('class_id', values.class_id)
-      .single();
-
-    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows found
-      console.error("Error checking for existing timetable entry:", checkError);
-      showError("Failed to check for existing timetable entry.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (existingEntry) {
-      showError("This class is already scheduled for this day.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('timetables')
-      .insert(values)
-      .select(`
-        id,
-        day_of_week,
-        class_id,
-        classes (id, name, period_number, start_time, end_time)
-      `)
-      .single();
-
-    if (error) {
-      console.error("Error adding timetable entry:", error);
-      showError("Failed to add timetable entry.");
-    } else {
-      showSuccess("Timetable entry added successfully!");
-      setTimetableEntries([...timetableEntries, data]);
+    const newEntry = await addTimetableEntry(values);
+    if (newEntry) {
       setIsFormOpen(false);
     }
-    setIsSubmitting(false);
   };
 
   const handleDeleteTimetableEntry = async (id: string) => {
-    const { error } = await supabase
-      .from('timetables')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error("Error deleting timetable entry:", error);
-      showError("Failed to delete timetable entry.");
-    } else {
-      showSuccess("Timetable entry deleted successfully!");
-      setTimetableEntries(timetableEntries.filter(entry => entry.id !== id));
-    }
+    await deleteTimetableEntry(id);
   };
 
   const closeForm = () => {
