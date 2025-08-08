@@ -92,12 +92,42 @@ export const useUserManager = () => {
     }
   };
 
+  const deleteUser = async (userId: string) => {
+    setUpdatingUserId(userId); // Indicate that this user is being processed
+    try {
+      const response = await fetch(`https://kptxngsdfpmdejprefjd.supabase.co/functions/v1/delete-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabase.auth.currentSession?.access_token}`,
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete user via Edge Function.');
+      }
+
+      showSuccess("User deleted successfully!");
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+      return true;
+    } catch (error: any) {
+      console.error("Error deleting user:", error);
+      showError(`Failed to delete user: ${error.message}`);
+      return false;
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
   return {
     users,
     loading,
     updatingUserId,
     fetchUsers, // Expose for manual refresh if needed
     toggleAdminStatus,
-    updateUser, // Expose the new update function
+    updateUser,
+    deleteUser, // Expose the new delete function
   };
 };

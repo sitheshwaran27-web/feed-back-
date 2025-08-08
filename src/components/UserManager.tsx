@@ -11,12 +11,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useUserManager } from '@/hooks/useUserManager';
 import { Profile } from '@/types/supabase'; // Import Profile
 import { Button } from '@/components/ui/button';
-import { Edit } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react'; // Import Trash2 icon
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import EditUserForm from './EditUserForm'; // Import the new form
+import ConfirmAlertDialog from './ConfirmAlertDialog'; // Import ConfirmAlertDialog
 
 const UserManager: React.FC = () => {
-  const { users, loading, updatingUserId, toggleAdminStatus, updateUser } = useUserManager();
+  const { users, loading, updatingUserId, toggleAdminStatus, updateUser, deleteUser } = useUserManager();
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
 
@@ -27,6 +28,10 @@ const UserManager: React.FC = () => {
       setIsEditFormOpen(false);
       setEditingUser(null);
     }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    await deleteUser(userId);
   };
 
   const openEditForm = (user: Profile) => {
@@ -97,9 +102,18 @@ const UserManager: React.FC = () => {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm" onClick={() => openEditForm(user)} disabled={updatingUserId === user.id}>
+                    <Button variant="outline" size="sm" onClick={() => openEditForm(user)} disabled={updatingUserId === user.id} className="mr-2">
                       <Edit className="h-4 w-4" />
                     </Button>
+                    <ConfirmAlertDialog
+                      title="Are you absolutely sure?"
+                      description="This action cannot be undone. This will permanently delete the user account and all associated data (profile, feedback, etc.)."
+                      onConfirm={() => handleDeleteUser(user.id)}
+                    >
+                      <Button variant="destructive" size="sm" disabled={updatingUserId === user.id}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </ConfirmAlertDialog>
                   </TableCell>
                 </TableRow>
               ))}
