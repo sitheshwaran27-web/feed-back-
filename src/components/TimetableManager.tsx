@@ -264,11 +264,28 @@ const TimetableManager: React.FC = () => {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
-            ))}
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Day of Week</TableHead>
+                <TableHead>Class Name</TableHead>
+                <TableHead>Period</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-12" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : timetableEntries.length === 0 ? (
           <p className="text-center">No timetable entries added yet. Click "Add Timetable Entry" to get started.</p>
         ) : (

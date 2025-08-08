@@ -80,11 +80,24 @@ const UserManager: React.FC = () => {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
-            ))}
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead className="text-center">Admin</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-6 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-48" /></TableCell>
+                  <TableCell className="text-center"><Skeleton className="h-6 w-16 mx-auto" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : users.length === 0 ? (
           <p className="text-center">No users found.</p>
         ) : (

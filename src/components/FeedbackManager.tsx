@@ -159,11 +159,30 @@ const FeedbackManager: React.FC = () => {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
-            ))}
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Class</TableHead>
+                <TableHead>Student</TableHead>
+                <TableHead>Rating</TableHead>
+                <TableHead>Comment</TableHead>
+                <TableHead>Admin Response</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-40" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-40" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : feedbackEntries.length === 0 ? (
           <p className="text-center">No feedback submitted yet.</p>
         ) : (
