@@ -27,7 +27,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="flex flex-col items-center p-4"> {/* Removed min-h-screen and background */}
+    <div className="flex flex-col items-center p-4 h-full"> {/* Added h-full */}
       <div className="w-full max-w-4xl text-center mb-8">
         <h1 className="text-4xl font-bold mb-4 text-gray-800 dark:text-gray-200">Admin Dashboard</h1>
         <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">

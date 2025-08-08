@@ -59,7 +59,7 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-center p-4">
+    <div className="flex flex-col items-center p-4 h-full">
       <Card className="w-full max-w-md mx-auto mt-8">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Your Profile</CardTitle>
