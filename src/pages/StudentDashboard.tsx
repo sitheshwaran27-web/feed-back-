@@ -50,18 +50,30 @@ const StudentDashboard = () => {
       return;
     }
 
-    const { data: classesData, error: classesError } = await supabase
-      .from('classes')
-      .select('*')
-      .order('period_number', { ascending: true })
-      .order('start_time', { ascending: true });
+    const currentDayOfWeek = new Date().getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
+    const supabaseDayOfWeek = currentDayOfWeek === 0 ? 7 : currentDayOfWeek; // Supabase uses 1 for Monday, 7 for Sunday
 
-    if (classesError) {
-      console.error("Error fetching daily classes:", classesError);
+    // Fetch timetable entries for the current day
+    const { data: timetableEntries, error: timetableError } = await supabase
+      .from('timetables')
+      .select(`
+        class_id,
+        classes (id, name, period_number, start_time, end_time)
+      `)
+      .eq('day_of_week', supabaseDayOfWeek)
+      .order('classes.period_number', { ascending: true })
+      .order('classes.start_time', { ascending: true });
+
+    if (timetableError) {
+      console.error("Error fetching daily timetable entries:", timetableError);
       showError("Failed to load daily timetable.");
       setClassesLoading(false);
       return;
     }
+
+    const dailyScheduledClasses: Class[] = (timetableEntries || [])
+      .map(entry => entry.classes)
+      .filter((cls): cls is Class => cls !== null); // Filter out any null classes if join fails
 
     const { data: feedbackData, error: feedbackError } = await supabase
       .from('feedback')
@@ -76,7 +88,7 @@ const StudentDashboard = () => {
 
     const submittedClassIds = new Set(feedbackData?.map(f => f.class_id));
 
-    const classesWithFeedbackStatus = (classesData || []).map(cls => ({
+    const classesWithFeedbackStatus = dailyScheduledClasses.map(cls => ({
       ...cls,
       hasSubmittedFeedback: submittedClassIds.has(cls.id),
     }));
