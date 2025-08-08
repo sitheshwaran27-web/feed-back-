@@ -97,6 +97,56 @@ export const useTimetable = () => {
     }
   };
 
+  const updateTimetableEntry = async (id: string, values: { day_of_week?: number; class_id?: string }) => {
+    setIsSubmitting(true);
+
+    // Check for existing entry with the new values, excluding the current entry being updated
+    const { data: existingEntry, error: checkError } = await supabase
+      .from('timetables')
+      .select('id')
+      .eq('day_of_week', values.day_of_week)
+      .eq('class_id', values.class_id)
+      .neq('id', id) // Exclude the current entry from the check
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error("Error checking for existing timetable entry during update:", checkError);
+      showError("Failed to check for existing timetable entry.");
+      setIsSubmitting(false);
+      return null;
+    }
+
+    if (existingEntry) {
+      showError("This class is already scheduled for this day.");
+      setIsSubmitting(false);
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from('timetables')
+      .update(values)
+      .eq('id', id)
+      .select(`
+        id,
+        day_of_week,
+        class_id,
+        classes (id, name, period, start_time, end_time)
+      `)
+      .single();
+
+    if (error) {
+      console.error("Error updating timetable entry:", error);
+      showError("Failed to update timetable entry.");
+      setIsSubmitting(false);
+      return null;
+    } else {
+      showSuccess("Timetable entry updated successfully!");
+      setTimetableEntries(prevEntries => prevEntries.map(entry => entry.id === data.id ? data : entry));
+      setIsSubmitting(false);
+      return data;
+    }
+  };
+
   const deleteTimetableEntry = async (id: string) => {
     const { error } = await supabase
       .from('timetables')
@@ -120,6 +170,7 @@ export const useTimetable = () => {
     loading,
     isSubmitting,
     addTimetableEntry,
+    updateTimetableEntry, // Expose the new update function
     deleteTimetableEntry,
     fetchData, // Expose for manual refresh if needed
   };

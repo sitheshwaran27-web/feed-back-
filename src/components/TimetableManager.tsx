@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { showError, showSuccess } from '@/utils/toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2, Edit } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Skeleton } from '@/components/ui/skeleton';
 import ConfirmAlertDialog from './ConfirmAlertDialog';
 import { useTimetable } from '@/hooks/useTimetable';
-import { Class } from '@/types/supabase'; // Import Class
+import { Class, TimetableEntry } from '@/types/supabase'; // Import Class and TimetableEntry
 
 const daysOfWeek = [
   { value: 1, label: 'Monday' },
@@ -36,16 +35,17 @@ const formSchema = z.object({
 type TimetableFormValues = z.infer<typeof formSchema>;
 
 interface TimetableFormProps {
+  initialData?: TimetableFormValues; // Added for editing
   availableClasses: Class[];
   onSubmit: (data: TimetableFormValues) => void;
   onCancel: () => void;
   isSubmitting: boolean;
 }
 
-const TimetableForm: React.FC<TimetableFormProps> = ({ availableClasses, onSubmit, onCancel, isSubmitting }) => {
+const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableClasses, onSubmit, onCancel, isSubmitting }) => {
   const form = useForm<TimetableFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       day_of_week: 1,
       class_id: "",
     },
@@ -65,7 +65,7 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ availableClasses, onSubmi
           render={({ field }) => (
             <FormItem>
               <FormLabel>Day of Week</FormLabel>
-              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value.toString()}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a day" />
@@ -87,7 +87,7 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ availableClasses, onSubmi
           render={({ field }) => (
             <FormItem>
               <FormLabel>Class</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a class" />
@@ -109,7 +109,7 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ availableClasses, onSubmi
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? "Adding..." : "Add to Timetable"}
+            {initialData ? "Update Entry" : "Add to Timetable"}
           </Button>
         </div>
       </form>
@@ -118,8 +118,9 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ availableClasses, onSubmi
 };
 
 const TimetableManager: React.FC = () => {
-  const { timetableEntries, availableClasses, loading, isSubmitting, addTimetableEntry, deleteTimetableEntry } = useTimetable();
+  const { timetableEntries, availableClasses, loading, isSubmitting, addTimetableEntry, updateTimetableEntry, deleteTimetableEntry } = useTimetable();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
 
   const handleAddTimetableEntry = async (values: TimetableFormValues) => {
     const newEntry = await addTimetableEntry(values);
@@ -128,17 +129,52 @@ const TimetableManager: React.FC = () => {
     }
   };
 
+  const handleUpdateTimetableEntry = async (values: TimetableFormValues) => {
+    if (!editingEntry) return;
+    const updated = await updateTimetableEntry(editingEntry.id, values);
+    if (updated) {
+      setIsFormOpen(false);
+      setEditingEntry(null);
+    }
+  };
+
   const handleDeleteTimetableEntry = async (id: string) => {
     await deleteTimetableEntry(id);
   };
 
+  const openEditForm = (entry: TimetableEntry) => {
+    setEditingEntry(entry);
+    setIsFormOpen(true);
+  };
+
   const closeForm = () => {
     setIsFormOpen(false);
+    setEditingEntry(null);
   };
 
   const getDayLabel = (dayValue: number) => {
     return daysOfWeek.find(day => day.value === dayValue)?.label || 'Unknown';
   };
+
+  const groupedTimetable = useMemo(() => {
+    const groups: { [key: number]: TimetableEntry[] } = {};
+    daysOfWeek.forEach(day => (groups[day.value] = [])); // Initialize all days
+    timetableEntries.forEach(entry => {
+      if (groups[entry.day_of_week]) {
+        groups[entry.day_of_week].push(entry);
+      }
+    });
+    // Sort classes within each day by period and then start time
+    Object.values(groups).forEach(dayEntries => {
+      dayEntries.sort((a, b) => {
+        if (a.classes.period !== b.classes.period) {
+          return a.classes.period - b.classes.period;
+        }
+        return a.classes.start_time.localeCompare(b.classes.start_time);
+      });
+    });
+    return groups;
+  }, [timetableEntries]);
 
   return (
     <Card className="w-full max-w-4xl mx-auto mt-8">
@@ -146,16 +182,17 @@ const TimetableManager: React.FC = () => {
         <CardTitle>Manage Weekly Timetable</CardTitle>
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setIsFormOpen(true)}>Add Timetable Entry</Button>
+            <Button onClick={() => { setEditingEntry(null); setIsFormOpen(true); }}>Add Timetable Entry</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Add New Timetable Entry</DialogTitle>
+              <DialogTitle>{editingEntry ? "Edit Timetable Entry" : "Add New Timetable Entry"}</DialogTitle>
             </DialogHeader>
             {isFormOpen && (
               <TimetableForm
+                initialData={editingEntry ? { day_of_week: editingEntry.day_of_week, class_id: editingEntry.class_id } : undefined}
                 availableClasses={availableClasses}
-                onSubmit={handleAddTimetableEntry}
+                onSubmit={editingEntry ? handleUpdateTimetableEntry : handleAddTimetableEntry}
                 onCancel={closeForm}
                 isSubmitting={isSubmitting}
               />
@@ -165,67 +202,54 @@ const TimetableManager: React.FC = () => {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Day of Week</TableHead>
-                <TableHead>Class Name</TableHead>
-                <TableHead>Period</TableHead>
-                <TableHead>Start Time</TableHead> {/* Added Start Time header */}
-                <TableHead>End Time</TableHead> {/* Added End Time header */}
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-12" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-24" /></TableCell> {/* Skeleton for Start Time */}
-                  <TableCell><Skeleton className="h-6 w-24" /></TableCell> {/* Skeleton for End Time */}
-                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : timetableEntries.length === 0 ? (
+          <Skeleton className="h-[400px] w-full" />
+        ) : Object.values(groupedTimetable).every(day => day.length === 0) ? (
           <p className="text-center">No timetable entries added yet. Click "Add Timetable Entry" to get started.</p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Day of Week</TableHead>
-                <TableHead>Class Name</TableHead>
-                <TableHead>Period</TableHead>
-                <TableHead>Start Time</TableHead> {/* Added Start Time header */}
-                <TableHead>End Time</TableHead> {/* Added End Time header */}
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {timetableEntries.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell>{getDayLabel(entry.day_of_week)}</TableCell>
-                  <TableCell>{entry.classes?.name}</TableCell>
-                  <TableCell>{entry.classes?.period}</TableCell>
-                  <TableCell>{entry.classes?.start_time}</TableCell> {/* Display Start Time */}
-                  <TableCell>{entry.classes?.end_time}</TableCell> {/* Display End Time */}
-                  <TableCell className="text-right">
-                    <ConfirmAlertDialog
-                      title="Are you absolutely sure?"
-                      description="This action cannot be undone. This will permanently remove this class from the timetable for this day."
-                      onConfirm={() => handleDeleteTimetableEntry(entry.id)}
-                    >
-                      <Button variant="destructive" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </ConfirmAlertDialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="space-y-6">
+            {daysOfWeek.map(day => (
+              <div key={day.value} className="border rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-3">{day.label}</h3>
+                {groupedTimetable[day.value].length === 0 ? (
+                  <p className="text-sm text-gray-500">No classes scheduled for {day.label}.</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Period</TableHead>
+                        <TableHead>Class Name</TableHead>
+                        <TableHead>Time</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {groupedTimetable[day.value].map((entry) => (
+                        <TableRow key={entry.id}>
+                          <TableCell>{entry.classes?.period}</TableCell>
+                          <TableCell>{entry.classes?.name}</TableCell>
+                          <TableCell>{entry.classes?.start_time} - {entry.classes?.end_time}</TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="outline" size="sm" onClick={() => openEditForm(entry)} className="mr-2">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <ConfirmAlertDialog
+                              title="Are you absolutely sure?"
+                              description="This action cannot be undone. This will permanently remove this class from the timetable for this day."
+                              onConfirm={() => handleDeleteTimetableEntry(entry.id)}
+                            >
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </ConfirmAlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>
