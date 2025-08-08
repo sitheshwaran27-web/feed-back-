@@ -8,7 +8,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import FeedbackForm from '@/components/FeedbackForm';
-import StudentFeedbackHistory from '@/components/StudentFeedbackHistory'; // Import the new component
+import StudentFeedbackHistory from '@/components/StudentFeedbackHistory';
 
 interface Class {
   id: string;
@@ -19,11 +19,12 @@ interface Class {
 }
 
 const StudentDashboard = () => {
-  const { session, isLoading, isAdmin } = useSession(); // Use isAdmin from context
+  const { session, isLoading, isAdmin } = useSession();
   const navigate = useNavigate();
   const [dailyClasses, setDailyClasses] = useState<Class[]>([]);
   const [classesLoading, setClassesLoading] = useState(true);
   const [activeFeedbackClass, setActiveFeedbackClass] = useState<Class | null>(null);
+  const [hasSubmittedFeedbackForActiveClass, setHasSubmittedFeedbackForActiveClass] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
   const checkFeedbackWindow = useCallback((classItem: Class) => {
@@ -39,6 +40,21 @@ const StudentDashboard = () => {
     return now >= fiveMinutesBeforeEnd && now <= classEndTime;
   }, []);
 
+  const checkIfFeedbackSubmitted = useCallback(async (classId: string, userId: string) => {
+    const { data, error } = await supabase
+      .from('feedback')
+      .select('id')
+      .eq('class_id', classId)
+      .eq('student_id', userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+      console.error("Error checking existing feedback:", error);
+      return false;
+    }
+    return !!data; // Returns true if data exists (feedback found), false otherwise
+  }, []);
+
   const fetchDailyClasses = useCallback(async () => {
     setClassesLoading(true);
     const { data, error } = await supabase
@@ -52,38 +68,39 @@ const StudentDashboard = () => {
       showError("Failed to load daily timetable.");
     } else {
       setDailyClasses(data || []);
-      // Check for active feedback window immediately after fetching classes
       const currentActive = data.find(checkFeedbackWindow);
       setActiveFeedbackClass(currentActive || null);
+
+      if (currentActive && session?.user.id) {
+        const submitted = await checkIfFeedbackSubmitted(currentActive.id, session.user.id);
+        setHasSubmittedFeedbackForActiveClass(submitted);
+      } else {
+        setHasSubmittedFeedbackForActiveClass(false);
+      }
     }
     setClassesLoading(false);
-  }, [checkFeedbackWindow]);
+  }, [checkFeedbackWindow, checkIfFeedbackSubmitted, session?.user.id]);
 
   useEffect(() => {
-    // If session is loading, do nothing yet
     if (isLoading) return;
 
-    // If no session, redirect to login
     if (!session) {
       navigate("/login");
       return;
     }
 
-    // If session exists and user is an admin, redirect to admin dashboard
     if (isAdmin) {
       navigate("/admin/dashboard");
       return;
     }
 
-    // For students, fetch classes and set up interval
     fetchDailyClasses();
     const interval = setInterval(() => {
-      const currentActive = dailyClasses.find(checkFeedbackWindow);
-      setActiveFeedbackClass(currentActive || null);
+      fetchDailyClasses(); // Re-fetch classes and check feedback window/submission status
     }, 60 * 1000); // Check every minute
 
     return () => clearInterval(interval);
-  }, [session, isLoading, isAdmin, navigate, fetchDailyClasses, dailyClasses, checkFeedbackWindow]);
+  }, [session, isLoading, isAdmin, navigate, fetchDailyClasses]);
 
   const handleFeedbackSubmit = async (values: { rating: number; comment?: string }) => {
     if (!session?.user.id || !activeFeedbackClass?.id) {
@@ -104,8 +121,9 @@ const StudentDashboard = () => {
       showError("Failed to submit feedback. You might have already submitted feedback for this class.");
     } else {
       showSuccess("Feedback submitted successfully!");
-      setActiveFeedbackClass(null); // Hide the form after submission
-      fetchDailyClasses(); // Re-fetch to update any state if needed
+      setHasSubmittedFeedbackForActiveClass(true); // Mark as submitted
+      // No need to hide activeFeedbackClass, just the form
+      // fetchDailyClasses(); // Re-fetch to update any state if needed, though not strictly necessary for this change
     }
     setIsSubmittingFeedback(false);
   };
@@ -118,7 +136,6 @@ const StudentDashboard = () => {
     );
   }
 
-  // If not session or is admin, the useEffect will navigate, so render nothing here
   if (!session || isAdmin) {
     return null;
   }
@@ -170,15 +187,23 @@ const StudentDashboard = () => {
             <CardTitle>Feedback for {activeFeedbackClass.name} (Period {activeFeedbackClass.period_number})</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Please provide your feedback for this class.
-            </p>
-            <FeedbackForm onSubmit={handleFeedbackSubmit} isSubmitting={isSubmittingFeedback} />
+            {hasSubmittedFeedbackForActiveClass ? (
+              <p className="text-center text-green-600 dark:text-green-400">
+                You have already submitted feedback for this class. Thank you!
+              </p>
+            ) : (
+              <>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Please provide your feedback for this class.
+                </p>
+                <FeedbackForm onSubmit={handleFeedbackSubmit} isSubmitting={isSubmittingFeedback} />
+              </>
+            )}
           </CardContent>
         </Card>
       )}
 
-      <StudentFeedbackHistory /> {/* Add the new component here */}
+      <StudentFeedbackHistory />
     </div>
   );
 };
