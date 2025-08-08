@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
 interface Feedback {
   id: string;
@@ -157,7 +158,11 @@ const FeedbackManager: React.FC = () => {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="text-center">Loading feedback...</p>
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
         ) : feedbackEntries.length === 0 ? (
           <p className="text-center">No feedback submitted yet.</p>
         ) : (
