@@ -22,7 +22,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <SessionContextProvider>
-          <div className="min-h-screen flex flex-col"> {/* Flex column for content + footer */}
+          <div> {/* Removed min-h-screen flex flex-col */}
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
