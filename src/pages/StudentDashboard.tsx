@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import FeedbackForm from '@/components/FeedbackForm';
 import StudentFeedbackHistory from '@/components/StudentFeedbackHistory';
+import { CheckCircle } from 'lucide-react'; // Import CheckCircle icon
 
 interface Class {
   id: string;
@@ -16,6 +17,7 @@ interface Class {
   period_number: number;
   start_time: string;
   end_time: string;
+  hasSubmittedFeedback?: boolean; // Added for feedback status
 }
 
 const StudentDashboard = () => {
@@ -40,46 +42,58 @@ const StudentDashboard = () => {
     return now >= fiveMinutesBeforeEnd && now <= classEndTime;
   }, []);
 
-  const checkIfFeedbackSubmitted = useCallback(async (classId: string, userId: string) => {
-    const { data, error } = await supabase
-      .from('feedback')
-      .select('id')
-      .eq('class_id', classId)
-      .eq('student_id', userId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-      console.error("Error checking existing feedback:", error);
-      return false;
-    }
-    return !!data; // Returns true if data exists (feedback found), false otherwise
-  }, []);
-
   const fetchDailyClasses = useCallback(async () => {
     setClassesLoading(true);
-    const { data, error } = await supabase
+    const userId = session?.user.id;
+    if (!userId) {
+      setClassesLoading(false);
+      return;
+    }
+
+    const { data: classesData, error: classesError } = await supabase
       .from('classes')
       .select('*')
       .order('period_number', { ascending: true })
       .order('start_time', { ascending: true });
 
-    if (error) {
-      console.error("Error fetching daily classes:", error);
+    if (classesError) {
+      console.error("Error fetching daily classes:", classesError);
       showError("Failed to load daily timetable.");
-    } else {
-      setDailyClasses(data || []);
-      const currentActive = data.find(checkFeedbackWindow);
-      setActiveFeedbackClass(currentActive || null);
-
-      if (currentActive && session?.user.id) {
-        const submitted = await checkIfFeedbackSubmitted(currentActive.id, session.user.id);
-        setHasSubmittedFeedbackForActiveClass(submitted);
-      } else {
-        setHasSubmittedFeedbackForActiveClass(false);
-      }
+      setClassesLoading(false);
+      return;
     }
+
+    const { data: feedbackData, error: feedbackError } = await supabase
+      .from('feedback')
+      .select('class_id')
+      .eq('student_id', userId);
+
+    if (feedbackError) {
+      console.error("Error fetching student feedback:", feedbackError);
+      showError("Failed to load feedback status.");
+      // Continue with classes even if feedback fails
+    }
+
+    const submittedClassIds = new Set(feedbackData?.map(f => f.class_id));
+
+    const classesWithFeedbackStatus = (classesData || []).map(cls => ({
+      ...cls,
+      hasSubmittedFeedback: submittedClassIds.has(cls.id),
+    }));
+
+    setDailyClasses(classesWithFeedbackStatus);
+
+    const currentActive = classesWithFeedbackStatus.find(checkFeedbackWindow);
+    setActiveFeedbackClass(currentActive || null);
+
+    if (currentActive) {
+      setHasSubmittedFeedbackForActiveClass(currentActive.hasSubmittedFeedback || false);
+    } else {
+      setHasSubmittedFeedbackForActiveClass(false);
+    }
+
     setClassesLoading(false);
-  }, [checkFeedbackWindow, checkIfFeedbackSubmitted, session?.user.id]);
+  }, [checkFeedbackWindow, session?.user.id]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -121,9 +135,13 @@ const StudentDashboard = () => {
       showError("Failed to submit feedback. You might have already submitted feedback for this class.");
     } else {
       showSuccess("Feedback submitted successfully!");
-      setHasSubmittedFeedbackForActiveClass(true); // Mark as submitted
-      // No need to hide activeFeedbackClass, just the form
-      // fetchDailyClasses(); // Re-fetch to update any state if needed, though not strictly necessary for this change
+      // Update the specific class in dailyClasses state
+      setDailyClasses(prevClasses =>
+        prevClasses.map(cls =>
+          cls.id === activeFeedbackClass.id ? { ...cls, hasSubmittedFeedback: true } : cls
+        )
+      );
+      setHasSubmittedFeedbackForActiveClass(true); // Mark as submitted for the active class
     }
     setIsSubmittingFeedback(false);
   };
@@ -165,6 +183,7 @@ const StudentDashboard = () => {
                   <TableHead>Period</TableHead>
                   <TableHead>Class Name</TableHead>
                   <TableHead>Time</TableHead>
+                  <TableHead>Feedback Status</TableHead> {/* New column header */}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -173,6 +192,15 @@ const StudentDashboard = () => {
                     <TableCell>{cls.period_number}</TableCell>
                     <TableCell>{cls.name}</TableCell>
                     <TableCell>{cls.start_time} - {cls.end_time}</TableCell>
+                    <TableCell>
+                      {cls.hasSubmittedFeedback ? (
+                        <span className="text-green-600 flex items-center">
+                          <CheckCircle className="h-4 w-4 mr-1" /> Submitted
+                        </span>
+                      ) : (
+                        <span className="text-gray-500">Pending</span>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
