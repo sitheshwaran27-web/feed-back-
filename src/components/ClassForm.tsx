@@ -38,6 +38,11 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel, 
     },
   });
 
+  const handleCancel = () => {
+    form.reset(); // Reset form fields on cancel
+    onCancel();
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -103,7 +108,7 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel, 
           )}
         />
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+          <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
