@@ -7,28 +7,25 @@ import { useNavigate } from 'react-router-dom';
 import { showError } from '@/utils/toast';
 import TimetableManager from '@/components/TimetableManager';
 import FeedbackManager from '@/components/FeedbackManager';
+import UserManager from '@/components/UserManager'; // Import the new component
 
 const AdminDashboard = () => {
-  const { session, isLoading, isAdmin } = useSession(); // Use isAdmin from context
+  const { session, isLoading, isAdmin } = useSession();
   const navigate = useNavigate();
-  const [profileLoading, setProfileLoading] = useState(true); // Keep for initial profile check if needed
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
-    // If session is loading, do nothing yet
     if (isLoading) return;
 
-    // If no session, redirect to login
     if (!session) {
       navigate("/login");
       return;
     }
 
-    // If session exists, but user is not an admin, redirect to student dashboard
-    // This check is now more direct using isAdmin from context
     if (!isAdmin) {
       navigate("/student/dashboard");
     }
-    setProfileLoading(false); // Profile status determined by isAdmin from context
+    setProfileLoading(false);
   }, [session, isLoading, isAdmin, navigate]);
 
   if (isLoading || profileLoading) {
@@ -39,7 +36,6 @@ const AdminDashboard = () => {
     );
   }
 
-  // If not admin, the useEffect will navigate, so render nothing here
   if (!isAdmin) {
     return null;
   }
@@ -54,6 +50,7 @@ const AdminDashboard = () => {
       </div>
       <TimetableManager />
       <FeedbackManager />
+      <UserManager /> {/* Add the new component here */}
     </div>
   );
 };
