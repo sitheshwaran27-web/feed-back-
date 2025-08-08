@@ -1,34 +1,63 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
-import { Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+"use client";
+
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { showError } from "@/utils/toast";
 
 interface SessionContextType {
   session: Session | null;
-  loading: boolean;
+  isLoading: boolean;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setLoading(false);
-    };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (event === 'SIGNED_OUT') {
+        setSession(null);
+        navigate("/login");
+        showError("You have been signed out.");
+      } else if (currentSession) {
+        setSession(currentSession);
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', currentSession.user.id)
+          .single();
 
-    getSession();
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          showError("Failed to load user profile.");
+          // Optionally sign out if profile cannot be fetched
+          await supabase.auth.signOut();
+          navigate("/login");
+          return;
+        }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setLoading(false);
-      if (_event === 'SIGNED_OUT') {
-        navigate('/login');
+        if (profile?.is_admin) {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/student/dashboard");
+        }
+      } else {
+        navigate("/login");
+      }
+      setIsLoading(false);
+    });
+
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      setSession(initialSession);
+      setIsLoading(false);
+      if (!initialSession) {
+        navigate("/login");
       }
     });
 
@@ -36,7 +65,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
   }, [navigate]);
 
   return (
-    <SessionContext.Provider value={{ session, loading }}>
+    <SessionContext.Provider value={{ session, isLoading }}>
       {children}
     </SessionContext.Provider>
   );
@@ -45,7 +74,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
 export const useSession = () => {
   const context = useContext(SessionContext);
   if (context === undefined) {
-    throw new Error('useSession must be used within a SessionContextProvider');
+    throw new Error("useSession must be used within a SessionContextProvider");
   }
   return context;
 };
