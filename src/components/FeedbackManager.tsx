@@ -3,110 +3,20 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Loader2, Trash2, Star, ArrowUp, ArrowDown, Filter, ChevronsUpDown, XCircle } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { MessageSquare, Star, Filter, ChevronsUpDown, XCircle, Inbox } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFeedbackManager } from '@/hooks/useFeedbackManager';
-import { Feedback } from '@/types/supabase';
 import RatingStars from './RatingStars';
-import ConfirmAlertDialog from './ConfirmAlertDialog';
-import { Separator } from '@/components/ui/separator';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
-
-const formSchema = z.object({
-  admin_response: z.string().max(500, "Response cannot exceed 500 characters").optional(),
-});
-
-type FeedbackResponseFormValues = z.infer<typeof formSchema>;
-
-interface FeedbackResponseFormProps {
-  initialData?: FeedbackResponseFormValues;
-  onSubmit: (data: FeedbackResponseFormValues) => void;
-  onCancel: () => void;
-  isSubmitting: boolean;
-}
-
-const FeedbackResponseForm: React.FC<FeedbackResponseFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting }) => {
-  const form = useForm<FeedbackResponseFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: initialData || {
-      admin_response: "",
-    },
-  });
-
-  const handleCancel = () => {
-    form.reset();
-    onCancel();
-  };
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="admin_response"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Your Response</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Type your response here..." {...field} value={field.value || ''} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? "Saving..." : "Save Response"}
-          </Button>
-        </div>
-      </form>
-    </Form>
-  );
-};
-
-type SortableHeaderProps = {
-  children: React.ReactNode;
-  columnKey: keyof Feedback | 'student_name' | 'class_name';
-  sortConfig: { key: string; direction: string } | null;
-  setSortConfig: (config: { key: string; direction: string }) => void;
-};
-
-const SortableHeader: React.FC<SortableHeaderProps> = ({ children, columnKey, sortConfig, setSortConfig }) => {
-  const isSorted = sortConfig?.key === columnKey;
-  const direction = isSorted ? sortConfig.direction : 'none';
-
-  const handleClick = () => {
-    let newDirection = 'ascending';
-    if (isSorted && sortConfig.direction === 'ascending') {
-      newDirection = 'descending';
-    }
-    setSortConfig({ key: columnKey, direction: newDirection });
-  };
-
-  return (
-    <Button variant="ghost" onClick={handleClick} className="pl-0">
-      {children}
-      {isSorted && direction === 'ascending' && <ArrowUp className="ml-2 h-4 w-4" />}
-      {isSorted && direction === 'descending' && <ArrowDown className="ml-2 h-4 w-4" />}
-    </Button>
-  );
-};
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+import FeedbackDetail from './admin/FeedbackDetail';
 
 const FeedbackManager: React.FC = () => {
   const {
@@ -117,25 +27,20 @@ const FeedbackManager: React.FC = () => {
     deleteFeedback,
   } = useFeedbackManager();
   const location = useLocation();
-  const [isResponseFormOpen, setIsResponseFormOpen] = useState(false);
-  const [respondingToFeedback, setRespondingToFeedback] = useState<Feedback | null>(null);
+  
+  const [selectedFeedbackId, setSelectedFeedbackId] = useState<string | null>(null);
   
   const [isFilterOpen, setIsFilterOpen] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
   const [ratingFilter, setRatingFilter] = useState<string[]>([]);
   const [classFilter, setClassFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: string } | null>({ key: 'created_at', direction: 'descending' });
 
   useEffect(() => {
     if (location.state) {
       const { classId, studentName } = location.state;
-      if (classId) {
-        setClassFilter(classId);
-      }
-      if (studentName) {
-        setSearchTerm(studentName);
-      }
+      if (classId) setClassFilter(classId);
+      if (studentName) setSearchTerm(studentName);
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -145,7 +50,6 @@ const FeedbackManager: React.FC = () => {
     setRatingFilter([]);
     setClassFilter('all');
     setSearchTerm('');
-    setSortConfig({ key: 'created_at', direction: 'descending' });
   };
 
   const activeFilterCount = [
@@ -166,7 +70,7 @@ const FeedbackManager: React.FC = () => {
     return Array.from(uniqueClasses.entries()).map(([id, data]) => ({ id, ...data })).sort((a, b) => a.period - b.period);
   }, [feedbackEntries]);
 
-  const filteredAndSortedFeedback = useMemo(() => {
+  const filteredFeedback = useMemo(() => {
     let filtered = [...feedbackEntries];
 
     if (statusFilter !== 'all') {
@@ -184,234 +88,177 @@ const FeedbackManager: React.FC = () => {
         `${entry.profiles?.first_name || ''} ${entry.profiles?.last_name || ''}`.toLowerCase().includes(lowercasedSearchTerm)
       );
     }
-
-    if (sortConfig !== null) {
-      filtered.sort((a, b) => {
-        let aValue: any;
-        let bValue: any;
-
-        if (sortConfig.key === 'student_name') {
-          aValue = `${a.profiles?.first_name || ''} ${a.profiles?.last_name || ''}`;
-          bValue = `${b.profiles?.first_name || ''} ${b.profiles?.last_name || ''}`;
-        } else if (sortConfig.key === 'class_name') {
-          aValue = a.classes?.name || '';
-          bValue = b.classes?.name || '';
-        } else {
-          aValue = a[sortConfig.key as keyof Feedback];
-          bValue = b[sortConfig.key as keyof Feedback];
-        }
-
-        if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
-        return 0;
-      });
-    }
+    
+    // Default sort by creation date descending
+    filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return filtered;
-  }, [feedbackEntries, statusFilter, ratingFilter, classFilter, searchTerm, sortConfig]);
+  }, [feedbackEntries, statusFilter, ratingFilter, classFilter, searchTerm]);
 
-  const handleUpdateResponse = async (values: FeedbackResponseFormValues) => {
-    if (!respondingToFeedback) return;
-    const updated = await updateAdminResponse(respondingToFeedback.id, values.admin_response || null);
-    if (updated) {
-      closeResponseForm();
+  const selectedFeedback = useMemo(() => {
+    return feedbackEntries.find(f => f.id === selectedFeedbackId) || null;
+  }, [selectedFeedbackId, feedbackEntries]);
+
+  // When filters change, if the selected feedback is no longer in the filtered list, deselect it.
+  useEffect(() => {
+    if (selectedFeedbackId && !filteredFeedback.find(f => f.id === selectedFeedbackId)) {
+      setSelectedFeedbackId(null);
     }
-  };
+  }, [filteredFeedback, selectedFeedbackId]);
 
-  const handleDeleteFeedback = async (feedbackId: string) => {
-    await deleteFeedback(feedbackId);
-  };
+  const renderFeedbackList = () => {
+    if (loading) {
+      return (
+        <div className="space-y-2 p-2">
+          {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
+        </div>
+      );
+    }
 
-  const openResponseForm = (feedback: Feedback) => {
-    setRespondingToFeedback(feedback);
-    setIsResponseFormOpen(true);
-  };
+    if (filteredFeedback.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-center p-4">
+          <Inbox className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold">No Feedback Found</h3>
+          <p className="text-sm text-muted-foreground">
+            No feedback entries match the current filters. Try adjusting your search.
+          </p>
+        </div>
+      );
+    }
 
-  const closeResponseForm = () => {
-    setIsResponseFormOpen(false);
-    setRespondingToFeedback(null);
+    return (
+      <ScrollArea className="h-full">
+        <div className="p-2 space-y-2">
+          {filteredFeedback.map(feedback => (
+            <button
+              key={feedback.id}
+              onClick={() => setSelectedFeedbackId(feedback.id)}
+              className={cn(
+                "w-full text-left p-3 border rounded-lg transition-colors",
+                "hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                selectedFeedbackId === feedback.id ? "bg-muted" : "bg-card"
+              )}
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex-grow">
+                  <p className="font-semibold">{feedback.profiles?.first_name} {feedback.profiles?.last_name}</p>
+                  <p className="text-sm text-muted-foreground">{feedback.classes.name}</p>
+                </div>
+                <RatingStars rating={feedback.rating} />
+              </div>
+              <p className="text-sm text-muted-foreground mt-2 truncate">
+                {feedback.comment || "No comment provided."}
+              </p>
+            </button>
+          ))}
+        </div>
+      </ScrollArea>
+    );
   };
 
   return (
-    <Card className="w-full max-w-6xl mx-auto mt-8">
+    <div className="h-[calc(100vh-150px)] flex flex-col">
       <CardHeader>
         <CardTitle>Manage Student Feedback</CardTitle>
+        <CardDescription>Review, respond to, and manage all student feedback entries.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <Collapsible
-          open={isFilterOpen}
-          onOpenChange={setIsFilterOpen}
-          className="mb-4 border rounded-lg"
-        >
-          <div className="flex items-center justify-between p-2 pr-4">
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="flex items-center text-sm font-semibold">
-                <Filter className="h-4 w-4 mr-2" />
-                Filters & Search
-                {activeFilterCount > 0 && (
-                  <Badge variant="secondary" className="ml-2">{activeFilterCount}</Badge>
-                )}
-                <ChevronsUpDown className="h-4 w-4 ml-2 text-muted-foreground" />
-              </Button>
-            </CollapsibleTrigger>
-            {activeFilterCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={handleClearFilters}>
-                <XCircle className="mr-2 h-4 w-4" />
-                Clear Filters
-              </Button>
-            )}
-          </div>
-          <CollapsibleContent>
-            <div className="flex flex-col gap-4 p-4 border-t">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  placeholder="Search by student name..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <Select value={classFilter} onValueChange={setClassFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by class..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Classes</SelectItem>
-                    {availableClasses.map(cls => (
-                      <SelectItem key={cls.id} value={cls.id}>{cls.name} (P{cls.period})</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+      
+      <Collapsible
+        open={isFilterOpen}
+        onOpenChange={setIsFilterOpen}
+        className="mb-4 border rounded-lg mx-6"
+      >
+        <div className="flex items-center justify-between p-2 pr-4">
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="flex items-center text-sm font-semibold">
+              <Filter className="h-4 w-4 mr-2" />
+              Filters & Search
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="ml-2">{activeFilterCount}</Badge>
+              )}
+              <ChevronsUpDown className="h-4 w-4 ml-2 text-muted-foreground" />
+            </Button>
+          </CollapsibleTrigger>
+          {activeFilterCount > 0 && (
+            <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+              <XCircle className="mr-2 h-4 w-4" />
+              Clear Filters
+            </Button>
+          )}
+        </div>
+        <CollapsibleContent>
+          <div className="flex flex-col gap-4 p-4 border-t">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                placeholder="Search by student name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Select value={classFilter} onValueChange={setClassFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by class..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {availableClasses.map(cls => (
+                    <SelectItem key={cls.id} value={cls.id}>{cls.name} (P{cls.period})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-muted-foreground">Status:</span>
+                <ToggleGroup type="single" value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
+                  <ToggleGroupItem value="all">All</ToggleGroupItem>
+                  <ToggleGroupItem value="unresponded">Unresponded</ToggleGroupItem>
+                  <ToggleGroupItem value="responded">Responded</ToggleGroupItem>
+                </ToggleGroup>
               </div>
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-muted-foreground">Status:</span>
-                  <ToggleGroup type="single" value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
-                    <ToggleGroupItem value="all">All</ToggleGroupItem>
-                    <ToggleGroupItem value="unresponded">Unresponded</ToggleGroupItem>
-                    <ToggleGroupItem value="responded">Responded</ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-                <Separator orientation="vertical" className="h-8 hidden md:block" />
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-muted-foreground">Ratings:</span>
-                  <ToggleGroup type="multiple" value={ratingFilter} onValueChange={setRatingFilter}>
-                    {[1, 2, 3, 4, 5].map(r => (
-                      <ToggleGroupItem key={r} value={r.toString()} className="p-2"><Star className="h-4 w-4" /></ToggleGroupItem>
-                    ))}
-                  </ToggleGroup>
-                </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-muted-foreground">Ratings:</span>
+                <ToggleGroup type="multiple" value={ratingFilter} onValueChange={setRatingFilter}>
+                  {[1, 2, 3, 4, 5].map(r => (
+                    <ToggleGroupItem key={r} value={r.toString()} className="p-2"><Star className="h-4 w-4" /></ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
               </div>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
-        {loading ? (
-          <Skeleton className="h-64 w-full" />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[24px] p-0"></TableHead>
-                <TableHead>
-                  <SortableHeader columnKey="student_name" sortConfig={sortConfig} setSortConfig={setSortConfig}>Student</SortableHeader>
-                </TableHead>
-                <TableHead>
-                  <SortableHeader columnKey="class_name" sortConfig={sortConfig} setSortConfig={setSortConfig}>Class</SortableHeader>
-                </TableHead>
-                <TableHead>
-                  <SortableHeader columnKey="rating" sortConfig={sortConfig} setSortConfig={setSortConfig}>Rating</SortableHeader>
-                </TableHead>
-                <TableHead>Comment</TableHead>
-                <TableHead>
-                  <SortableHeader columnKey="created_at" sortConfig={sortConfig} setSortConfig={setSortConfig}>Date</SortableHeader>
-                </TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAndSortedFeedback.length > 0 ? (
-                filteredAndSortedFeedback.map((feedback) => (
-                  <Collapsible asChild key={feedback.id}>
-                    <>
-                      <CollapsibleTrigger asChild>
-                        <TableRow className="cursor-pointer hover:bg-muted/50">
-                          <TableCell className="p-2">
-                            <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
-                          </TableCell>
-                          <TableCell>{feedback.profiles?.first_name} {feedback.profiles?.last_name}</TableCell>
-                          <TableCell>{feedback.classes.name}</TableCell>
-                          <TableCell><RatingStars rating={feedback.rating} /></TableCell>
-                          <TableCell className="max-w-[200px] truncate">{feedback.comment || 'N/A'}</TableCell>
-                          <TableCell>{new Date(feedback.created_at).toLocaleDateString()}</TableCell>
-                          <TableCell className="text-right">
-                            <Dialog open={isResponseFormOpen && respondingToFeedback?.id === feedback.id} onOpenChange={(isOpen) => !isOpen && closeResponseForm()}>
-                              <DialogTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openResponseForm(feedback); }} className="mr-2">
-                                  <MessageSquare className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="sm:max-w-md">
-                                <DialogHeader><DialogTitle>Respond to Feedback</DialogTitle></DialogHeader>
-                                {respondingToFeedback && (
-                                  <>
-                                    <div className="space-y-3 rounded-md border bg-muted/50 p-4">
-                                      <div className="flex justify-between items-center">
-                                        <span className="font-medium">{respondingToFeedback.profiles?.first_name} {respondingToFeedback.profiles?.last_name}</span>
-                                        <RatingStars rating={respondingToFeedback.rating} />
-                                      </div>
-                                      <blockquote className="mt-2 border-l-2 pl-4 italic text-foreground">{respondingToFeedback.comment || "No comment provided."}</blockquote>
-                                    </div>
-                                    <Separator />
-                                    <FeedbackResponseForm
-                                      initialData={{ admin_response: respondingToFeedback?.admin_response || "" }}
-                                      onSubmit={handleUpdateResponse}
-                                      onCancel={closeResponseForm}
-                                      isSubmitting={isSubmittingResponse}
-                                    />
-                                  </>
-                                )}
-                              </DialogContent>
-                            </Dialog>
-                            <ConfirmAlertDialog
-                              title="Are you absolutely sure?"
-                              description="This will permanently delete this feedback entry."
-                              onConfirm={() => handleDeleteFeedback(feedback.id)}
-                            >
-                              <Button variant="destructive" size="sm" onClick={(e) => e.stopPropagation()}><Trash2 className="h-4 w-4" /></Button>
-                            </ConfirmAlertDialog>
-                          </TableCell>
-                        </TableRow>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent asChild>
-                        <TableRow>
-                          <TableCell colSpan={7} className="p-0">
-                            <div className="p-4 bg-muted/20">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <h5 className="text-sm font-medium text-muted-foreground mb-1">Student Comment</h5>
-                                  <p className="text-sm whitespace-pre-wrap">{feedback.comment || 'No comment provided.'}</p>
-                                </div>
-                                <div>
-                                  <h5 className="text-sm font-medium text-muted-foreground mb-1">Admin Response</h5>
-                                  <p className="text-sm whitespace-pre-wrap">{feedback.admin_response || 'No response yet.'}</p>
-                                </div>
-                              </div>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      </CollapsibleContent>
-                    </>
-                  </Collapsible>
-                ))
+      <div className="flex-grow overflow-hidden px-6 pb-6">
+        <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg border">
+          <ResizablePanel defaultSize={35} minSize={25}>
+            {renderFeedbackList()}
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={65} minSize={40}>
+            <div className="h-full p-4">
+              {selectedFeedback ? (
+                <FeedbackDetail
+                  feedback={selectedFeedback}
+                  onUpdateResponse={updateAdminResponse}
+                  onDelete={deleteFeedback}
+                  isSubmitting={isSubmittingResponse}
+                  onClearSelection={() => setSelectedFeedbackId(null)}
+                />
               ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">No feedback matches the current filters.</TableCell>
-                </TableRow>
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold">Select Feedback</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Choose a feedback entry from the list to view its details and respond.
+                  </p>
+                </div>
               )}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
+    </div>
   );
 };
 
