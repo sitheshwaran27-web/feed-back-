@@ -1,19 +1,18 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useSession } from '@/components/SessionContextProvider';
 import ClassManager from '@/components/ClassManager';
 import FeedbackManager from '@/components/FeedbackManager';
 import UserManager from '@/components/UserManager';
 import FeedbackAnalytics from '@/components/FeedbackAnalytics';
-import TimetableManager from '@/components/TimetableManager'; // Import the new TimetableManager
+import TimetableManager from '@/components/TimetableManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DashboardStats from '@/components/DashboardStats'; // Import the new component
 
 const AdminDashboard = () => {
-  const { session, isLoading, isAdmin } = useSession();
-  const [profileLoading, setProfileLoading] = useState(true); // Keep this for initial profile fetch status
+  const { session, isLoading } = useSession();
 
-  // SessionContextProvider handles redirection if not authenticated or if not admin
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
@@ -22,12 +21,12 @@ const AdminDashboard = () => {
     );
   }
 
-  if (!session || !isAdmin) {
-    return null; // SessionContextProvider handles redirect
+  if (!session) {
+    return null; // ProtectedRoute handles the redirect
   }
 
   return (
-    <div className="flex flex-col items-center p-4 h-full"> {/* Added h-full */}
+    <div className="flex flex-col items-center p-4 h-full">
       <div className="w-full max-w-4xl text-center mb-8">
         <h1 className="text-4xl font-bold mb-4 text-gray-800 dark:text-gray-200">Admin Dashboard</h1>
         <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
@@ -35,10 +34,12 @@ const AdminDashboard = () => {
         </p>
       </div>
 
+      <DashboardStats /> {/* Add the stats component here */}
+
       <Tabs defaultValue="classes" className="w-full max-w-4xl">
-        <TabsList className="grid w-full grid-cols-5"> {/* Increased grid columns for new tab */}
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="classes">Classes</TabsTrigger>
-          <TabsTrigger value="timetable">Timetable</TabsTrigger> {/* New Timetable tab */}
+          <TabsTrigger value="timetable">Timetable</TabsTrigger>
           <TabsTrigger value="feedback">Feedback</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -46,7 +47,7 @@ const AdminDashboard = () => {
         <TabsContent value="classes">
           <ClassManager />
         </TabsContent>
-        <TabsContent value="timetable"> {/* New Timetable content */}
+        <TabsContent value="timetable">
           <TimetableManager />
         </TabsContent>
         <TabsContent value="feedback">
