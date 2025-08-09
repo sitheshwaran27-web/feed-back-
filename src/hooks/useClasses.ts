@@ -76,13 +76,13 @@ export const useClasses = () => {
 
   const deleteClass = async (id: string) => {
     const { error } = await supabase
-      .from('classes')
-      .delete()
-      .eq('id', id);
+      .rpc('delete_class_and_dependents', {
+        class_id_to_delete: id
+      });
 
     if (error) {
       console.error("Error deleting class:", error);
-      showError("Failed to delete class.");
+      showError(`Failed to delete class: ${error.message}`);
       return false;
     } else {
       showSuccess("Class deleted successfully!");
