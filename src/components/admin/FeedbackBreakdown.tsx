@@ -35,7 +35,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const FeedbackAnalytics: React.FC = () => {
+const FeedbackBreakdown: React.FC = () => {
   const { feedbackStats, loading } = useFeedbackAnalytics();
 
   const distributionChartData = feedbackStats.map(stat => ({
@@ -126,4 +126,4 @@ const FeedbackAnalytics: React.FC = () => {
   );
 };
 
-export default FeedbackAnalytics;
+export default FeedbackBreakdown;

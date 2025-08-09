@@ -77,3 +77,9 @@ export interface ClassPerformanceSummary {
   average_rating: number;
   feedback_count: number;
 }
+
+export interface FeedbackTrendPoint {
+  date: string;
+  submission_count: number;
+  average_rating: number | null;
+}
