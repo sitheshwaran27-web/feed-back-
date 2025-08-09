@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Star, MessageSquare, Loader2, Trash2 } from 'lucide-react';
+import { MessageSquare, Loader2, Trash2, Star } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,9 +16,8 @@ import { useFeedbackManager } from '@/hooks/useFeedbackManager';
 import { Feedback } from '@/types/supabase';
 import RatingStars from './RatingStars';
 import ConfirmAlertDialog from './ConfirmAlertDialog';
-import { useClasses } from '@/hooks/useClasses';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const formSchema = z.object({
   admin_response: z.string().max(500, "Response cannot exceed 500 characters").optional(),
@@ -56,7 +55,7 @@ const FeedbackResponseForm: React.FC<FeedbackResponseFormProps> = ({ initialData
             <FormItem>
               <FormLabel>Your Response</FormLabel>
               <FormControl>
-                <Textarea placeholder="Type your response here..." {...field} />
+                <Textarea placeholder="Type your response here..." {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -84,12 +83,36 @@ const FeedbackManager: React.FC = () => {
     isSubmittingResponse,
     updateAdminResponse,
     deleteFeedback,
-    classIdFilter,
-    setClassIdFilter,
   } = useFeedbackManager();
-  const { classes, loading: classesLoading } = useClasses();
   const [isResponseFormOpen, setIsResponseFormOpen] = useState(false);
   const [respondingToFeedback, setRespondingToFeedback] = useState<Feedback | null>(null);
+
+  const groupedFeedback = useMemo(() => {
+    if (!feedbackEntries) return [];
+    const groups: Record<string, { className: string; period: number; entries: Feedback[]; totalRating: number }> = {};
+
+    feedbackEntries.forEach(feedback => {
+      if (!feedback.class_id || !feedback.classes) return;
+      if (!groups[feedback.class_id]) {
+        groups[feedback.class_id] = {
+          className: feedback.classes.name,
+          period: feedback.classes.period,
+          entries: [],
+          totalRating: 0,
+        };
+      }
+      groups[feedback.class_id].entries.push(feedback);
+      groups[feedback.class_id].totalRating += feedback.rating;
+    });
+
+    return Object.entries(groups)
+      .map(([classId, group]) => ({
+        classId,
+        ...group,
+        averageRating: group.totalRating / group.entries.length,
+      }))
+      .sort((a, b) => a.period - b.period);
+  }, [feedbackEntries]);
 
   const handleUpdateResponse = async (values: FeedbackResponseFormValues) => {
     if (!respondingToFeedback) return;
@@ -116,134 +139,101 @@ const FeedbackManager: React.FC = () => {
 
   return (
     <Card className="w-full max-w-4xl mx-auto mt-8">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <CardTitle>Manage Student Feedback</CardTitle>
-        <div className="flex items-center space-x-2">
-          <Select
-            value={classIdFilter}
-            onValueChange={(value) => setClassIdFilter(value)}
-            disabled={classesLoading || loading}
-          >
-            <SelectTrigger className="w-[250px]">
-              <SelectValue placeholder="Filter by class..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Classes</SelectItem>
-              {classes.map((cls) => (
-                <SelectItem key={cls.id} value={cls.id}>
-                  {cls.name} (P{cls.period})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </CardHeader>
       <CardContent>
         {loading ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Class</TableHead>
-                <TableHead>Student</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Comment</TableHead>
-                <TableHead>Admin Response</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-40" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-40" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="space-y-2">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
         ) : feedbackEntries.length === 0 ? (
-          <p className="text-center">
-            {classIdFilter === 'all'
-              ? "No feedback submitted yet."
-              : "No feedback found for the selected class."}
-          </p>
+          <p className="text-center py-8">No feedback submitted yet.</p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Class</TableHead>
-                <TableHead>Student</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Comment</TableHead>
-                <TableHead>Admin Response</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {feedbackEntries.map((feedback: Feedback) => (
-                <TableRow key={feedback.id}>
-                  <TableCell>{feedback.classes?.name} (P{feedback.classes?.period})</TableCell>
-                  <TableCell>{feedback.profiles?.first_name} {feedback.profiles?.last_name}</TableCell>
-                  <TableCell>
-                    <RatingStars rating={feedback.rating} />
-                  </TableCell>
-                  <TableCell className="max-w-[200px] truncate">{feedback.comment || 'N/A'}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{feedback.admin_response || 'No response yet'}</TableCell>
-                  <TableCell className="text-right">
-                    <Dialog open={isResponseFormOpen && respondingToFeedback?.id === feedback.id} onOpenChange={(isOpen) => !isOpen && closeResponseForm()}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" onClick={() => openResponseForm(feedback)} className="mr-2">
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Respond to Feedback</DialogTitle>
-                        </DialogHeader>
-                        {respondingToFeedback && (
-                          <>
-                            <div className="space-y-3 rounded-md border bg-muted/50 p-4">
-                              <div className="flex justify-between items-center">
-                                <span className="font-medium">{respondingToFeedback.profiles?.first_name} {respondingToFeedback.profiles?.last_name}</span>
-                                <span className="text-sm text-muted-foreground">{respondingToFeedback.classes?.name} (P{respondingToFeedback.classes?.period})</span>
-                              </div>
-                              <RatingStars rating={respondingToFeedback.rating} />
-                              {respondingToFeedback.comment ? (
-                                <blockquote className="mt-2 border-l-2 pl-4 italic text-foreground">
-                                  {respondingToFeedback.comment}
-                                </blockquote>
-                              ) : (
-                                <p className="text-sm text-muted-foreground italic">No comment provided.</p>
-                              )}
-                            </div>
-                            <Separator />
-                            <FeedbackResponseForm
-                              initialData={{ admin_response: respondingToFeedback?.admin_response || "" }}
-                              onSubmit={handleUpdateResponse}
-                              onCancel={closeResponseForm}
-                              isSubmitting={isSubmittingResponse}
-                            />
-                          </>
-                        )}
-                      </DialogContent>
-                    </Dialog>
-                    <ConfirmAlertDialog
-                      title="Are you absolutely sure?"
-                      description="This action cannot be undone. This will permanently delete this feedback entry."
-                      onConfirm={() => handleDeleteFeedback(feedback.id)}
-                    >
-                      <Button variant="destructive" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </ConfirmAlertDialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <Accordion type="single" collapsible className="w-full">
+            {groupedFeedback.map((group) => (
+              <AccordionItem value={group.classId} key={group.classId}>
+                <AccordionTrigger>
+                  <div className="flex justify-between items-center w-full pr-4">
+                    <span className="font-semibold">{group.className} (P{group.period})</span>
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                      <span>{group.entries.length} submissions</span>
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 mr-1 text-yellow-500 fill-yellow-500" />
+                        <span>{group.averageRating.toFixed(1)} avg. rating</span>
+                      </div>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Student</TableHead>
+                        <TableHead>Rating</TableHead>
+                        <TableHead>Comment</TableHead>
+                        <TableHead>Admin Response</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {group.entries.map((feedback) => (
+                        <TableRow key={feedback.id}>
+                          <TableCell>{feedback.profiles?.first_name} {feedback.profiles?.last_name}</TableCell>
+                          <TableCell><RatingStars rating={feedback.rating} /></TableCell>
+                          <TableCell className="max-w-[200px] truncate">{feedback.comment || 'N/A'}</TableCell>
+                          <TableCell className="max-w-[200px] truncate">{feedback.admin_response || 'No response yet'}</TableCell>
+                          <TableCell className="text-right">
+                            <Dialog open={isResponseFormOpen && respondingToFeedback?.id === feedback.id} onOpenChange={(isOpen) => !isOpen && closeResponseForm()}>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm" onClick={() => openResponseForm(feedback)} className="mr-2">
+                                  <MessageSquare className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-md">
+                                <DialogHeader><DialogTitle>Respond to Feedback</DialogTitle></DialogHeader>
+                                {respondingToFeedback && (
+                                  <>
+                                    <div className="space-y-3 rounded-md border bg-muted/50 p-4">
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-medium">{respondingToFeedback.profiles?.first_name} {respondingToFeedback.profiles?.last_name}</span>
+                                        <RatingStars rating={respondingToFeedback.rating} />
+                                      </div>
+                                      {respondingToFeedback.comment ? (
+                                        <blockquote className="mt-2 border-l-2 pl-4 italic text-foreground">{respondingToFeedback.comment}</blockquote>
+                                      ) : (
+                                        <p className="text-sm text-muted-foreground italic">No comment provided.</p>
+                                      )}
+                                    </div>
+                                    <Separator />
+                                    <FeedbackResponseForm
+                                      initialData={{ admin_response: respondingToFeedback?.admin_response || "" }}
+                                      onSubmit={handleUpdateResponse}
+                                      onCancel={closeResponseForm}
+                                      isSubmitting={isSubmittingResponse}
+                                    />
+                                  </>
+                                )}
+                              </DialogContent>
+                            </Dialog>
+                            <ConfirmAlertDialog
+                              title="Are you absolutely sure?"
+                              description="This action cannot be undone. This will permanently delete this feedback entry."
+                              onConfirm={() => handleDeleteFeedback(feedback.id)}
+                            >
+                              <Button variant="destructive" size="sm"><Trash2 className="h-4 w-4" /></Button>
+                            </ConfirmAlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         )}
       </CardContent>
     </Card>

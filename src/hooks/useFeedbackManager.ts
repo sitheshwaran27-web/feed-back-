@@ -9,11 +9,10 @@ export const useFeedbackManager = () => {
   const [feedbackEntries, setFeedbackEntries] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmittingResponse, setIsSubmittingResponse] = useState(false);
-  const [classIdFilter, setClassIdFilter] = useState<string>('all'); // Filter state
 
   const fetchFeedback = useCallback(async () => {
     setLoading(true);
-    let query = supabase
+    const { data, error } = await supabase
       .from('feedback')
       .select(`
         id,
@@ -21,16 +20,11 @@ export const useFeedbackManager = () => {
         comment,
         admin_response,
         created_at,
+        class_id,
         classes (name, period),
         profiles (first_name, last_name)
       `)
       .order('created_at', { ascending: false });
-
-    if (classIdFilter !== 'all') {
-      query = query.eq('class_id', classIdFilter);
-    }
-
-    const { data, error } = await query;
 
     if (error) {
       console.error("Error fetching feedback:", error);
@@ -39,7 +33,7 @@ export const useFeedbackManager = () => {
       setFeedbackEntries(data || []);
     }
     setLoading(false);
-  }, [classIdFilter]);
+  }, []);
 
   useEffect(() => {
     fetchFeedback();
@@ -61,11 +55,8 @@ export const useFeedbackManager = () => {
       return null;
     } else {
       showSuccess("Feedback response updated successfully!");
-      setFeedbackEntries(prevEntries =>
-        prevEntries.map(entry =>
-          entry.id === data.id ? { ...entry, admin_response: data.admin_response } : entry
-        )
-      );
+      // Refetch to ensure data consistency after update
+      fetchFeedback();
       setIsSubmittingResponse(false);
       return data;
     }
@@ -95,7 +86,5 @@ export const useFeedbackManager = () => {
     fetchFeedback,
     updateAdminResponse,
     deleteFeedback,
-    classIdFilter,
-    setClassIdFilter,
   };
 };
