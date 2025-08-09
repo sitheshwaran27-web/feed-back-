@@ -40,6 +40,12 @@ const PerformanceList = ({ title, classes, icon: Icon, iconColor }: { title: str
   </Card>
 );
 
+interface ClassPerformanceProps {
+    topClasses: ClassPerformanceSummary[];
+    bottomClasses: ClassPerformanceSummary[];
+    loading: boolean;
+}
+
 const ClassPerformance: React.FC<ClassPerformanceProps> = ({ topClasses, bottomClasses, loading }) => {
   if (loading) {
     return (
