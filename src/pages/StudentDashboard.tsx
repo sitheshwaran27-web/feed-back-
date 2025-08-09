@@ -13,7 +13,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { DailyClass } from '@/types/supabase';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import StudentFeedbackHistory from '@/components/StudentFeedbackHistory';
+import RecentStudentFeedback from '@/components/RecentStudentFeedback';
 
 const StudentDashboard = () => {
   const { session, isLoading, isAdmin } = useSession();
@@ -166,7 +166,7 @@ const StudentDashboard = () => {
         </Card>
       )}
 
-      <StudentFeedbackHistory />
+      <RecentStudentFeedback />
     </div>
   );
 };

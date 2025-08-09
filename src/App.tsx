@@ -15,6 +15,7 @@ import AdminTimetablePage from "./pages/admin/Timetable";
 import AdminFeedbackPage from "./pages/admin/Feedback";
 import AdminUsersPage from "./pages/admin/Users";
 import AdminAnalyticsPage from "./pages/admin/Analytics";
+import StudentFeedbackHistoryPage from "./pages/StudentFeedbackHistoryPage";
 
 const App = () => (
   <div className="flex flex-col min-h-screen">
@@ -38,6 +39,14 @@ const App = () => (
         element={
           <ProtectedRoute>
             <Layout><StudentTimetable /></Layout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/student/feedback-history"
+        element={
+          <ProtectedRoute>
+            <Layout><StudentFeedbackHistoryPage /></Layout>
           </ProtectedRoute>
         } 
       />
