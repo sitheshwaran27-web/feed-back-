@@ -6,7 +6,6 @@ import StudentDashboard from "./pages/StudentDashboard";
 import ProfilePage from "./pages/ProfilePage";
 import StudentTimetable from "./pages/StudentTimetable";
 import Layout from "./components/Layout";
-import { MadeWithDyad } from "./components/made-with-dyad";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboardPage from "./pages/admin/Dashboard";
@@ -82,7 +81,6 @@ const App = () => (
       {/* Catch-all for any other undefined routes */}
       <Route path="*" element={<Layout><NotFound /></Layout>} />
     </Routes>
-    <MadeWithDyad />
   </div>
 );
 
