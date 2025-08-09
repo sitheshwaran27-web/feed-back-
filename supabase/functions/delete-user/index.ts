@@ -28,7 +28,21 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Delete the user from auth.users
+    // Manually delete associated feedback first to avoid orphaned data
+    const { error: feedbackError } = await supabaseAdmin
+      .from('feedback')
+      .delete()
+      .eq('student_id', userId);
+
+    if (feedbackError) {
+      console.error('Error deleting user feedback:', feedbackError);
+      return new Response(JSON.stringify({ error: `Failed to delete user's feedback: ${feedbackError.message}` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+
+    // Now, delete the user from auth.users. This will cascade to the profiles table.
     const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (authError) {
@@ -39,10 +53,7 @@ serve(async (req) => {
       });
     }
 
-    // Note: Due to CASCADE DELETE on profiles table, the profile entry should be automatically deleted.
-    // If other tables also have CASCADE DELETE, they will be handled too.
-
-    return new Response(JSON.stringify({ message: 'User and associated data deleted successfully' }), {
+    return new Response(JSON.stringify({ message: 'User and all associated data deleted successfully' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
