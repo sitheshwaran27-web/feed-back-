@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Loader2, Trash2, Star, ArrowUp, ArrowDown } from 'lucide-react';
+import { MessageSquare, Loader2, Trash2, Star, ArrowUp, ArrowDown, Filter, ChevronsUpDown, XCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -19,9 +19,10 @@ import RatingStars from './RatingStars';
 import ConfirmAlertDialog from './ConfirmAlertDialog';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
   admin_response: z.string().max(500, "Response cannot exceed 500 characters").optional(),
@@ -119,7 +120,7 @@ const FeedbackManager: React.FC = () => {
   const [isResponseFormOpen, setIsResponseFormOpen] = useState(false);
   const [respondingToFeedback, setRespondingToFeedback] = useState<Feedback | null>(null);
   
-  // State for filters and sorting
+  const [isFilterOpen, setIsFilterOpen] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
   const [ratingFilter, setRatingFilter] = useState<string[]>([]);
   const [classFilter, setClassFilter] = useState('all');
@@ -130,10 +131,24 @@ const FeedbackManager: React.FC = () => {
     const preselectedClassId = location.state?.classId;
     if (preselectedClassId) {
       setClassFilter(preselectedClassId);
-      // Clear the state so the filter doesn't re-apply on navigation within the page
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
+
+  const handleClearFilters = () => {
+    setStatusFilter('all');
+    setRatingFilter([]);
+    setClassFilter('all');
+    setSearchTerm('');
+    setSortConfig({ key: 'created_at', direction: 'descending' });
+  };
+
+  const activeFilterCount = [
+    statusFilter !== 'all',
+    ratingFilter.length > 0,
+    classFilter !== 'all',
+    searchTerm !== '',
+  ].filter(Boolean).length;
 
   const availableClasses = useMemo(() => {
     if (!feedbackEntries) return [];
@@ -218,45 +233,71 @@ const FeedbackManager: React.FC = () => {
         <CardTitle>Manage Student Feedback</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col gap-4 mb-4 p-4 border rounded-lg">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              placeholder="Search by student name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Select value={classFilter} onValueChange={setClassFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by class..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {availableClasses.map(cls => (
-                  <SelectItem key={cls.id} value={cls.id}>{cls.name} (P{cls.period})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <Collapsible
+          open={isFilterOpen}
+          onOpenChange={setIsFilterOpen}
+          className="mb-4 border rounded-lg"
+        >
+          <div className="flex items-center justify-between p-2 pr-4">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="flex items-center text-sm font-semibold">
+                <Filter className="h-4 w-4 mr-2" />
+                Filters & Search
+                {activeFilterCount > 0 && (
+                  <Badge variant="secondary" className="ml-2">{activeFilterCount}</Badge>
+                )}
+                <ChevronsUpDown className="h-4 w-4 ml-2 text-muted-foreground" />
+              </Button>
+            </CollapsibleTrigger>
+            {activeFilterCount > 0 && (
+              <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+                <XCircle className="mr-2 h-4 w-4" />
+                Clear Filters
+              </Button>
+            )}
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-muted-foreground">Status:</span>
-              <ToggleGroup type="single" value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
-                <ToggleGroupItem value="all">All</ToggleGroupItem>
-                <ToggleGroupItem value="unresponded">Unresponded</ToggleGroupItem>
-                <ToggleGroupItem value="responded">Responded</ToggleGroupItem>
-              </ToggleGroup>
+          <CollapsibleContent>
+            <div className="flex flex-col gap-4 p-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  placeholder="Search by student name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <Select value={classFilter} onValueChange={setClassFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by class..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Classes</SelectItem>
+                    {availableClasses.map(cls => (
+                      <SelectItem key={cls.id} value={cls.id}>{cls.name} (P{cls.period})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-muted-foreground">Status:</span>
+                  <ToggleGroup type="single" value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
+                    <ToggleGroupItem value="all">All</ToggleGroupItem>
+                    <ToggleGroupItem value="unresponded">Unresponded</ToggleGroupItem>
+                    <ToggleGroupItem value="responded">Responded</ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+                <Separator orientation="vertical" className="h-8 hidden md:block" />
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-muted-foreground">Ratings:</span>
+                  <ToggleGroup type="multiple" value={ratingFilter} onValueChange={setRatingFilter}>
+                    {[1, 2, 3, 4, 5].map(r => (
+                      <ToggleGroupItem key={r} value={r.toString()} className="p-2"><Star className="h-4 w-4" /></ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                </div>
+              </div>
             </div>
-            <Separator orientation="vertical" className="h-8 hidden md:block" />
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-muted-foreground">Ratings:</span>
-              <ToggleGroup type="multiple" value={ratingFilter} onValueChange={setRatingFilter}>
-                {[1, 2, 3, 4, 5].map(r => (
-                  <ToggleGroupItem key={r} value={r.toString()}><Star className="h-4 w-4" /></ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </div>
-          </div>
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         {loading ? (
           <Skeleton className="h-64 w-full" />
