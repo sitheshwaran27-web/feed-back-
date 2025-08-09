@@ -52,23 +52,19 @@ export const useTimetable = () => {
   const addTimetableEntry = async (values: { day_of_week: number; class_id: string }) => {
     setIsSubmitting(true);
 
-    // Check for existing entry
-    const { data: existingEntry, error: checkError } = await supabase
-      .from('timetables')
-      .select('id')
-      .eq('day_of_week', values.day_of_week)
-      .eq('class_id', values.class_id)
-      .single();
-
-    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows found
-      console.error("Error checking for existing timetable entry:", checkError);
-      showError("Failed to check for existing timetable entry.");
+    const classToAdd = availableClasses.find(c => c.id === values.class_id);
+    if (!classToAdd) {
+      showError("Selected class could not be found.");
       setIsSubmitting(false);
       return null;
     }
 
-    if (existingEntry) {
-      showError("This class is already scheduled for this day.");
+    const existingEntryForPeriod = timetableEntries.find(entry =>
+      entry.day_of_week === values.day_of_week && entry.classes.period === classToAdd.period
+    );
+
+    if (existingEntryForPeriod) {
+      showError(`A class is already scheduled for Period ${classToAdd.period} on this day.`);
       setIsSubmitting(false);
       return null;
     }
@@ -100,24 +96,21 @@ export const useTimetable = () => {
   const updateTimetableEntry = async (id: string, values: { day_of_week?: number; class_id?: string }) => {
     setIsSubmitting(true);
 
-    // Check for existing entry with the new values, excluding the current entry being updated
-    const { data: existingEntry, error: checkError } = await supabase
-      .from('timetables')
-      .select('id')
-      .eq('day_of_week', values.day_of_week)
-      .eq('class_id', values.class_id)
-      .neq('id', id) // Exclude the current entry from the check
-      .single();
-
-    if (checkError && checkError.code !== 'PGRST116') {
-      console.error("Error checking for existing timetable entry during update:", checkError);
-      showError("Failed to check for existing timetable entry.");
+    const classToUpdate = availableClasses.find(c => c.id === values.class_id);
+    if (!classToUpdate) {
+      showError("Selected class could not be found.");
       setIsSubmitting(false);
       return null;
     }
 
-    if (existingEntry) {
-      showError("This class is already scheduled for this day.");
+    const existingEntryForPeriod = timetableEntries.find(entry =>
+      entry.id !== id &&
+      entry.day_of_week === values.day_of_week &&
+      entry.classes.period === classToUpdate.period
+    );
+
+    if (existingEntryForPeriod) {
+      showError(`Another class is already scheduled for Period ${classToUpdate.period} on this day.`);
       setIsSubmitting(false);
       return null;
     }
@@ -170,8 +163,8 @@ export const useTimetable = () => {
     loading,
     isSubmitting,
     addTimetableEntry,
-    updateTimetableEntry, // Expose the new update function
+    updateTimetableEntry,
     deleteTimetableEntry,
-    fetchData, // Expose for manual refresh if needed
+    fetchData,
   };
 };
