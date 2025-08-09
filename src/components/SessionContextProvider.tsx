@@ -3,8 +3,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { showError, showSuccess } from "@/utils/toast";
 
 interface SessionContextType {
   session: Session | null;
@@ -21,66 +19,53 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isProfileIncompleteRedirect, setIsProfileIncompleteRedirect] = useState(false);
-  const navigate = useNavigate();
-
-  const handleSession = async (currentSession: Session | null) => {
-    setIsLoading(true);
-    if (currentSession) {
-      setSession(currentSession);
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('is_admin, first_name, last_name')
-        .eq('id', currentSession.user.id)
-        .single();
-
-      if (profileError || !profile?.first_name || !profile?.last_name) {
-        console.error("Profile incomplete or error fetching profile:", profileError);
-        showError("Please complete your profile details.");
-        setIsAdmin(profile?.is_admin || false); // Still set admin status if profile exists but is incomplete
-        setIsProfileIncompleteRedirect(true);
-        navigate("/profile");
-      } else {
-        setIsAdmin(profile.is_admin);
-        setIsProfileIncompleteRedirect(false);
-        if (profile.is_admin) {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/student/dashboard");
-        }
-      }
-    } else {
-      setSession(null);
-      setIsAdmin(false);
-      setIsProfileIncompleteRedirect(false);
-      navigate("/login");
-    }
-    setIsLoading(false);
-  };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      if (event === 'SIGNED_OUT') {
+    const checkSessionAndProfile = async () => {
+      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error("Error getting session:", sessionError);
         setSession(null);
         setIsAdmin(false);
         setIsProfileIncompleteRedirect(false);
-        navigate("/login");
-        showError("You have been signed out.");
-      } else if (currentSession) {
-        handleSession(currentSession);
+        setIsLoading(false);
+        return;
+      }
+
+      if (currentSession) {
+        setSession(currentSession);
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_admin, first_name, last_name')
+          .eq('id', currentSession.user.id)
+          .single();
+
+        if (profileError || !profile?.first_name || !profile?.last_name) {
+          setIsAdmin(profile?.is_admin || false);
+          setIsProfileIncompleteRedirect(true);
+        } else {
+          setIsAdmin(profile.is_admin);
+          setIsProfileIncompleteRedirect(false);
+        }
       } else {
         setSession(null);
         setIsAdmin(false);
         setIsProfileIncompleteRedirect(false);
-        navigate("/login");
       }
-    });
+      setIsLoading(false);
+    };
 
-    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
-      handleSession(initialSession);
+    checkSessionAndProfile();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // On SIGNED_IN or SIGNED_OUT, a full profile check is needed.
+      setIsLoading(true);
+      checkSessionAndProfile();
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, []);
 
   return (
     <SessionContext.Provider value={{ session, isLoading, isAdmin, isProfileIncompleteRedirect, setIsProfileIncompleteRedirect }}>

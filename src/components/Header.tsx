@@ -18,102 +18,61 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils'; // Import cn utility for conditional class names
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Import Avatar components
-import { useProfile } from '@/hooks/useProfile'; // Import useProfile hook
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useProfile } from '@/hooks/useProfile';
 
 const Header: React.FC = () => {
-  const { session, isLoading, isAdmin, isProfileIncompleteRedirect } = useSession();
-  const { profile, loading: profileLoading } = useProfile(); // Fetch profile for avatar
+  const { session, isLoading, isAdmin } = useSession();
+  const { profile, loading: profileLoading } = useProfile();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    // SessionContextProvider will handle the redirect to /login
   };
 
   if (isLoading || !session || profileLoading) {
-    return null; // Don't render header if loading or not authenticated or profile is loading
+    // Return a minimal header or null during loading/unauthenticated states
+    return (
+      <header className="bg-primary text-primary-foreground p-4 shadow-md w-full">
+        <div className="container mx-auto flex justify-between items-center">
+          <span className="text-2xl font-bold">Feedback Portal</span>
+          <ThemeToggle />
+        </div>
+      </header>
+    );
   }
-
-  // Disable navigation if profile is incomplete and user was redirected
-  const disableNavigation = isProfileIncompleteRedirect;
-  const disabledTooltipContent = "Please complete your profile first to access other pages.";
 
   return (
     <header className="bg-primary text-primary-foreground p-4 shadow-md w-full">
       <div className="container mx-auto flex justify-between items-center">
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Link to={isAdmin ? "/admin/dashboard" : "/student/dashboard"}
-              className={cn(
-                "text-2xl font-bold",
-                disableNavigation && "opacity-60 cursor-not-allowed"
-              )}
-              onClick={(e) => disableNavigation && e.preventDefault()} // Prevent navigation if disabled
-            >
-              Feedback Portal
+        <Link to={isAdmin ? "/admin/dashboard" : "/student/dashboard"} className="text-2xl font-bold">
+          Feedback Portal
+        </Link>
+
+        <nav className="flex items-center space-x-2 sm:space-x-4">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={profile?.avatar_url || undefined} alt="User Avatar" />
+            <AvatarFallback>
+              <User className="h-4 w-4" />
+            </AvatarFallback>
+          </Avatar>
+
+          <Button asChild variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10 hidden sm:flex">
+            <Link to={isAdmin ? "/admin/dashboard" : "/student/dashboard"}>
+              <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
             </Link>
-          </TooltipTrigger>
-          {disableNavigation && <TooltipContent>{disabledTooltipContent}</TooltipContent>}
-        </Tooltip>
+          </Button>
 
-        <nav className="flex items-center space-x-4">
-          {profile?.avatar_url ? (
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={profile.avatar_url} alt="User Avatar" />
-              <AvatarFallback>
-                <User className="h-4 w-4" />
-              </AvatarFallback>
-            </Avatar>
-          ) : (
-            <Avatar className="h-8 w-8">
-              <AvatarFallback>
-                <User className="h-4 w-4" />
-              </AvatarFallback>
-            </Avatar>
-          )}
-
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <Button asChild variant="ghost" className={cn(
-                "text-primary-foreground hover:bg-primary-foreground/10",
-                disableNavigation && "opacity-60 cursor-not-allowed"
-              )} disabled={disableNavigation}>
-                <Link to={isAdmin ? "/admin/dashboard" : "/student/dashboard"}>
-                  <LayoutDashboard className="mr-2 h-4 w-4" /> {isAdmin ? "Admin Dashboard" : "Student Dashboard"}
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            {disableNavigation && <TooltipContent>{disabledTooltipContent}</TooltipContent>}
-          </Tooltip>
-
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <Button asChild variant="ghost" className={cn(
-                "text-primary-foreground hover:bg-primary-foreground/10",
-                disableNavigation && "opacity-60 cursor-not-allowed"
-              )} disabled={disableNavigation}>
-                <Link to="/profile">
-                  <User className="mr-2 h-4 w-4" /> Profile
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            {disableNavigation && <TooltipContent>{disabledTooltipContent}</TooltipContent>}
-          </Tooltip>
+          <Button asChild variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
+            <Link to="/profile">
+              <User className="mr-2 h-4 w-4" /> Profile
+            </Link>
+          </Button>
 
           <ThemeToggle />
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" className={cn(
-                "text-primary-foreground hover:bg-primary-foreground/10",
-                disableNavigation && "opacity-60 cursor-not-allowed"
-              )} disabled={disableNavigation}>
+              <Button variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
                 <LogOut className="mr-2 h-4 w-4" /> Sign Out
               </Button>
             </AlertDialogTrigger>

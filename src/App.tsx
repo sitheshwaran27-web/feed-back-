@@ -7,21 +7,43 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ProfilePage from "./pages/ProfilePage";
 import Layout from "./components/Layout";
 import { MadeWithDyad } from "./components/made-with-dyad";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => (
   <div className="flex flex-col min-h-screen">
     <Routes>
-      {/* Public Routes - now wrapped with Layout */}
+      {/* Public Routes */}
       <Route path="/" element={<Layout><Index /></Layout>} />
       <Route path="/login" element={<Layout><Login /></Layout>} />
       <Route path="/not-found" element={<Layout><NotFound /></Layout>} />
 
-      {/* Authenticated Routes - wrapped with Layout */}
-      <Route path="/student/dashboard" element={<Layout><StudentDashboard /></Layout>} />
-      <Route path="/admin/dashboard" element={<Layout><AdminDashboard /></Layout>} />
-      <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
+      {/* Authenticated Routes */}
+      <Route 
+        path="/student/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Layout><StudentDashboard /></Layout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/dashboard" 
+        element={
+          <ProtectedRoute requireAdmin={true}>
+            <Layout><AdminDashboard /></Layout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <Layout><ProfilePage /></Layout>
+          </ProtectedRoute>
+        } 
+      />
 
-      {/* Catch-all for any other undefined routes, redirect to NotFound */}
+      {/* Catch-all for any other undefined routes */}
       <Route path="*" element={<Layout><NotFound /></Layout>} />
     </Routes>
     <MadeWithDyad />
