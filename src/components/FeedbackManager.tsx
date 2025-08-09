@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -114,6 +115,7 @@ const FeedbackManager: React.FC = () => {
     updateAdminResponse,
     deleteFeedback,
   } = useFeedbackManager();
+  const location = useLocation();
   const [isResponseFormOpen, setIsResponseFormOpen] = useState(false);
   const [respondingToFeedback, setRespondingToFeedback] = useState<Feedback | null>(null);
   
@@ -123,6 +125,15 @@ const FeedbackManager: React.FC = () => {
   const [classFilter, setClassFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: string } | null>({ key: 'created_at', direction: 'descending' });
+
+  useEffect(() => {
+    const preselectedClassId = location.state?.classId;
+    if (preselectedClassId) {
+      setClassFilter(preselectedClassId);
+      // Clear the state so the filter doesn't re-apply on navigation within the page
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const availableClasses = useMemo(() => {
     if (!feedbackEntries) return [];

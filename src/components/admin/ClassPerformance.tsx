@@ -5,13 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowUpCircle, ArrowDownCircle, Star } from 'lucide-react';
 import { ClassPerformanceSummary } from '@/types/supabase';
-import RatingStars from '../RatingStars';
-
-interface ClassPerformanceProps {
-  topClasses: ClassPerformanceSummary[];
-  bottomClasses: ClassPerformanceSummary[];
-  loading: boolean;
-}
+import { Link } from 'react-router-dom';
 
 const PerformanceList = ({ title, classes, icon: Icon, iconColor }: { title: string, classes: ClassPerformanceSummary[], icon: React.ElementType, iconColor: string }) => (
   <Card>
@@ -22,17 +16,23 @@ const PerformanceList = ({ title, classes, icon: Icon, iconColor }: { title: str
       </CardTitle>
     </CardHeader>
     <CardContent>
-      <ul className="space-y-4">
+      <ul className="space-y-1">
         {classes.map(cls => (
-          <li key={cls.class_id} className="flex items-center justify-between">
-            <div>
-              <p className="font-semibold">{cls.class_name}</p>
-              <p className="text-sm text-muted-foreground">{cls.feedback_count} submissions</p>
-            </div>
-            <div className="flex items-center">
-              <span className="font-bold mr-2">{cls.average_rating.toFixed(1)}</span>
-              <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-            </div>
+          <li key={cls.class_id}>
+            <Link
+              to="/admin/feedback"
+              state={{ classId: cls.class_id }}
+              className="flex items-center justify-between p-3 rounded-md hover:bg-muted"
+            >
+              <div>
+                <p className="font-semibold">{cls.class_name}</p>
+                <p className="text-sm text-muted-foreground">{cls.feedback_count} submissions</p>
+              </div>
+              <div className="flex items-center">
+                <span className="font-bold mr-2">{cls.average_rating.toFixed(1)}</span>
+                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+              </div>
+            </Link>
           </li>
         ))}
       </ul>

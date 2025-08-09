@@ -53,26 +53,32 @@ const RecentFeedback: React.FC<RecentFeedbackProps> = ({ feedback, loading }) =>
         </Button>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-4">
+        <ul className="space-y-2">
           {feedback.map(item => (
-            <li key={item.id} className="flex items-start space-x-4">
-              <Avatar>
-                <AvatarImage src={item.profiles?.avatar_url || undefined} />
-                <AvatarFallback>
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-grow">
-                <div className="flex justify-between items-center">
-                  <p className="font-semibold">
-                    {item.profiles?.first_name || 'Student'} on {item.classes.name}
+            <li key={item.id}>
+              <Link
+                to="/admin/feedback"
+                state={{ classId: item.class_id }}
+                className="flex items-start space-x-4 p-2 rounded-md hover:bg-muted"
+              >
+                <Avatar>
+                  <AvatarImage src={item.profiles?.avatar_url || undefined} />
+                  <AvatarFallback>
+                    <User className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-grow">
+                  <div className="flex justify-between items-center">
+                    <p className="font-semibold">
+                      {item.profiles?.first_name || 'Student'} on {item.classes.name}
+                    </p>
+                    <RatingStars rating={item.rating} />
+                  </div>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {item.comment || 'No comment provided.'}
                   </p>
-                  <RatingStars rating={item.rating} />
                 </div>
-                <p className="text-sm text-muted-foreground truncate">
-                  {item.comment || 'No comment provided.'}
-                </p>
-              </div>
+              </Link>
             </li>
           ))}
         </ul>
