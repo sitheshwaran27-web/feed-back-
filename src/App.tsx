@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProfilePage from "./pages/ProfilePage";
+import StudentTimetable from "./pages/StudentTimetable";
 import Layout from "./components/Layout";
 import { MadeWithDyad } from "./components/made-with-dyad";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -23,6 +24,14 @@ const App = () => (
         element={
           <ProtectedRoute>
             <Layout><StudentDashboard /></Layout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/student/timetable"
+        element={
+          <ProtectedRoute>
+            <Layout><StudentTimetable /></Layout>
           </ProtectedRoute>
         } 
       />

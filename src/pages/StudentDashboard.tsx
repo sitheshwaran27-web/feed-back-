@@ -6,13 +6,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import FeedbackForm from '@/components/FeedbackForm';
-import { CheckCircle, Star } from 'lucide-react';
+import { CheckCircle, Star, CalendarDays } from 'lucide-react';
 import { useDailyClasses } from '@/hooks/useDailyClasses';
 import { useStudentFeedbackHistory } from '@/hooks/useStudentFeedbackHistory';
 import { Skeleton } from '@/components/ui/skeleton';
 import { showError, showSuccess } from '@/utils/toast';
-import { DailyClass, FeedbackHistoryEntry } from '@/types/supabase'; // Import DailyClass and FeedbackHistoryEntry
-import RatingStars from '@/components/RatingStars'; // Import the new component
+import { DailyClass, FeedbackHistoryEntry } from '@/types/supabase';
+import RatingStars from '@/components/RatingStars';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const StudentDashboard = () => {
   const { session, isLoading, isAdmin } = useSession();
@@ -33,7 +35,6 @@ const StudentDashboard = () => {
 
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
-  // SessionContextProvider handles redirection if not authenticated or if admin
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
@@ -43,7 +44,7 @@ const StudentDashboard = () => {
   }
 
   if (!session || isAdmin) {
-    return null; // SessionContextProvider handles redirect
+    return null;
   }
 
   const handleFeedbackSubmit = async (values: { rating: number; comment?: string }) => {
@@ -65,7 +66,6 @@ const StudentDashboard = () => {
       showError("Failed to submit feedback. You might have already submitted feedback for this class.");
     } else {
       showSuccess("Feedback submitted successfully!");
-      // Manually trigger re-fetch for both daily classes and history to update UI
       fetchDailyClasses();
       fetchFeedbackHistory(session.user.id);
     }
@@ -73,9 +73,17 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col items-center p-4 h-full"> {/* Added h-full */}
-      <div className="w-full max-w-4xl text-center mb-8">
-        <h1 className="text-4xl font-bold mb-4 text-gray-800 dark:text-gray-200">Student Dashboard</h1>
+    <div className="flex flex-col items-center p-4 h-full">
+      <div className="w-full max-w-4xl mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200">Student Dashboard</h1>
+          <Button asChild variant="outline">
+            <Link to="/student/timetable">
+              <CalendarDays className="mr-2 h-4 w-4" />
+              View Full Timetable
+            </Link>
+          </Button>
+        </div>
         <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
           Welcome, {session.user.email}!
         </p>
@@ -83,7 +91,7 @@ const StudentDashboard = () => {
 
       <Card className="w-full max-w-4xl mx-auto mb-8">
         <CardHeader>
-          <CardTitle>Your Daily Timetable</CardTitle>
+          <CardTitle>Today's Timetable</CardTitle>
         </CardHeader>
         <CardContent>
           {classesLoading ? (
@@ -164,7 +172,6 @@ const StudentDashboard = () => {
         </Card>
       )}
 
-      {/* Student Feedback History Section */}
       <Card className="w-full max-w-4xl mx-auto mt-8">
         <CardHeader>
           <CardTitle>Your Feedback History</CardTitle>
@@ -188,7 +195,7 @@ const StudentDashboard = () => {
                     <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-40" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-40" /></TableCell>
-                    <TableCell><Skeleton className className="h-6 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
