@@ -19,6 +19,7 @@ import ConfirmAlertDialog from './ConfirmAlertDialog';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   admin_response: z.string().max(500, "Response cannot exceed 500 characters").optional(),
@@ -87,23 +88,22 @@ const FeedbackManager: React.FC = () => {
   } = useFeedbackManager();
   const [isResponseFormOpen, setIsResponseFormOpen] = useState(false);
   const [respondingToFeedback, setRespondingToFeedback] = useState<Feedback | null>(null);
-  const [filter, setFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [ratingFilter, setRatingFilter] = useState<string[]>([]);
 
   const filteredFeedbackEntries = useMemo(() => {
     if (!feedbackEntries) return [];
-    if (filter === 'all') {
-      return feedbackEntries;
-    }
     return feedbackEntries.filter(entry => {
-      if (filter === 'responded') {
-        return !!entry.admin_response;
-      }
-      if (filter === 'unresponded') {
-        return !entry.admin_response;
-      }
-      return true;
+      const statusMatch =
+        statusFilter === 'all' ||
+        (statusFilter === 'responded' && !!entry.admin_response) ||
+        (statusFilter === 'unresponded' && !entry.admin_response);
+
+      const ratingMatch = ratingFilter.length === 0 || ratingFilter.includes(entry.rating.toString());
+
+      return statusMatch && ratingMatch;
     });
-  }, [feedbackEntries, filter]);
+  }, [feedbackEntries, statusFilter, ratingFilter]);
 
   const groupedFeedback = useMemo(() => {
     if (!filteredFeedbackEntries) return [];
@@ -161,19 +161,38 @@ const FeedbackManager: React.FC = () => {
         <CardTitle>Manage Student Feedback</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center space-x-2 mb-4">
-          <ToggleGroup
-            type="single"
-            defaultValue="all"
-            value={filter}
-            onValueChange={(value) => {
-              if (value) setFilter(value);
-            }}
-          >
-            <ToggleGroupItem value="all">All</ToggleGroupItem>
-            <ToggleGroupItem value="unresponded">Unresponded</ToggleGroupItem>
-            <ToggleGroupItem value="responded">Responded</ToggleGroupItem>
-          </ToggleGroup>
+        <div className="flex flex-wrap items-center gap-4 mb-4 p-2 border rounded-lg">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-muted-foreground">Status:</span>
+            <ToggleGroup
+              type="single"
+              defaultValue="all"
+              value={statusFilter}
+              onValueChange={(value) => {
+                if (value) setStatusFilter(value);
+              }}
+            >
+              <ToggleGroupItem value="all">All</ToggleGroupItem>
+              <ToggleGroupItem value="unresponded">Unresponded</ToggleGroupItem>
+              <ToggleGroupItem value="responded">Responded</ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+          <Separator orientation="vertical" className="h-8" />
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-muted-foreground">Ratings:</span>
+            <ToggleGroup
+              type="multiple"
+              value={ratingFilter}
+              onValueChange={setRatingFilter}
+              aria-label="Filter by rating"
+            >
+              {[1, 2, 3, 4, 5].map(rating => (
+                <ToggleGroupItem key={rating} value={rating.toString()} aria-label={`Toggle ${rating} star`}>
+                  <Star className={cn("h-4 w-4", ratingFilter.includes(rating.toString()) ? "text-yellow-500 fill-yellow-500" : "text-yellow-300 fill-yellow-300")} />
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
         </div>
         {loading ? (
           <div className="space-y-2">
@@ -183,7 +202,7 @@ const FeedbackManager: React.FC = () => {
           </div>
         ) : groupedFeedback.length === 0 ? (
           <p className="text-center py-8">
-            {filter === 'all' ? 'No feedback submitted yet.' : `No ${filter} feedback found.`}
+            No feedback matches the current filters.
           </p>
         ) : (
           <Accordion type="single" collapsible className="w-full">
