@@ -8,15 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import FeedbackForm from '@/components/FeedbackForm';
 import { CheckCircle, Star, CalendarDays } from 'lucide-react';
 import { useDailyClasses } from '@/hooks/useDailyClasses';
-import { useStudentFeedbackHistory } from '@/hooks/useStudentFeedbackHistory';
 import { Skeleton } from '@/components/ui/skeleton';
 import { showError, showSuccess } from '@/utils/toast';
-import { DailyClass, FeedbackHistoryEntry } from '@/types/supabase';
-import RatingStars from '@/components/RatingStars';
+import { DailyClass } from '@/types/supabase';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Separator } from '@/components/ui/separator';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import StudentFeedbackHistory from '@/components/StudentFeedbackHistory';
 
 const StudentDashboard = () => {
   const { session, isLoading, isAdmin } = useSession();
@@ -28,12 +25,6 @@ const StudentDashboard = () => {
     loading: classesLoading,
     fetchDailyClasses
   } = useDailyClasses();
-
-  const {
-    feedbackHistory,
-    loading: feedbackHistoryLoading,
-    fetchFeedbackHistory
-  } = useStudentFeedbackHistory();
 
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
@@ -69,7 +60,8 @@ const StudentDashboard = () => {
     } else {
       showSuccess("Feedback submitted successfully!");
       fetchDailyClasses();
-      fetchFeedbackHistory(session.user.id);
+      // The history component will refetch on its own if we trigger a re-render or if we expose a refetch function.
+      // For now, we'll rely on the user navigating or refreshing to see the new entry in the paginated list.
     }
     setIsSubmittingFeedback(false);
   };
@@ -174,55 +166,7 @@ const StudentDashboard = () => {
         </Card>
       )}
 
-      <Card className="w-full max-w-4xl mx-auto mt-8">
-        <CardHeader>
-          <CardTitle>Your Feedback History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {feedbackHistoryLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ) : feedbackHistory.length === 0 ? (
-            <p className="text-center">You haven't submitted any feedback yet.</p>
-          ) : (
-            <Accordion type="single" collapsible className="w-full">
-              {feedbackHistory.map((feedback: FeedbackHistoryEntry) => (
-                <AccordionItem value={feedback.id} key={feedback.id}>
-                  <AccordionTrigger>
-                    <div className="flex justify-between items-center w-full pr-4">
-                      <div className="text-left">
-                        <p className="font-semibold">{feedback.classes?.name} (P{feedback.classes?.period})</p>
-                        <p className="text-sm text-muted-foreground">{new Date(feedback.created_at).toLocaleDateString()}</p>
-                      </div>
-                      <RatingStars rating={feedback.rating} />
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4 py-4 px-2">
-                      <div>
-                        <h4 className="font-medium mb-2">Your Comment:</h4>
-                        <p className="text-sm text-muted-foreground p-3 bg-muted rounded-md min-h-[60px]">
-                          {feedback.comment || "You did not leave a comment."}
-                        </p>
-                      </div>
-                      <Separator />
-                      <div>
-                        <h4 className="font-medium mb-2">Administrator's Response:</h4>
-                        <p className="text-sm text-muted-foreground p-3 bg-muted rounded-md min-h-[60px]">
-                          {feedback.admin_response || "No response from the administrator yet."}
-                        </p>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          )}
-        </CardContent>
-      </Card>
+      <StudentFeedbackHistory />
     </div>
   );
 };
