@@ -5,7 +5,6 @@ import { useSession } from '@/components/SessionContextProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FeedbackForm from '@/components/FeedbackForm';
 import { CheckCircle, Star, CalendarDays } from 'lucide-react';
 import { useDailyClasses } from '@/hooks/useDailyClasses';
@@ -17,6 +16,7 @@ import RatingStars from '@/components/RatingStars';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const StudentDashboard = () => {
   const { session, isLoading, isAdmin } = useSession();
@@ -36,8 +36,6 @@ const StudentDashboard = () => {
   } = useStudentFeedbackHistory();
 
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
-  const [selectedFeedback, setSelectedFeedback] = useState<FeedbackHistoryEntry | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -74,11 +72,6 @@ const StudentDashboard = () => {
       fetchFeedbackHistory(session.user.id);
     }
     setIsSubmittingFeedback(false);
-  };
-
-  const handleViewDetails = (feedback: FeedbackHistoryEntry) => {
-    setSelectedFeedback(feedback);
-    setIsDetailsOpen(true);
   };
 
   return (
@@ -187,93 +180,49 @@ const StudentDashboard = () => {
         </CardHeader>
         <CardContent>
           {feedbackHistoryLoading ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Rating</TableHead>
-                  <TableHead>Your Comment</TableHead>
-                  <TableHead>Admin Response</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="space-y-2">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
           ) : feedbackHistory.length === 0 ? (
             <p className="text-center">You haven't submitted any feedback yet.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Rating</TableHead>
-                  <TableHead>Your Comment</TableHead>
-                  <TableHead>Admin Response</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {feedbackHistory.map((feedback: FeedbackHistoryEntry) => (
-                  <TableRow key={feedback.id} onClick={() => handleViewDetails(feedback)} className="cursor-pointer hover:bg-muted/50">
-                    <TableCell>{feedback.classes?.name} (P{feedback.classes?.period})</TableCell>
-                    <TableCell>
+            <Accordion type="single" collapsible className="w-full">
+              {feedbackHistory.map((feedback: FeedbackHistoryEntry) => (
+                <AccordionItem value={feedback.id} key={feedback.id}>
+                  <AccordionTrigger>
+                    <div className="flex justify-between items-center w-full pr-4">
+                      <div className="text-left">
+                        <p className="font-semibold">{feedback.classes?.name} (P{feedback.classes?.period})</p>
+                        <p className="text-sm text-muted-foreground">{new Date(feedback.created_at).toLocaleDateString()}</p>
+                      </div>
                       <RatingStars rating={feedback.rating} />
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate">{feedback.comment || 'N/A'}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{feedback.admin_response || 'No response yet'}</TableCell>
-                    <TableCell>{new Date(feedback.created_at).toLocaleDateString()}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4 py-4 px-2">
+                      <div>
+                        <h4 className="font-medium mb-2">Your Comment:</h4>
+                        <p className="text-sm text-muted-foreground p-3 bg-muted rounded-md min-h-[60px]">
+                          {feedback.comment || "You did not leave a comment."}
+                        </p>
+                      </div>
+                      <Separator />
+                      <div>
+                        <h4 className="font-medium mb-2">Administrator's Response:</h4>
+                        <p className="text-sm text-muted-foreground p-3 bg-muted rounded-md min-h-[60px]">
+                          {feedback.admin_response || "No response from the administrator yet."}
+                        </p>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           )}
         </CardContent>
       </Card>
-
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="sm:max-w-lg">
-          {selectedFeedback && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Feedback for {selectedFeedback.classes?.name} (P{selectedFeedback.classes?.period})</DialogTitle>
-                <CardDescription>
-                  Submitted on {new Date(selectedFeedback.created_at).toLocaleString()}
-                </CardDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">Your Rating:</span>
-                  <RatingStars rating={selectedFeedback.rating} />
-                </div>
-                <Separator />
-                <div>
-                  <h4 className="font-medium mb-2">Your Comment:</h4>
-                  <p className="text-sm text-muted-foreground p-3 bg-muted rounded-md min-h-[60px]">
-                    {selectedFeedback.comment || "You did not leave a comment."}
-                  </p>
-                </div>
-                <Separator />
-                <div>
-                  <h4 className="font-medium mb-2">Administrator's Response:</h4>
-                  <p className="text-sm text-muted-foreground p-3 bg-muted rounded-md min-h-[60px]">
-                    {selectedFeedback.admin_response || "No response from the administrator yet."}
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
