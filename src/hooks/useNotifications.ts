@@ -55,11 +55,12 @@ export const useNotifications = () => {
 
   const markAsRead = async (feedbackId: string) => {
     const { error } = await supabase
-      .from('feedback')
-      .update({ is_response_seen_by_student: true })
-      .eq('id', feedbackId);
+      .rpc('mark_feedback_as_seen', {
+        feedback_id_to_update: feedbackId
+      });
 
     if (error) {
+      console.error("Error marking notification as read:", error);
       showError("Failed to mark notification as read.");
     } else {
       setNotifications(prev => prev.filter(n => n.id !== feedbackId));
@@ -68,13 +69,10 @@ export const useNotifications = () => {
 
   const markAllAsRead = async () => {
     if (!session?.user.id) return;
-    const { error } = await supabase
-      .from('feedback')
-      .update({ is_response_seen_by_student: true })
-      .eq('student_id', session.user.id)
-      .eq('is_response_seen_by_student', false);
+    const { error } = await supabase.rpc('mark_all_feedback_as_seen');
 
     if (error) {
+      console.error("Error marking all notifications as read:", error);
       showError("Failed to mark all notifications as read.");
     } else {
       setNotifications([]);
