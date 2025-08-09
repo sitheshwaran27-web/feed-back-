@@ -25,6 +25,7 @@ export const useStudentFeedbackHistory = (page: number, pageSize: number) => {
         comment,
         admin_response,
         created_at,
+        is_response_seen_by_student,
         classes (name, period)
       `, { count: 'exact' })
       .eq('student_id', userId)
@@ -51,6 +52,30 @@ export const useStudentFeedbackHistory = (page: number, pageSize: number) => {
     }
   }, [session, isSessionLoading, fetchFeedbackHistory]);
 
+  const markAsSeen = async (feedbackId: string) => {
+    // Optimistically update the UI for a responsive feel
+    setFeedbackHistory(prev =>
+      prev.map(f =>
+        f.id === feedbackId ? { ...f, is_response_seen_by_student: true } : f
+      )
+    );
+
+    const { error } = await supabase
+      .from('feedback')
+      .update({ is_response_seen_by_student: true })
+      .eq('id', feedbackId);
+
+    if (error) {
+      // Revert the optimistic update if the database call fails
+      setFeedbackHistory(prev =>
+        prev.map(f =>
+          f.id === feedbackId ? { ...f, is_response_seen_by_student: false } : f
+        )
+      );
+      showError("Failed to mark feedback as seen.");
+    }
+  };
+
   const refetch = () => {
     if (session?.user.id) {
       fetchFeedbackHistory(session.user.id);
@@ -62,5 +87,6 @@ export const useStudentFeedbackHistory = (page: number, pageSize: number) => {
     loading,
     totalCount,
     refetch,
+    markAsSeen,
   };
 };

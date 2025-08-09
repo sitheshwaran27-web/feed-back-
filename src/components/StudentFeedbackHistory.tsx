@@ -16,7 +16,7 @@ const PAGE_SIZE = 5;
 
 const StudentFeedbackHistory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const { feedbackHistory, loading, totalCount } = useStudentFeedbackHistory(currentPage, PAGE_SIZE);
+  const { feedbackHistory, loading, totalCount, markAsSeen } = useStudentFeedbackHistory(currentPage, PAGE_SIZE);
   const [selectedFeedback, setSelectedFeedback] = useState<FeedbackHistoryEntry | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const location = useLocation();
@@ -26,8 +26,7 @@ const StudentFeedbackHistory: React.FC = () => {
     if (feedbackIdToOpen && feedbackHistory.length > 0) {
       const feedbackToSelect = feedbackHistory.find(f => f.id === feedbackIdToOpen);
       if (feedbackToSelect) {
-        setSelectedFeedback(feedbackToSelect);
-        setIsDialogOpen(true);
+        handleRowClick(feedbackToSelect);
         window.history.replaceState({}, document.title);
       }
     }
@@ -44,6 +43,10 @@ const StudentFeedbackHistory: React.FC = () => {
   const handleRowClick = (feedback: FeedbackHistoryEntry) => {
     setSelectedFeedback(feedback);
     setIsDialogOpen(true);
+    // Mark as seen if it's an unread response
+    if (feedback.admin_response && !feedback.is_response_seen_by_student) {
+      markAsSeen(feedback.id);
+    }
   };
 
   return (
@@ -73,7 +76,14 @@ const StudentFeedbackHistory: React.FC = () => {
               <TableBody>
                 {feedbackHistory.map((feedback) => (
                   <TableRow key={feedback.id} onClick={() => handleRowClick(feedback)} className="cursor-pointer">
-                    <TableCell>{feedback.classes?.name} (P{feedback.classes?.period})</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        {feedback.admin_response && !feedback.is_response_seen_by_student && (
+                          <span className="mr-2 h-2 w-2 rounded-full bg-blue-500" aria-label="New response"></span>
+                        )}
+                        {feedback.classes?.name} (P{feedback.classes?.period})
+                      </div>
+                    </TableCell>
                     <TableCell>{new Date(feedback.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
                       <RatingStars rating={feedback.rating} starClassName="inline-block" />
