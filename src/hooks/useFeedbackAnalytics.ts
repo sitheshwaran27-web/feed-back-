@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError } from '@/utils/toast';
-import { ClassFeedbackStats } from '@/types/supabase'; // Import ClassFeedbackStats
+import { ClassFeedbackStats } from '@/types/supabase';
 
 export const useFeedbackAnalytics = () => {
   const [feedbackStats, setFeedbackStats] = useState<ClassFeedbackStats[]>([]);
@@ -32,31 +32,43 @@ export const useFeedbackAnalytics = () => {
       return;
     }
 
-    // Aggregate data to calculate average rating per class
-    const classMap = new Map<string, { totalRating: number; count: number; name: string; period: number }>();
+    const classMap = new Map<string, { ratings: number[]; name: string; period: number }>();
 
     feedbackData.forEach(entry => {
+      if (!entry.classes) return; // Skip entries with no associated class
       const classId = entry.class_id;
-      const className = entry.classes?.name || 'Unknown Class';
-      const period = entry.classes?.period || 0;
+      const className = entry.classes.name;
+      const period = entry.classes.period;
       const rating = entry.rating;
 
       if (classMap.has(classId)) {
-        const existing = classMap.get(classId)!;
-        existing.totalRating += rating;
-        existing.count += 1;
+        classMap.get(classId)!.ratings.push(rating);
       } else {
-        classMap.set(classId, { totalRating: rating, count: 1, name: className, period: period });
+        classMap.set(classId, { ratings: [rating], name: className, period: period });
       }
     });
 
-    const aggregatedStats: ClassFeedbackStats[] = Array.from(classMap.entries()).map(([class_id, data]) => ({
-      class_id,
-      class_name: data.name,
-      period: data.period,
-      average_rating: parseFloat((data.totalRating / data.count).toFixed(2)),
-      feedback_count: data.count,
-    })).sort((a, b) => a.period - b.period); // Sort by period number
+    const aggregatedStats: ClassFeedbackStats[] = Array.from(classMap.entries()).map(([class_id, data]) => {
+      const feedback_count = data.ratings.length;
+      const totalRating = data.ratings.reduce((acc, r) => acc + r, 0);
+      const average_rating = feedback_count > 0 ? parseFloat((totalRating / feedback_count).toFixed(2)) : 0;
+      
+      const rating_counts = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
+      data.ratings.forEach(r => {
+        if (r >= 1 && r <= 5) {
+          rating_counts[r as keyof typeof rating_counts]++;
+        }
+      });
+
+      return {
+        class_id,
+        class_name: data.name,
+        period: data.period,
+        average_rating,
+        feedback_count,
+        rating_counts,
+      };
+    }).sort((a, b) => a.period - b.period);
 
     setFeedbackStats(aggregatedStats);
     setLoading(false);
@@ -69,6 +81,6 @@ export const useFeedbackAnalytics = () => {
   return {
     feedbackStats,
     loading,
-    fetchFeedbackStats, // Expose for manual refresh if needed
+    fetchFeedbackStats,
   };
 };
