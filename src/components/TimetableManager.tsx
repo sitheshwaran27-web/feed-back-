@@ -3,14 +3,13 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Trash2, Edit } from 'lucide-react';
+import { Trash2, Edit, PlusCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import ConfirmAlertDialog from './ConfirmAlertDialog';
 import { useTimetable } from '@/hooks/useTimetable';
-import { TimetableEntry } from '@/types/supabase';
-import TimetableForm from './TimetableForm'; // Import the standalone form
+import { TimetableEntry, Class } from '@/types/supabase';
+import TimetableForm from './TimetableForm';
 
 const daysOfWeek = [
   { value: 1, label: 'Monday' },
@@ -21,16 +20,19 @@ const daysOfWeek = [
   { value: 6, label: 'Saturday' },
   { value: 7, label: 'Sunday' },
 ];
+const periods = Array.from({ length: 7 }, (_, i) => i + 1); // Periods 1-7
 
 const TimetableManager: React.FC = () => {
   const { timetableEntries, availableClasses, loading, isSubmitting, addTimetableEntry, updateTimetableEntry, deleteTimetableEntry } = useTimetable();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
+  const [formInitialData, setFormInitialData] = useState<{ day_of_week: number; class_id: string } | undefined>(undefined);
+  const [formAvailableClasses, setFormAvailableClasses] = useState<Class[]>([]);
 
   const handleAddTimetableEntry = async (values: { day_of_week: number; class_id: string }) => {
     const newEntry = await addTimetableEntry(values);
     if (newEntry) {
-      setIsFormOpen(false);
+      closeForm();
     }
   };
 
@@ -38,8 +40,7 @@ const TimetableManager: React.FC = () => {
     if (!editingEntry) return;
     const updated = await updateTimetableEntry(editingEntry.id, values);
     if (updated) {
-      setIsFormOpen(false);
-      setEditingEntry(null);
+      closeForm();
     }
   };
 
@@ -47,112 +48,112 @@ const TimetableManager: React.FC = () => {
     await deleteTimetableEntry(id);
   };
 
-  const openEditForm = (entry: TimetableEntry) => {
+  const openFormForAdd = (day: number, period: number) => {
+    setEditingEntry(null);
+    setFormInitialData({ day_of_week: day, class_id: "" });
+    setFormAvailableClasses(availableClasses.filter(c => c.period === period));
+    setIsFormOpen(true);
+  };
+
+  const openFormForEdit = (entry: TimetableEntry) => {
     setEditingEntry(entry);
+    setFormInitialData({ day_of_week: entry.day_of_week, class_id: entry.class_id });
+    // For editing, show classes of the same period
+    setFormAvailableClasses(availableClasses.filter(c => c.period === entry.classes.period));
     setIsFormOpen(true);
   };
 
   const closeForm = () => {
     setIsFormOpen(false);
     setEditingEntry(null);
+    setFormInitialData(undefined);
+    setFormAvailableClasses([]);
   };
 
-  const groupedTimetable = useMemo(() => {
-    const groups: { [key: number]: TimetableEntry[] } = {};
-    daysOfWeek.forEach(day => (groups[day.value] = [])); // Initialize all days
+  const timetableGrid = useMemo(() => {
+    const grid: (TimetableEntry | null)[][] = Array(periods.length).fill(null).map(() => Array(daysOfWeek.length).fill(null));
     timetableEntries.forEach(entry => {
-      if (groups[entry.day_of_week]) {
-        groups[entry.day_of_week].push(entry);
+      if (entry.classes) {
+        const dayIndex = entry.day_of_week - 1;
+        const periodIndex = entry.classes.period - 1;
+        if (dayIndex >= 0 && dayIndex < daysOfWeek.length && periodIndex >= 0 && periodIndex < periods.length) {
+          grid[periodIndex][dayIndex] = entry;
+        }
       }
     });
-    // Sort classes within each day by period and then start time
-    Object.values(groups).forEach(dayEntries => {
-      dayEntries.sort((a, b) => {
-        if (a.classes.period !== b.classes.period) {
-          return a.classes.period - b.classes.period;
-        }
-        return a.classes.start_time.localeCompare(b.classes.start_time);
-      });
-    });
-    return groups;
+    return grid;
   }, [timetableEntries]);
 
   return (
-    <Card className="w-full max-w-4xl mx-auto mt-8">
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="w-full max-w-7xl mx-auto mt-8">
+      <CardHeader>
         <CardTitle>Manage Weekly Timetable</CardTitle>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { setEditingEntry(null); setIsFormOpen(true); }}>Add Timetable Entry</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{editingEntry ? "Edit Timetable Entry" : "Add New Timetable Entry"}</DialogTitle>
-            </DialogHeader>
-            {isFormOpen && (
-              <TimetableForm
-                initialData={editingEntry ? { day_of_week: editingEntry.day_of_week, class_id: editingEntry.class_id } : undefined}
-                availableClasses={availableClasses}
-                onSubmit={editingEntry ? handleUpdateTimetableEntry : handleAddTimetableEntry}
-                onCancel={closeForm}
-                isSubmitting={isSubmitting}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
       </CardHeader>
       <CardContent>
         {loading ? (
           <Skeleton className="h-[400px] w-full" />
-        ) : Object.values(groupedTimetable).every(day => day.length === 0) ? (
-          <p className="text-center">No timetable entries added yet. Click "Add Timetable Entry" to get started.</p>
         ) : (
-          <div className="space-y-6">
+          <div className="grid grid-cols-[auto_repeat(7,1fr)] gap-1">
+            {/* Header: Empty corner + Days of week */}
+            <div />
             {daysOfWeek.map(day => (
-              <div key={day.value} className="border rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-3">{day.label}</h3>
-                {groupedTimetable[day.value].length === 0 ? (
-                  <p className="text-sm text-gray-500">No classes scheduled for {day.label}.</p>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Period</TableHead>
-                        <TableHead>Class Name</TableHead>
-                        <TableHead>Time</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {groupedTimetable[day.value].map((entry) => (
-                        <TableRow key={entry.id}>
-                          <TableCell>{entry.classes?.period}</TableCell>
-                          <TableCell>{entry.classes?.name}</TableCell>
-                          <TableCell>{entry.classes?.start_time} - {entry.classes?.end_time}</TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="outline" size="sm" onClick={() => openEditForm(entry)} className="mr-2">
-                              <Edit className="h-4 w-4" />
+              <div key={day.value} className="text-center font-semibold p-2">{day.label}</div>
+            ))}
+
+            {/* Timetable Body: Periods + Grid Cells */}
+            {periods.map((period, periodIndex) => (
+              <React.Fragment key={period}>
+                <div className="text-center font-semibold p-2 self-center">P{period}</div>
+                {daysOfWeek.map((day, dayIndex) => {
+                  const entry = timetableGrid[periodIndex][dayIndex];
+                  return (
+                    <div key={day.value} className="border rounded-md p-2 min-h-[80px] flex flex-col justify-center items-center bg-muted/20">
+                      {entry ? (
+                        <div className="w-full text-center">
+                          <p className="font-semibold text-sm">{entry.classes.name}</p>
+                          <p className="text-xs text-muted-foreground">{entry.classes.start_time} - {entry.classes.end_time}</p>
+                          <div className="mt-2 flex justify-center space-x-1">
+                            <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => openFormForEdit(entry)}>
+                              <Edit className="h-3 w-3" />
                             </Button>
                             <ConfirmAlertDialog
-                              title="Are you absolutely sure?"
-                              description="This action cannot be undone. This will permanently remove this class from the timetable for this day."
+                              title="Are you sure?"
+                              description="This will permanently remove this class from the timetable for this day."
                               onConfirm={() => handleDeleteTimetableEntry(entry.id)}
                             >
-                              <Button variant="destructive" size="sm">
-                                <Trash2 className="h-4 w-4" />
+                              <Button variant="destructive" size="icon" className="h-6 w-6">
+                                <Trash2 className="h-3 w-3" />
                               </Button>
                             </ConfirmAlertDialog>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <Button variant="ghost" size="sm" className="h-full w-full" onClick={() => openFormForAdd(day.value, period)}>
+                          <PlusCircle className="h-5 w-5 text-muted-foreground" />
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </React.Fragment>
             ))}
           </div>
         )}
       </CardContent>
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{editingEntry ? "Edit Timetable Entry" : "Add New Timetable Entry"}</DialogTitle>
+          </DialogHeader>
+          <TimetableForm
+            initialData={formInitialData}
+            availableClasses={formAvailableClasses}
+            onSubmit={editingEntry ? handleUpdateTimetableEntry : handleAddTimetableEntry}
+            onCancel={closeForm}
+            isSubmitting={isSubmitting}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

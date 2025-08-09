@@ -1,21 +1,37 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useWeeklyTimetable } from '@/hooks/useWeeklyTimetable';
 import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { TimetableEntry } from '@/types/supabase';
+
+const periods = Array.from({ length: 7 }, (_, i) => i + 1); // Periods 1-7
 
 const StudentTimetable = () => {
   const { groupedTimetable, loading, daysOfWeek } = useWeeklyTimetable();
   const navigate = useNavigate();
 
+  const timetableGrid = useMemo(() => {
+    const grid: (TimetableEntry | null)[][] = Array(periods.length).fill(null).map(() => Array(daysOfWeek.length).fill(null));
+    Object.values(groupedTimetable).flat().forEach(entry => {
+      if (entry.classes) {
+        const dayIndex = entry.day_of_week - 1;
+        const periodIndex = entry.classes.period - 1;
+        if (dayIndex >= 0 && dayIndex < daysOfWeek.length && periodIndex >= 0 && periodIndex < periods.length) {
+          grid[periodIndex][dayIndex] = entry;
+        }
+      }
+    });
+    return grid;
+  }, [groupedTimetable, daysOfWeek]);
+
   return (
     <div className="flex flex-col items-center p-4 h-full">
-      <div className="w-full max-w-4xl mb-8">
+      <div className="w-full max-w-7xl mb-8">
         <div className="flex items-center justify-between">
             <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200">Your Weekly Timetable</h1>
             <Button variant="outline" onClick={() => navigate(-1)}>
@@ -25,45 +41,38 @@ const StudentTimetable = () => {
         </div>
       </div>
 
-      <Card className="w-full max-w-4xl mx-auto">
+      <Card className="w-full max-w-7xl mx-auto">
         <CardContent className="p-6">
           {loading ? (
-            <div className="space-y-6">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i}>
-                  <Skeleton className="h-8 w-32 mb-3" />
-                  <Skeleton className="h-24 w-full" />
-                </div>
-              ))}
-            </div>
+            <Skeleton className="h-[400px] w-full" />
           ) : (
-            <div className="space-y-6">
+            <div className="grid grid-cols-[auto_repeat(7,1fr)] gap-1">
+              {/* Header: Empty corner + Days of week */}
+              <div />
               {daysOfWeek.map(day => (
-                <div key={day.value}>
-                  <h3 className="text-xl font-semibold mb-3 text-gray-700 dark:text-gray-300">{day.label}</h3>
-                  {groupedTimetable[day.value].length === 0 ? (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 pl-2">No classes scheduled.</p>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[100px]">Period</TableHead>
-                          <TableHead>Class</TableHead>
-                          <TableHead>Time</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {groupedTimetable[day.value].map((entry) => (
-                          <TableRow key={entry.id}>
-                            <TableCell>{entry.classes?.period}</TableCell>
-                            <TableCell>{entry.classes?.name}</TableCell>
-                            <TableCell>{entry.classes?.start_time} - {entry.classes?.end_time}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </div>
+                <div key={day.value} className="text-center font-semibold p-2">{day.label}</div>
+              ))}
+
+              {/* Timetable Body: Periods + Grid Cells */}
+              {periods.map((period, periodIndex) => (
+                <React.Fragment key={period}>
+                  <div className="text-center font-semibold p-2 self-center">P{period}</div>
+                  {daysOfWeek.map((day, dayIndex) => {
+                    const entry = timetableGrid[periodIndex][dayIndex];
+                    return (
+                      <div key={day.value} className="border rounded-md p-2 min-h-[80px] flex flex-col justify-center items-center bg-muted/20">
+                        {entry ? (
+                          <div className="w-full text-center">
+                            <p className="font-semibold text-sm">{entry.classes.name}</p>
+                            <p className="text-xs text-muted-foreground">{entry.classes.start_time} - {entry.classes.end_time}</p>
+                          </div>
+                        ) : (
+                          <div /> // Empty cell
+                        )}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
               ))}
             </div>
           )}
