@@ -49,7 +49,8 @@ const NotificationBell: React.FC = () => {
             notifications.map(notification => (
               <DropdownMenuItem key={notification.id} asChild>
                 <Link
-                  to="/student/dashboard"
+                  to="/student/feedback-history"
+                  state={{ feedbackId: notification.id }}
                   className="flex flex-col items-start cursor-pointer"
                   onClick={() => handleMarkAsRead(notification.id)}
                 >

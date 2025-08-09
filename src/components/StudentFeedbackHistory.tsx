@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useStudentFeedbackHistory } from '@/hooks/useStudentFeedbackHistory';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import RatingStars from './RatingStars';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FeedbackHistoryEntry } from '@/types/supabase';
 import { Separator } from './ui/separator';
 
@@ -17,6 +18,20 @@ const StudentFeedbackHistory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { feedbackHistory, loading, totalCount } = useStudentFeedbackHistory(currentPage, PAGE_SIZE);
   const [selectedFeedback, setSelectedFeedback] = useState<FeedbackHistoryEntry | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    const feedbackIdToOpen = location.state?.feedbackId;
+    if (feedbackIdToOpen && feedbackHistory.length > 0) {
+      const feedbackToSelect = feedbackHistory.find(f => f.id === feedbackIdToOpen);
+      if (feedbackToSelect) {
+        setSelectedFeedback(feedbackToSelect);
+        setIsDialogOpen(true);
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location.state, feedbackHistory]);
 
   const pageCount = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -28,6 +43,7 @@ const StudentFeedbackHistory: React.FC = () => {
 
   const handleRowClick = (feedback: FeedbackHistoryEntry) => {
     setSelectedFeedback(feedback);
+    setIsDialogOpen(true);
   };
 
   return (
@@ -45,7 +61,7 @@ const StudentFeedbackHistory: React.FC = () => {
         ) : feedbackHistory.length === 0 ? (
           <p className="text-center">You haven't submitted any feedback yet.</p>
         ) : (
-          <Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -56,15 +72,13 @@ const StudentFeedbackHistory: React.FC = () => {
               </TableHeader>
               <TableBody>
                 {feedbackHistory.map((feedback) => (
-                  <DialogTrigger asChild key={feedback.id}>
-                    <TableRow onClick={() => handleRowClick(feedback)} className="cursor-pointer">
-                      <TableCell>{feedback.classes?.name} (P{feedback.classes?.period})</TableCell>
-                      <TableCell>{new Date(feedback.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right">
-                        <RatingStars rating={feedback.rating} starClassName="inline-block" />
-                      </TableCell>
-                    </TableRow>
-                  </DialogTrigger>
+                  <TableRow key={feedback.id} onClick={() => handleRowClick(feedback)} className="cursor-pointer">
+                    <TableCell>{feedback.classes?.name} (P{feedback.classes?.period})</TableCell>
+                    <TableCell>{new Date(feedback.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-right">
+                      <RatingStars rating={feedback.rating} starClassName="inline-block" />
+                    </TableCell>
+                  </TableRow>
                 ))}
               </TableBody>
             </Table>
