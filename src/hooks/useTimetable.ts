@@ -59,22 +59,23 @@ export const useTimetable = () => {
       return null;
     }
 
-    // New time conflict check
-    const newStartTime = classToAdd.start_time;
-    const newEndTime = classToAdd.end_time;
+    // New period-based conflict check
+    const { data: conflictingEntry, error: conflictError } = await supabase
+      .from('timetables')
+      .select('id, classes!inner(period)')
+      .eq('day_of_week', values.day_of_week)
+      .eq('classes.period', classToAdd.period)
+      .maybeSingle();
 
-    const conflictingEntry = timetableEntries.find(entry => {
-      if (entry.day_of_week === values.day_of_week && entry.classes) {
-        const existingStartTime = entry.classes.start_time;
-        const existingEndTime = entry.classes.end_time;
-        // Check for overlap: (StartA < EndB) and (EndA > StartB)
-        return newStartTime < existingEndTime && newEndTime > existingStartTime;
-      }
-      return false;
-    });
+    if (conflictError) {
+      console.error("Error checking for timetable conflicts:", conflictError);
+      showError("Could not verify timetable, please try again.");
+      setIsSubmitting(false);
+      return null;
+    }
 
     if (conflictingEntry) {
-      showError(`Time conflict with "${conflictingEntry.classes.name}" (${conflictingEntry.classes.start_time} - ${conflictingEntry.classes.end_time}).`);
+      showError(`Period ${classToAdd.period} on this day is already occupied.`);
       setIsSubmitting(false);
       return null;
     }
@@ -113,26 +114,26 @@ export const useTimetable = () => {
       return null;
     }
 
-    // New time conflict check
-    const newStartTime = classToUpdate.start_time;
-    const newEndTime = classToUpdate.end_time;
     const dayOfWeek = values.day_of_week || timetableEntries.find(e => e.id === id)?.day_of_week;
 
-    const conflictingEntry = timetableEntries.find(entry => {
-      // Ignore the entry being updated
-      if (entry.id === id) return false;
+    // New period-based conflict check for update
+    const { data: conflictingEntry, error: conflictError } = await supabase
+      .from('timetables')
+      .select('id, classes!inner(period)')
+      .eq('day_of_week', dayOfWeek)
+      .eq('classes.period', classToUpdate.period)
+      .not('id', 'eq', id) // Exclude the current entry from the check
+      .maybeSingle();
 
-      if (entry.day_of_week === dayOfWeek && entry.classes) {
-        const existingStartTime = entry.classes.start_time;
-        const existingEndTime = entry.classes.end_time;
-        // Check for overlap: (StartA < EndB) and (EndA > StartB)
-        return newStartTime < existingEndTime && newEndTime > existingStartTime;
-      }
-      return false;
-    });
+    if (conflictError) {
+      console.error("Error checking for timetable conflicts:", conflictError);
+      showError("Could not verify timetable, please try again.");
+      setIsSubmitting(false);
+      return null;
+    }
 
     if (conflictingEntry) {
-      showError(`Time conflict with "${conflictingEntry.classes.name}" (${conflictingEntry.classes.start_time} - ${conflictingEntry.classes.end_time}).`);
+      showError(`Period ${classToUpdate.period} on this day is already occupied.`);
       setIsSubmitting(false);
       return null;
     }
