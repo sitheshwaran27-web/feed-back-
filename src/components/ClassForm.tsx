@@ -16,6 +16,9 @@ const formSchema = z.object({
   period: z.coerce.number().min(1, "Period must be at least 1").max(7, "Period cannot exceed 7"), // Changed from period_number to period
   start_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid start time format (HH:MM)"),
   end_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid end time format (HH:MM)"),
+}).refine(data => data.end_time > data.start_time, {
+  message: "End time must be after start time",
+  path: ["end_time"], // Set the error on the end_time field
 });
 
 type ClassFormValues = z.infer<typeof formSchema>;
