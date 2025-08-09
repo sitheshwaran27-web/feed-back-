@@ -18,6 +18,7 @@ import RatingStars from './RatingStars';
 import ConfirmAlertDialog from './ConfirmAlertDialog';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const formSchema = z.object({
   admin_response: z.string().max(500, "Response cannot exceed 500 characters").optional(),
@@ -86,12 +87,29 @@ const FeedbackManager: React.FC = () => {
   } = useFeedbackManager();
   const [isResponseFormOpen, setIsResponseFormOpen] = useState(false);
   const [respondingToFeedback, setRespondingToFeedback] = useState<Feedback | null>(null);
+  const [filter, setFilter] = useState('all');
+
+  const filteredFeedbackEntries = useMemo(() => {
+    if (!feedbackEntries) return [];
+    if (filter === 'all') {
+      return feedbackEntries;
+    }
+    return feedbackEntries.filter(entry => {
+      if (filter === 'responded') {
+        return !!entry.admin_response;
+      }
+      if (filter === 'unresponded') {
+        return !entry.admin_response;
+      }
+      return true;
+    });
+  }, [feedbackEntries, filter]);
 
   const groupedFeedback = useMemo(() => {
-    if (!feedbackEntries) return [];
+    if (!filteredFeedbackEntries) return [];
     const groups: Record<string, { className: string; period: number; entries: Feedback[]; totalRating: number }> = {};
 
-    feedbackEntries.forEach(feedback => {
+    filteredFeedbackEntries.forEach(feedback => {
       if (!feedback.class_id || !feedback.classes) return;
       if (!groups[feedback.class_id]) {
         groups[feedback.class_id] = {
@@ -112,7 +130,7 @@ const FeedbackManager: React.FC = () => {
         averageRating: group.totalRating / group.entries.length,
       }))
       .sort((a, b) => a.period - b.period);
-  }, [feedbackEntries]);
+  }, [filteredFeedbackEntries]);
 
   const handleUpdateResponse = async (values: FeedbackResponseFormValues) => {
     if (!respondingToFeedback) return;
@@ -143,14 +161,30 @@ const FeedbackManager: React.FC = () => {
         <CardTitle>Manage Student Feedback</CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="flex items-center space-x-2 mb-4">
+          <ToggleGroup
+            type="single"
+            defaultValue="all"
+            value={filter}
+            onValueChange={(value) => {
+              if (value) setFilter(value);
+            }}
+          >
+            <ToggleGroupItem value="all">All</ToggleGroupItem>
+            <ToggleGroupItem value="unresponded">Unresponded</ToggleGroupItem>
+            <ToggleGroupItem value="responded">Responded</ToggleGroupItem>
+          </ToggleGroup>
+        </div>
         {loading ? (
           <div className="space-y-2">
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
           </div>
-        ) : feedbackEntries.length === 0 ? (
-          <p className="text-center py-8">No feedback submitted yet.</p>
+        ) : groupedFeedback.length === 0 ? (
+          <p className="text-center py-8">
+            {filter === 'all' ? 'No feedback submitted yet.' : `No ${filter} feedback found.`}
+          </p>
         ) : (
           <Accordion type="single" collapsible className="w-full">
             {groupedFeedback.map((group) => (
