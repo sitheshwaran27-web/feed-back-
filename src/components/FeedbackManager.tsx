@@ -310,6 +310,7 @@ const FeedbackManager: React.FC = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[24px] p-0"></TableHead>
                 <TableHead>
                   <SortableHeader columnKey="student_name" sortConfig={sortConfig} setSortConfig={setSortConfig}>Student</SortableHeader>
                 </TableHead>
@@ -329,54 +330,81 @@ const FeedbackManager: React.FC = () => {
             <TableBody>
               {filteredAndSortedFeedback.length > 0 ? (
                 filteredAndSortedFeedback.map((feedback) => (
-                  <TableRow key={feedback.id}>
-                    <TableCell>{feedback.profiles?.first_name} {feedback.profiles?.last_name}</TableCell>
-                    <TableCell>{feedback.classes.name}</TableCell>
-                    <TableCell><RatingStars rating={feedback.rating} /></TableCell>
-                    <TableCell className="max-w-[200px] truncate">{feedback.comment || 'N/A'}</TableCell>
-                    <TableCell>{new Date(feedback.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      <Dialog open={isResponseFormOpen && respondingToFeedback?.id === feedback.id} onOpenChange={(isOpen) => !isOpen && closeResponseForm()}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => openResponseForm(feedback)} className="mr-2">
-                            <MessageSquare className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader><DialogTitle>Respond to Feedback</DialogTitle></DialogHeader>
-                          {respondingToFeedback && (
-                            <>
-                              <div className="space-y-3 rounded-md border bg-muted/50 p-4">
-                                <div className="flex justify-between items-center">
-                                  <span className="font-medium">{respondingToFeedback.profiles?.first_name} {respondingToFeedback.profiles?.last_name}</span>
-                                  <RatingStars rating={respondingToFeedback.rating} />
+                  <Collapsible asChild key={feedback.id}>
+                    <>
+                      <CollapsibleTrigger asChild>
+                        <TableRow className="cursor-pointer hover:bg-muted/50">
+                          <TableCell className="p-2">
+                            <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+                          </TableCell>
+                          <TableCell>{feedback.profiles?.first_name} {feedback.profiles?.last_name}</TableCell>
+                          <TableCell>{feedback.classes.name}</TableCell>
+                          <TableCell><RatingStars rating={feedback.rating} /></TableCell>
+                          <TableCell className="max-w-[200px] truncate">{feedback.comment || 'N/A'}</TableCell>
+                          <TableCell>{new Date(feedback.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell className="text-right">
+                            <Dialog open={isResponseFormOpen && respondingToFeedback?.id === feedback.id} onOpenChange={(isOpen) => !isOpen && closeResponseForm()}>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openResponseForm(feedback); }} className="mr-2">
+                                  <MessageSquare className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-md">
+                                <DialogHeader><DialogTitle>Respond to Feedback</DialogTitle></DialogHeader>
+                                {respondingToFeedback && (
+                                  <>
+                                    <div className="space-y-3 rounded-md border bg-muted/50 p-4">
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-medium">{respondingToFeedback.profiles?.first_name} {respondingToFeedback.profiles?.last_name}</span>
+                                        <RatingStars rating={respondingToFeedback.rating} />
+                                      </div>
+                                      <blockquote className="mt-2 border-l-2 pl-4 italic text-foreground">{respondingToFeedback.comment || "No comment provided."}</blockquote>
+                                    </div>
+                                    <Separator />
+                                    <FeedbackResponseForm
+                                      initialData={{ admin_response: respondingToFeedback?.admin_response || "" }}
+                                      onSubmit={handleUpdateResponse}
+                                      onCancel={closeResponseForm}
+                                      isSubmitting={isSubmittingResponse}
+                                    />
+                                  </>
+                                )}
+                              </DialogContent>
+                            </Dialog>
+                            <ConfirmAlertDialog
+                              title="Are you absolutely sure?"
+                              description="This will permanently delete this feedback entry."
+                              onConfirm={() => handleDeleteFeedback(feedback.id)}
+                            >
+                              <Button variant="destructive" size="sm" onClick={(e) => e.stopPropagation()}><Trash2 className="h-4 w-4" /></Button>
+                            </ConfirmAlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent asChild>
+                        <TableRow>
+                          <TableCell colSpan={7} className="p-0">
+                            <div className="p-4 bg-muted/20">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <h5 className="text-sm font-medium text-muted-foreground mb-1">Student Comment</h5>
+                                  <p className="text-sm whitespace-pre-wrap">{feedback.comment || 'No comment provided.'}</p>
                                 </div>
-                                <blockquote className="mt-2 border-l-2 pl-4 italic text-foreground">{respondingToFeedback.comment || "No comment provided."}</blockquote>
+                                <div>
+                                  <h5 className="text-sm font-medium text-muted-foreground mb-1">Admin Response</h5>
+                                  <p className="text-sm whitespace-pre-wrap">{feedback.admin_response || 'No response yet.'}</p>
+                                </div>
                               </div>
-                              <Separator />
-                              <FeedbackResponseForm
-                                initialData={{ admin_response: respondingToFeedback?.admin_response || "" }}
-                                onSubmit={handleUpdateResponse}
-                                onCancel={closeResponseForm}
-                                isSubmitting={isSubmittingResponse}
-                              />
-                            </>
-                          )}
-                        </DialogContent>
-                      </Dialog>
-                      <ConfirmAlertDialog
-                        title="Are you absolutely sure?"
-                        description="This will permanently delete this feedback entry."
-                        onConfirm={() => handleDeleteFeedback(feedback.id)}
-                      >
-                        <Button variant="destructive" size="sm"><Trash2 className="h-4 w-4" /></Button>
-                      </ConfirmAlertDialog>
-                    </TableCell>
-                  </TableRow>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      </CollapsibleContent>
+                    </>
+                  </Collapsible>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">No feedback matches the current filters.</TableCell>
+                  <TableCell colSpan={7} className="h-24 text-center">No feedback matches the current filters.</TableCell>
                 </TableRow>
               )}
             </TableBody>
