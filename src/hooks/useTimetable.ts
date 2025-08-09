@@ -59,12 +59,22 @@ export const useTimetable = () => {
       return null;
     }
 
-    const existingEntryForPeriod = timetableEntries.find(entry =>
-      entry.day_of_week === values.day_of_week && entry.classes.period === classToAdd.period
-    );
+    // New time conflict check
+    const newStartTime = classToAdd.start_time;
+    const newEndTime = classToAdd.end_time;
 
-    if (existingEntryForPeriod) {
-      showError(`A class is already scheduled for Period ${classToAdd.period} on this day.`);
+    const conflictingEntry = timetableEntries.find(entry => {
+      if (entry.day_of_week === values.day_of_week && entry.classes) {
+        const existingStartTime = entry.classes.start_time;
+        const existingEndTime = entry.classes.end_time;
+        // Check for overlap: (StartA < EndB) and (EndA > StartB)
+        return newStartTime < existingEndTime && newEndTime > existingStartTime;
+      }
+      return false;
+    });
+
+    if (conflictingEntry) {
+      showError(`Time conflict with "${conflictingEntry.classes.name}" (${conflictingEntry.classes.start_time} - ${conflictingEntry.classes.end_time}).`);
       setIsSubmitting(false);
       return null;
     }
@@ -103,14 +113,26 @@ export const useTimetable = () => {
       return null;
     }
 
-    const existingEntryForPeriod = timetableEntries.find(entry =>
-      entry.id !== id &&
-      entry.day_of_week === values.day_of_week &&
-      entry.classes.period === classToUpdate.period
-    );
+    // New time conflict check
+    const newStartTime = classToUpdate.start_time;
+    const newEndTime = classToUpdate.end_time;
+    const dayOfWeek = values.day_of_week || timetableEntries.find(e => e.id === id)?.day_of_week;
 
-    if (existingEntryForPeriod) {
-      showError(`Another class is already scheduled for Period ${classToUpdate.period} on this day.`);
+    const conflictingEntry = timetableEntries.find(entry => {
+      // Ignore the entry being updated
+      if (entry.id === id) return false;
+
+      if (entry.day_of_week === dayOfWeek && entry.classes) {
+        const existingStartTime = entry.classes.start_time;
+        const existingEndTime = entry.classes.end_time;
+        // Check for overlap: (StartA < EndB) and (EndA > StartB)
+        return newStartTime < existingEndTime && newEndTime > existingStartTime;
+      }
+      return false;
+    });
+
+    if (conflictingEntry) {
+      showError(`Time conflict with "${conflictingEntry.classes.name}" (${conflictingEntry.classes.start_time} - ${conflictingEntry.classes.end_time}).`);
       setIsSubmitting(false);
       return null;
     }
