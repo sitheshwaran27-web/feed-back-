@@ -41,7 +41,7 @@ const AdminNotificationBell: React.FC = () => {
               <DropdownMenuItem key={notification.id} asChild>
                 <Link
                   to="/admin/feedback"
-                  state={{ studentName: `${notification.profiles?.first_name || ''} ${notification.profiles?.last_name || ''}`.trim() }}
+                  state={{ feedbackId: notification.id }}
                   className="flex flex-col items-start cursor-pointer"
                 >
                   <p className="font-semibold">

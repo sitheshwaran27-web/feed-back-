@@ -36,21 +36,36 @@ const FeedbackManager: React.FC = () => {
   const [classFilter, setClassFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    if (location.state) {
-      const { classId, studentName } = location.state;
-      if (classId) setClassFilter(classId);
-      if (studentName) setSearchTerm(studentName);
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
-
   const handleClearFilters = () => {
     setStatusFilter('all');
     setRatingFilter([]);
     setClassFilter('all');
     setSearchTerm('');
   };
+
+  useEffect(() => {
+    if (location.state) {
+      const { classId, studentName, feedbackId } = location.state;
+      
+      // Prioritize direct feedback ID linking
+      if (feedbackId && feedbackEntries.length > 0) {
+        const feedbackExists = feedbackEntries.some(f => f.id === feedbackId);
+        if (feedbackExists) {
+          // Clear filters to ensure the item is visible in the list
+          handleClearFilters();
+          // Set the selected ID
+          setSelectedFeedbackId(feedbackId);
+        }
+      } else {
+        // Handle older filter-based navigation
+        if (classId) setClassFilter(classId);
+        if (studentName) setSearchTerm(studentName);
+      }
+      
+      // Clear the state to prevent re-triggering on component re-renders
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, feedbackEntries]);
 
   const activeFilterCount = [
     statusFilter !== 'all',

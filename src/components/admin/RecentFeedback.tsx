@@ -53,32 +53,34 @@ const RecentFeedback: React.FC<RecentFeedbackProps> = ({ feedback, loading }) =>
         </Button>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-2">
+        <ul className="space-y-1">
           {feedback.map(item => (
-            <li key={item.id} className="flex items-start space-x-4 p-2 rounded-md hover:bg-muted">
-              <Avatar>
-                <AvatarImage src={item.profiles?.avatar_url || undefined} />
-                <AvatarFallback>
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-grow">
-                <div className="flex justify-between items-center">
-                  <p className="font-semibold">
-                    <Link to="/admin/feedback" state={{ studentName: `${item.profiles?.first_name || ''} ${item.profiles?.last_name || ''}`.trim() }} className="hover:underline">
+            <li key={item.id}>
+              <Link
+                to="/admin/feedback"
+                state={{ feedbackId: item.id }}
+                className="flex items-start space-x-4 p-2 rounded-md hover:bg-muted transition-colors"
+              >
+                <Avatar>
+                  <AvatarImage src={item.profiles?.avatar_url || undefined} />
+                  <AvatarFallback>
+                    <User className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-grow overflow-hidden">
+                  <div className="flex justify-between items-center">
+                    <p className="font-semibold truncate">
                       {item.profiles?.first_name || 'Student'} {item.profiles?.last_name}
-                    </Link>
-                    <span className="mx-1">on</span>
-                    <Link to="/admin/feedback" state={{ classId: item.class_id }} className="hover:underline">
+                      <span className="mx-1 font-normal text-muted-foreground">on</span>
                       {item.classes.name}
-                    </Link>
+                    </p>
+                    <RatingStars rating={item.rating} />
+                  </div>
+                  <p className="text-sm text-muted-foreground truncate text-left">
+                    {item.comment || 'No comment provided.'}
                   </p>
-                  <RatingStars rating={item.rating} />
                 </div>
-                <p className="text-sm text-muted-foreground truncate">
-                  {item.comment || 'No comment provided.'}
-                </p>
-              </div>
+              </Link>
             </li>
           ))}
         </ul>
