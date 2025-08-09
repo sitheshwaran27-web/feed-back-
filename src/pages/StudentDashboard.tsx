@@ -3,20 +3,22 @@
 import React, { useState } from 'react';
 import { useSession } from '@/components/SessionContextProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import FeedbackForm from '@/components/FeedbackForm';
-import { CheckCircle, Star, CalendarDays } from 'lucide-react';
+import { CheckCircle, CalendarDays } from 'lucide-react';
 import { useDailyClasses } from '@/hooks/useDailyClasses';
-import { Skeleton } from '@/components/ui/skeleton';
 import { showError, showSuccess } from '@/utils/toast';
 import { DailyClass } from '@/types/supabase';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import RecentStudentFeedback from '@/components/RecentStudentFeedback';
+import { useProfile } from '@/hooks/useProfile';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const StudentDashboard = () => {
-  const { session, isLoading, isAdmin } = useSession();
+  const { session, isLoading: isSessionLoading, isAdmin } = useSession();
+  const { profile, loading: profileLoading } = useProfile();
 
   const {
     dailyClasses,
@@ -28,10 +30,15 @@ const StudentDashboard = () => {
 
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
-  if (isLoading) {
+  if (isSessionLoading || classesLoading || profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <p className="text-lg text-gray-700 dark:text-gray-300">Loading dashboard...</p>
+      <div className="flex flex-col items-center p-4 h-full">
+        <div className="w-full max-w-4xl mb-8">
+          <Skeleton className="h-10 w-3/4 mb-4" />
+          <Skeleton className="h-7 w-1/2 mb-6" />
+        </div>
+        <Skeleton className="h-64 w-full max-w-4xl mb-8" />
+        <Skeleton className="h-48 w-full max-w-4xl" />
       </div>
     );
   }
@@ -60,8 +67,6 @@ const StudentDashboard = () => {
     } else {
       showSuccess("Feedback submitted successfully!");
       fetchDailyClasses();
-      // The history component will refetch on its own if we trigger a re-render or if we expose a refetch function.
-      // For now, we'll rely on the user navigating or refreshing to see the new entry in the paginated list.
     }
     setIsSubmittingFeedback(false);
   };
@@ -79,7 +84,7 @@ const StudentDashboard = () => {
           </Button>
         </div>
         <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
-          Welcome, {session.user.email}!
+          Welcome, {profile?.first_name || session.user.email}!
         </p>
       </div>
 
@@ -88,28 +93,7 @@ const StudentDashboard = () => {
           <CardTitle>Today's Timetable</CardTitle>
         </CardHeader>
         <CardContent>
-          {classesLoading ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Period</TableHead>
-                  <TableHead>Class Name</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Feedback Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-6 w-12" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : dailyClasses.length === 0 ? (
+          {dailyClasses.length === 0 ? (
             <p className="text-center">No classes scheduled for today.</p>
           ) : (
             <Table>
