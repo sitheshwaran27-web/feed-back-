@@ -1,14 +1,20 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import StudentDashboard from "./pages/StudentDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
 import ProfilePage from "./pages/ProfilePage";
 import StudentTimetable from "./pages/StudentTimetable";
 import Layout from "./components/Layout";
 import { MadeWithDyad } from "./components/made-with-dyad";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboardPage from "./pages/admin/Dashboard";
+import AdminClassesPage from "./pages/admin/Classes";
+import AdminTimetablePage from "./pages/admin/Timetable";
+import AdminFeedbackPage from "./pages/admin/Feedback";
+import AdminUsersPage from "./pages/admin/Users";
+import AdminAnalyticsPage from "./pages/admin/Analytics";
 
 const App = () => (
   <div className="flex flex-col min-h-screen">
@@ -18,7 +24,7 @@ const App = () => (
       <Route path="/login" element={<Layout><Login /></Layout>} />
       <Route path="/not-found" element={<Layout><NotFound /></Layout>} />
 
-      {/* Authenticated Routes */}
+      {/* Authenticated Student Routes */}
       <Route 
         path="/student/dashboard" 
         element={
@@ -35,14 +41,8 @@ const App = () => (
           </ProtectedRoute>
         } 
       />
-      <Route 
-        path="/admin/dashboard" 
-        element={
-          <ProtectedRoute requireAdmin={true}>
-            <Layout><AdminDashboard /></Layout>
-          </ProtectedRoute>
-        } 
-      />
+      
+      {/* Profile Page (shared) */}
       <Route 
         path="/profile" 
         element={
@@ -51,6 +51,24 @@ const App = () => (
           </ProtectedRoute>
         } 
       />
+
+      {/* Admin Routes */}
+      <Route 
+        path="/admin" 
+        element={
+          <ProtectedRoute requireAdmin={true}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboardPage />} />
+        <Route path="classes" element={<AdminClassesPage />} />
+        <Route path="timetable" element={<AdminTimetablePage />} />
+        <Route path="feedback" element={<AdminFeedbackPage />} />
+        <Route path="users" element={<AdminUsersPage />} />
+        <Route path="analytics" element={<AdminAnalyticsPage />} />
+      </Route>
 
       {/* Catch-all for any other undefined routes */}
       <Route path="*" element={<Layout><NotFound /></Layout>} />
