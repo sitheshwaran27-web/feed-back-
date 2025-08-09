@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useStudentFeedbackHistory } from '@/hooks/useStudentFeedbackHistory';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
@@ -11,26 +11,59 @@ import RatingStars from './RatingStars';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FeedbackHistoryEntry } from '@/types/supabase';
 import { Separator } from './ui/separator';
+import { supabase } from '@/integrations/supabase/client';
 
 const PAGE_SIZE = 5;
 
 const StudentFeedbackHistory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const { feedbackHistory, loading, totalCount, markAsSeen } = useStudentFeedbackHistory(currentPage, PAGE_SIZE);
+  const { feedbackHistory, loading, totalCount, markAsSeen, refetch } = useStudentFeedbackHistory(currentPage, PAGE_SIZE);
   const [selectedFeedback, setSelectedFeedback] = useState<FeedbackHistoryEntry | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
+  // This effect handles deep linking from notifications
   useEffect(() => {
     const feedbackIdToOpen = location.state?.feedbackId;
-    if (feedbackIdToOpen && feedbackHistory.length > 0) {
-      const feedbackToSelect = feedbackHistory.find(f => f.id === feedbackIdToOpen);
-      if (feedbackToSelect) {
-        handleRowClick(feedbackToSelect);
-        window.history.replaceState({}, document.title);
+    if (!feedbackIdToOpen || loading) return;
+
+    const openFeedbackDialog = async (feedbackItem: FeedbackHistoryEntry) => {
+      setSelectedFeedback(feedbackItem);
+      setIsDialogOpen(true);
+      if (feedbackItem.admin_response && !feedbackItem.is_response_seen_by_student) {
+        await markAsSeen(feedbackItem.id);
+        refetch(); // Refetch to update the UI (e.g., remove blue dot)
       }
-    }
-  }, [location.state, feedbackHistory]);
+    };
+
+    const findAndOpenFeedback = async () => {
+      const feedbackOnCurrentPage = feedbackHistory.find(f => f.id === feedbackIdToOpen);
+
+      if (feedbackOnCurrentPage) {
+        openFeedbackDialog(feedbackOnCurrentPage);
+      } else {
+        // If not on the current page, fetch it directly
+        const { data, error } = await supabase
+          .from('feedback')
+          .select(`
+            id, rating, comment, admin_response, created_at, is_response_seen_by_student,
+            classes (name, period)
+          `)
+          .eq('id', feedbackIdToOpen)
+          .single();
+        
+        if (data && !error) {
+          openFeedbackDialog(data as FeedbackHistoryEntry);
+        }
+      }
+      // Clear the location state to prevent re-triggering
+      navigate(location.pathname, { replace: true, state: {} });
+    };
+
+    findAndOpenFeedback();
+
+  }, [location.state, feedbackHistory, loading, navigate, markAsSeen, refetch]);
 
   const pageCount = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -43,9 +76,16 @@ const StudentFeedbackHistory: React.FC = () => {
   const handleRowClick = (feedback: FeedbackHistoryEntry) => {
     setSelectedFeedback(feedback);
     setIsDialogOpen(true);
-    // Mark as seen if it's an unread response
     if (feedback.admin_response && !feedback.is_response_seen_by_student) {
       markAsSeen(feedback.id);
+    }
+  };
+  
+  const handleDialogChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      // Delay clearing to allow for exit animation
+      setTimeout(() => setSelectedFeedback(null), 300);
     }
   };
 
@@ -64,7 +104,7 @@ const StudentFeedbackHistory: React.FC = () => {
         ) : feedbackHistory.length === 0 ? (
           <p className="text-center">You haven't submitted any feedback yet.</p>
         ) : (
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
             <Table>
               <TableHeader>
                 <TableRow>
