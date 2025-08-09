@@ -38,6 +38,19 @@ export const useFeedbackManager = () => {
 
   useEffect(() => {
     fetchFeedback();
+
+    const channel = supabase
+      .channel('feedback-manager-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'feedback' },
+        () => fetchFeedback()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchFeedback]);
 
   const updateAdminResponse = async (feedbackId: string, response: string | null) => {
@@ -59,8 +72,7 @@ export const useFeedbackManager = () => {
       return null;
     } else {
       showSuccess("Feedback response updated successfully!");
-      // Refetch to ensure data consistency after update
-      fetchFeedback();
+      // No need to manually refetch, real-time subscription will handle it.
       setIsSubmittingResponse(false);
       return data;
     }
@@ -78,7 +90,7 @@ export const useFeedbackManager = () => {
       return false;
     } else {
       showSuccess("Feedback entry deleted successfully!");
-      setFeedbackEntries(prevEntries => prevEntries.filter(entry => entry.id !== feedbackId));
+      // No need to manually refetch, real-time subscription will handle it.
       return true;
     }
   };

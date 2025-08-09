@@ -62,6 +62,19 @@ export const useAdminDashboardData = () => {
 
   useEffect(() => {
     fetchData();
+
+    const channel = supabase
+      .channel('admin-dashboard-feedback-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'feedback' },
+        () => fetchData()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchData]);
 
   const topClasses = [...classPerformance].sort((a, b) => b.average_rating - a.average_rating).slice(0, 3);

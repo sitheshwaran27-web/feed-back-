@@ -57,7 +57,20 @@ export const useFeedbackTrends = (timeframeInDays: number = 30) => {
 
   useEffect(() => {
     fetchTrends();
-  }, [fetchTrends]);
+
+    const channel = supabase
+      .channel(`feedback-trends-changes-${timeframeInDays}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'feedback' },
+        () => fetchTrends()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchTrends, timeframeInDays]);
 
   return { trendData, loading, fetchTrends };
 };

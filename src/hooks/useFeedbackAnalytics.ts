@@ -76,6 +76,19 @@ export const useFeedbackAnalytics = () => {
 
   useEffect(() => {
     fetchFeedbackStats();
+
+    const channel = supabase
+      .channel('feedback-analytics-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'feedback' },
+        () => fetchFeedbackStats()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchFeedbackStats]);
 
   return {
