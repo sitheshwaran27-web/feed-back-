@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,11 +15,23 @@ import { Edit, Trash2 } from 'lucide-react'; // Import Trash2 icon
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import EditUserForm from './EditUserForm'; // Import the new form
 import ConfirmAlertDialog from './ConfirmAlertDialog'; // Import ConfirmAlertDialog
+import { Input } from '@/components/ui/input'; // Import Input for search
 
 const UserManager: React.FC = () => {
   const { users, loading, updatingUserId, toggleAdminStatus, updateUser, deleteUser } = useUserManager();
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    const lowercasedSearchTerm = searchTerm.toLowerCase();
+    return users.filter(user =>
+      (user.first_name?.toLowerCase().includes(lowercasedSearchTerm)) ||
+      (user.last_name?.toLowerCase().includes(lowercasedSearchTerm)) ||
+      (user.email?.toLowerCase().includes(lowercasedSearchTerm))
+    );
+  }, [users, searchTerm]);
 
   const handleUpdateUser = async (values: { first_name?: string; last_name?: string; is_admin?: boolean }) => {
     if (!editingUser) return;
@@ -50,6 +62,14 @@ const UserManager: React.FC = () => {
         <CardTitle>Manage Users</CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="mb-4">
+          <Input
+            placeholder="Search by name or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+        </div>
         {loading ? (
           <Table>
             <TableHeader>
@@ -71,8 +91,10 @@ const UserManager: React.FC = () => {
               ))}
             </TableBody>
           </Table>
-        ) : users.length === 0 ? (
-          <p className="text-center">No users found.</p>
+        ) : filteredUsers.length === 0 ? (
+          <p className="text-center py-8">
+            {searchTerm ? 'No users match your search.' : 'No users found.'}
+          </p>
         ) : (
           <Table>
             <TableHeader>
@@ -84,7 +106,7 @@ const UserManager: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user: Profile) => (
+              {filteredUsers.map((user: Profile) => (
                 <TableRow key={user.id}>
                   <TableCell>{user.first_name || 'N/A'} {user.last_name || 'N/A'}</TableCell>
                   <TableCell>{user.email}</TableCell>
