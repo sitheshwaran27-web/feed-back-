@@ -14,7 +14,7 @@ const RecentStudentFeedback: React.FC = () => {
   const { feedbackHistory, loading } = useStudentFeedbackHistory(1, 3);
 
   return (
-    <Card className="w-full max-w-4xl mx-auto mt-8">
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Recent Feedback</CardTitle>
         <Button asChild variant="outline" size="sm">
