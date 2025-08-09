@@ -128,9 +128,14 @@ const FeedbackManager: React.FC = () => {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: string } | null>({ key: 'created_at', direction: 'descending' });
 
   useEffect(() => {
-    const preselectedClassId = location.state?.classId;
-    if (preselectedClassId) {
-      setClassFilter(preselectedClassId);
+    if (location.state) {
+      const { classId, studentName } = location.state;
+      if (classId) {
+        setClassFilter(classId);
+      }
+      if (studentName) {
+        setSearchTerm(studentName);
+      }
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);

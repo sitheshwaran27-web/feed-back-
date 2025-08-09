@@ -55,30 +55,30 @@ const RecentFeedback: React.FC<RecentFeedbackProps> = ({ feedback, loading }) =>
       <CardContent>
         <ul className="space-y-2">
           {feedback.map(item => (
-            <li key={item.id}>
-              <Link
-                to="/admin/feedback"
-                state={{ classId: item.class_id }}
-                className="flex items-start space-x-4 p-2 rounded-md hover:bg-muted"
-              >
-                <Avatar>
-                  <AvatarImage src={item.profiles?.avatar_url || undefined} />
-                  <AvatarFallback>
-                    <User className="h-5 w-5" />
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-grow">
-                  <div className="flex justify-between items-center">
-                    <p className="font-semibold">
-                      {item.profiles?.first_name || 'Student'} on {item.classes.name}
-                    </p>
-                    <RatingStars rating={item.rating} />
-                  </div>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {item.comment || 'No comment provided.'}
+            <li key={item.id} className="flex items-start space-x-4 p-2 rounded-md hover:bg-muted">
+              <Avatar>
+                <AvatarImage src={item.profiles?.avatar_url || undefined} />
+                <AvatarFallback>
+                  <User className="h-5 w-5" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-grow">
+                <div className="flex justify-between items-center">
+                  <p className="font-semibold">
+                    <Link to="/admin/feedback" state={{ studentName: `${item.profiles?.first_name || ''} ${item.profiles?.last_name || ''}`.trim() }} className="hover:underline">
+                      {item.profiles?.first_name || 'Student'} {item.profiles?.last_name}
+                    </Link>
+                    <span className="mx-1">on</span>
+                    <Link to="/admin/feedback" state={{ classId: item.class_id }} className="hover:underline">
+                      {item.classes.name}
+                    </Link>
                   </p>
+                  <RatingStars rating={item.rating} />
                 </div>
-              </Link>
+                <p className="text-sm text-muted-foreground truncate">
+                  {item.comment || 'No comment provided.'}
+                </p>
+              </div>
             </li>
           ))}
         </ul>
