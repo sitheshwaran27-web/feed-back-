@@ -69,3 +69,11 @@ export interface ClassFeedbackStats {
     '5': number;
   };
 }
+
+export interface ClassPerformanceSummary {
+  class_id: string;
+  class_name: string;
+  period: number;
+  average_rating: number;
+  feedback_count: number;
+}
