@@ -37,6 +37,16 @@ function Login() {
               theme: customAuthTheme, // Use the custom theme
             }}
             redirectTo={window.location.origin} // Redirect to root after auth, SessionContextProvider handles further redirect
+            localization={{
+              variables: {
+                sign_up: {
+                  additional_data: {
+                    first_name: 'First Name',
+                    last_name: 'Last Name',
+                  },
+                },
+              },
+            }}
           />
         </CardContent>
       </Card>
