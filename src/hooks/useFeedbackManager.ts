@@ -20,6 +20,7 @@ export const useFeedbackManager = () => {
         comment,
         admin_response,
         created_at,
+        is_response_seen_by_student,
         class_id,
         classes (name, period),
         profiles (first_name, last_name)
@@ -43,7 +44,10 @@ export const useFeedbackManager = () => {
     setIsSubmittingResponse(true);
     const { data, error } = await supabase
       .from('feedback')
-      .update({ admin_response: response })
+      .update({ 
+        admin_response: response,
+        is_response_seen_by_student: false // Reset flag to notify student
+      })
       .eq('id', feedbackId)
       .select()
       .single();

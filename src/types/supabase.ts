@@ -33,6 +33,7 @@ export interface Feedback {
   comment: string | null;
   admin_response: string | null;
   created_at: string;
+  is_response_seen_by_student?: boolean; // Added for notifications
   classes: { // Simplified for feedback join, as only name and period are used
     name: string;
     period: number;

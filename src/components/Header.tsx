@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useProfile } from '@/hooks/useProfile';
+import NotificationBell from './NotificationBell'; // Import the new component
 
 const Header: React.FC = () => {
   const { session, isLoading, isAdmin } = useSession();
@@ -67,6 +68,8 @@ const Header: React.FC = () => {
               <User className="mr-2 h-4 w-4" /> Profile
             </Link>
           </Button>
+
+          {!isAdmin && <NotificationBell />}
 
           <ThemeToggle />
 
