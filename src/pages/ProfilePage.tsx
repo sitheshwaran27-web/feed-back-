@@ -30,19 +30,17 @@ const ProfilePage: React.FC = () => {
     const updatedProfile = await updateProfile(values);
 
     if (updatedProfile) {
-      if (wasIncomplete && updatedProfile.first_name && updatedProfile.last_name) {
-        if (updatedProfile.is_admin) {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/student/dashboard");
-        }
+      // Always redirect to the correct dashboard after a successful update.
+      if (updatedProfile.is_admin) {
+        navigate("/admin/dashboard");
       } else {
-        navigate(-1);
+        navigate("/student/dashboard");
       }
     }
   };
 
   const handleCancel = () => {
+    // This action should only be possible if the profile is already complete.
     navigate(-1);
   };
 
@@ -85,6 +83,7 @@ const ProfilePage: React.FC = () => {
             isSubmitting={isSubmitting}
             email={session.user.email || "N/A"}
             userId={session.user.id}
+            disableCancel={wasIncomplete}
           />
         </CardContent>
       </Card>

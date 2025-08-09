@@ -27,9 +27,10 @@ interface ProfileFormProps {
   isSubmitting: boolean;
   email: string;
   userId: string; // Add userId prop for AvatarUpload
+  disableCancel?: boolean;
 }
 
-const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting, email, userId }) => {
+const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting, email, userId, disableCancel = false }) => {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
@@ -99,7 +100,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCanc
         />
         {/* Removed direct avatar_url input as it's now handled by AvatarUpload */}
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+          <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting || disableCancel}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
