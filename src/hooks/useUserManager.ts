@@ -12,14 +12,13 @@ export const useUserManager = () => {
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
-    // Fetch from the new secure view
+    // Fetch from the new secure function
     const { data, error } = await supabase
-      .from('user_profiles_with_email')
-      .select('*');
+      .rpc('get_all_user_profiles');
 
     if (error) {
       console.error("Error fetching users:", error);
-      showError("Failed to load user list.");
+      showError("Failed to load user list. You may not have admin privileges.");
     } else {
       setUsers(data || []);
     }
