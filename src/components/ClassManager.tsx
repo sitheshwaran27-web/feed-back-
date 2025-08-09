@@ -1,16 +1,18 @@
 "use client";
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import ClassForm from './ClassForm';
-import { Trash2, Edit } from 'lucide-react';
+import { Trash2, Edit, MessageSquare } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import ConfirmAlertDialog from './ConfirmAlertDialog';
 import { useClasses } from '@/hooks/useClasses';
-import { Class } from '@/types/supabase'; // Import Class
+import { Class } from '@/types/supabase';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const ClassManager: React.FC = () => {
   const { classes, loading, isSubmitting, addClass, updateClass, deleteClass } = useClasses();
@@ -120,18 +122,46 @@ const ClassManager: React.FC = () => {
                   <TableCell>{cls.start_time}</TableCell>
                   <TableCell>{cls.end_time}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm" onClick={() => openEditForm(cls)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <ConfirmAlertDialog
-                      title="Are you absolutely sure?"
-                      description="This action cannot be undone. This will permanently delete the class and any associated feedback."
-                      onConfirm={() => handleDeleteClass(cls.id)}
-                    >
-                      <Button variant="destructive" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </ConfirmAlertDialog>
+                    <div className="flex justify-end items-center space-x-2">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button asChild variant="outline" size="icon">
+                            <Link to="/admin/feedback" state={{ classId: cls.id }}>
+                              <MessageSquare className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>View Feedback</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="outline" size="icon" onClick={() => openEditForm(cls)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Edit Class</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <ConfirmAlertDialog
+                            title="Are you absolutely sure?"
+                            description="This action cannot be undone. This will permanently delete the class and any associated feedback."
+                            onConfirm={() => handleDeleteClass(cls.id)}
+                          >
+                            <Button variant="destructive" size="icon">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </ConfirmAlertDialog>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Delete Class</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
