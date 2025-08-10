@@ -3,17 +3,17 @@
 import React, { useEffect, useState } from 'react';
 import { useSession } from '@/components/SessionContextProvider';
 import { useNavigate } from 'react-router-dom';
-import { showError } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ProfileForm from '@/components/ProfileForm';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ProfilePage: React.FC = () => {
-  const { session, isLoading: isSessionLoading, isAdmin, setIsProfileIncompleteRedirect } = useSession();
+  const { session, isLoading: isSessionLoading, setIsProfileIncompleteRedirect } = useSession();
   const navigate = useNavigate();
-  const { profile, loading: loadingProfile, isSubmitting, fetchProfile, updateProfile } = useProfile();
+  const { profile, loading: loadingProfile, isSubmitting, updateProfile } = useProfile();
   const [wasIncomplete, setWasIncomplete] = useState(false);
 
   useEffect(() => {
@@ -30,7 +30,6 @@ const ProfilePage: React.FC = () => {
     const updatedProfile = await updateProfile(values);
 
     if (updatedProfile) {
-      // Always redirect to the correct dashboard after a successful update.
       if (updatedProfile.is_admin) {
         navigate("/admin/dashboard");
       } else {
@@ -40,14 +39,39 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleCancel = () => {
-    // This action should only be possible if the profile is already complete.
     navigate(-1);
   };
 
   if (isSessionLoading || loadingProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <p className="text-lg text-gray-700 dark:text-gray-300">Loading profile...</p>
+      <div className="flex flex-col items-center h-full">
+        <Card className="w-full max-w-md mx-auto mt-8">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Your Profile</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col items-center space-y-4 mb-6">
+              <Skeleton className="h-24 w-24 rounded-full" />
+              <Skeleton className="h-6 w-48" />
+              <div className="w-full space-y-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-24" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -57,7 +81,7 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-center p-4 h-full">
+    <div className="flex flex-col items-center h-full">
       <Card className="w-full max-w-md mx-auto mt-8">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Your Profile</CardTitle>
