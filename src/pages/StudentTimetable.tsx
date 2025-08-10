@@ -29,6 +29,33 @@ const StudentTimetable = () => {
     return grid;
   }, [groupedTimetable, daysOfWeek]);
 
+  const renderLoadingSkeleton = () => (
+    <div className="grid grid-cols-[auto_repeat(7,1fr)] gap-1">
+      {/* Header: Empty corner + Days of week skeletons */}
+      <div />
+      {daysOfWeek.map(day => (
+        <div key={day.value} className="text-center font-semibold p-2">
+          <Skeleton className="h-6 w-20 mx-auto" />
+        </div>
+      ))}
+
+      {/* Timetable Body: Periods skeletons + Grid Cell skeletons */}
+      {periods.map((period) => (
+        <React.Fragment key={period}>
+          <div className="text-center font-semibold p-2 self-center">
+            <Skeleton className="h-6 w-8 mx-auto" />
+          </div>
+          {daysOfWeek.map((day) => (
+            <div key={day.value} className="border rounded-md p-2 min-h-[80px] flex flex-col justify-center items-center bg-muted/20">
+              <Skeleton className="h-4 w-24 mb-1" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          ))}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+
   return (
     <div className="flex flex-col items-center p-4 h-full">
       <div className="w-full max-w-7xl mb-8">
@@ -44,7 +71,7 @@ const StudentTimetable = () => {
       <Card className="w-full max-w-7xl mx-auto">
         <CardContent className="p-6">
           {loading ? (
-            <Skeleton className="h-[400px] w-full" />
+            renderLoadingSkeleton()
           ) : (
             <div className="grid grid-cols-[auto_repeat(7,1fr)] gap-1">
               {/* Header: Empty corner + Days of week */}
