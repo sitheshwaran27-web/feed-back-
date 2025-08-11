@@ -38,7 +38,12 @@ const TimetableManager: React.FC = () => {
     });
     // Sort classes within each day by start time
     Object.values(groups).forEach(dayEntries => {
-      dayEntries.sort((a, b) => a.start_time.localeCompare(b.start_time));
+      dayEntries.sort((a, b) => {
+        // Defensive check for null/undefined start_time
+        const timeA = a.start_time || '';
+        const timeB = b.start_time || '';
+        return timeA.localeCompare(timeB);
+      });
     });
     return groups;
   }, [timetableEntries]);
