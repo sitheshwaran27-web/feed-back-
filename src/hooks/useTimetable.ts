@@ -16,7 +16,7 @@ export const useTimetable = () => {
     const { data: classesData, error: classesError } = await supabase
       .from('classes')
       .select('*')
-      .order('name', { ascending: true });
+      .order('period', { ascending: true });
 
     if (classesError) {
       console.error("Error fetching classes:", classesError);
@@ -30,12 +30,11 @@ export const useTimetable = () => {
       .select(`
         id,
         day_of_week,
-        period,
         class_id,
-        classes (id, name, start_time, end_time)
+        classes (id, name, period, start_time, end_time)
       `)
       .order('day_of_week', { ascending: true })
-      .order('period', { ascending: true });
+      .order('period', { foreignTable: 'classes', ascending: true });
 
     if (timetableError) {
       console.error("Error fetching timetable entries:", timetableError);
@@ -50,7 +49,7 @@ export const useTimetable = () => {
     fetchData();
   }, [fetchData]);
 
-  const addTimetableEntry = async (values: { day_of_week: number; class_id: string; period: number }) => {
+  const addTimetableEntry = async (values: { day_of_week: number; class_id: string }) => {
     setIsSubmitting(true);
 
     const classToAdd = availableClasses.find(c => c.id === values.class_id);
@@ -60,6 +59,7 @@ export const useTimetable = () => {
       return null;
     }
 
+    // Get all entries for the target day to check for time conflicts
     const { data: dayEntries, error: dayEntriesError } = await supabase
       .from('timetables')
       .select('*, classes!inner(*)')
@@ -72,12 +72,14 @@ export const useTimetable = () => {
       return null;
     }
 
+    // Check for time overlap
     const hasConflict = dayEntries.some(existingEntry => {
       if (!existingEntry.classes) return false;
       const newStartTime = classToAdd.start_time;
       const newEndTime = classToAdd.end_time;
       const existingStartTime = existingEntry.classes.start_time;
       const existingEndTime = existingEntry.classes.end_time;
+      // Conflict if (StartA < EndB) and (EndA > StartB)
       return newStartTime < existingEndTime && newEndTime > existingStartTime;
     });
 
@@ -93,9 +95,8 @@ export const useTimetable = () => {
       .select(`
         id,
         day_of_week,
-        period,
         class_id,
-        classes (id, name, start_time, end_time)
+        classes (id, name, period, start_time, end_time)
       `)
       .single();
 
@@ -112,7 +113,7 @@ export const useTimetable = () => {
     }
   };
 
-  const updateTimetableEntry = async (id: string, values: { day_of_week: number; class_id: string; period: number }) => {
+  const updateTimetableEntry = async (id: string, values: { day_of_week?: number; class_id?: string }) => {
     setIsSubmitting(true);
 
     const classToUpdate = availableClasses.find(c => c.id === values.class_id);
@@ -122,11 +123,21 @@ export const useTimetable = () => {
       return null;
     }
 
+    const originalEntry = timetableEntries.find(e => e.id === id);
+    const dayOfWeek = values.day_of_week || originalEntry?.day_of_week;
+
+    if (!dayOfWeek) {
+        showError("Could not determine the day for the timetable entry.");
+        setIsSubmitting(false);
+        return null;
+    }
+
+    // Get all entries for the target day, excluding the one being updated
     const { data: dayEntries, error: dayEntriesError } = await supabase
       .from('timetables')
       .select('*, classes!inner(*)')
-      .eq('day_of_week', values.day_of_week)
-      .not('id', 'eq', id);
+      .eq('day_of_week', dayOfWeek)
+      .not('id', 'eq', id); // Exclude self
 
     if (dayEntriesError) {
         console.error("Error fetching day's schedule for conflict check:", dayEntriesError);
@@ -135,6 +146,7 @@ export const useTimetable = () => {
         return null;
     }
 
+    // Check for time overlap
     const hasConflict = dayEntries.some(existingEntry => {
         if (!existingEntry.classes) return false;
         const newStartTime = classToUpdate.start_time;
@@ -157,9 +169,8 @@ export const useTimetable = () => {
       .select(`
         id,
         day_of_week,
-        period,
         class_id,
-        classes (id, name, start_time, end_time)
+        classes (id, name, period, start_time, end_time)
       `)
       .single();
 

@@ -42,7 +42,7 @@ const RecentStudentFeedback: React.FC = () => {
             <TableBody>
               {feedbackHistory.map((feedback) => (
                 <TableRow key={feedback.id}>
-                  <TableCell>{feedback.classes?.name}</TableCell>
+                  <TableCell>{feedback.classes?.name} (P{feedback.classes?.period})</TableCell>
                   <TableCell>{new Date(feedback.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <RatingStars rating={feedback.rating} starClassName="inline-block" />

@@ -77,6 +77,7 @@ const ClassManager: React.FC = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Period</TableHead>
                 <TableHead>Class Name</TableHead>
                 <TableHead>Start Time</TableHead>
                 <TableHead>End Time</TableHead>
@@ -86,6 +87,7 @@ const ClassManager: React.FC = () => {
             <TableBody>
               {Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
+                  <TableCell><Skeleton className="h-6 w-12" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20" /></TableCell>
@@ -105,6 +107,7 @@ const ClassManager: React.FC = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Period</TableHead>
                 <TableHead>Class Name</TableHead>
                 <TableHead>Start Time</TableHead>
                 <TableHead>End Time</TableHead>
@@ -114,6 +117,7 @@ const ClassManager: React.FC = () => {
             <TableBody>
               {classes.map((cls: Class) => (
                 <TableRow key={cls.id}>
+                  <TableCell>{cls.period}</TableCell>
                   <TableCell>{cls.name}</TableCell>
                   <TableCell>{cls.start_time}</TableCell>
                   <TableCell>{cls.end_time}</TableCell>

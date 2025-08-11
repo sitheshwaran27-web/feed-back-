@@ -20,7 +20,7 @@ const StudentTimetable = () => {
     Object.values(groupedTimetable).flat().forEach(entry => {
       if (entry.classes) {
         const dayIndex = entry.day_of_week - 1;
-        const periodIndex = entry.period - 1;
+        const periodIndex = entry.classes.period - 1;
         if (dayIndex >= 0 && dayIndex < daysOfWeek.length && periodIndex >= 0 && periodIndex < periods.length) {
           grid[periodIndex][dayIndex].push(entry);
         }
