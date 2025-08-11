@@ -35,18 +35,21 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
 
       if (currentSession) {
         setSession(currentSession);
+        // Temporarily fetch only ID to diagnose 406 error
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('is_admin, first_name, last_name')
+          .select('id') // Simplified select
           .eq('id', currentSession.user.id)
           .single();
 
-        if (profileError || !profile?.first_name || !profile?.last_name) {
-          setIsAdmin(profile?.is_admin || false);
+        if (profileError || !profile) { // Check if profile exists at all
+          setIsAdmin(false); // Cannot determine admin status without profile
           setIsProfileIncompleteRedirect(true);
         } else {
-          setIsAdmin(profile.is_admin);
-          setIsProfileIncompleteRedirect(false);
+          // We can't determine first_name, last_name, or is_admin with just 'id'
+          // For now, assume not admin and profile incomplete if we only fetch ID
+          setIsAdmin(false); 
+          setIsProfileIncompleteRedirect(true); // Force redirect to profile to complete data
         }
       } else {
         setSession(null);
@@ -59,7 +62,6 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
     checkSessionAndProfile();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // On SIGNED_IN or SIGNED_OUT, a full profile check is needed.
       setIsLoading(true);
       checkSessionAndProfile();
     });
