@@ -25,35 +25,30 @@ interface ConfirmAlertDialogProps {
   size?: "default" | "sm" | "lg" | "icon";
 }
 
-const ConfirmAlertDialog: React.FC<ConfirmAlertDialogProps> = ({
-  children,
-  title,
-  description,
-  onConfirm,
-  confirmText = "Continue",
-  cancelText = "Cancel",
-  variant = "destructive", // Default to destructive for confirmation actions
-  size = "sm", // Default to small size for trigger button
-}) => {
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        {children}
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className={variant === "destructive" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}>
-            {confirmText}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-};
+const ConfirmAlertDialog = React.forwardRef<HTMLButtonElement, ConfirmAlertDialogProps>(
+  ({ children, title, description, onConfirm, confirmText = "Continue", cancelText = "Cancel", variant = "destructive", size = "sm" }, ref) => {
+    return (
+      <AlertDialog>
+        <AlertDialogTrigger asChild ref={ref}>
+          {children}
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{title}</AlertDialogTitle>
+            <AlertDialogDescription>{description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+            <AlertDialogAction onClick={onConfirm} className={variant === "destructive" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}>
+              {confirmText}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
+);
+
+ConfirmAlertDialog.displayName = "ConfirmAlertDialog";
 
 export default ConfirmAlertDialog;
