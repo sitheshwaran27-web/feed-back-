@@ -64,7 +64,12 @@ const TimetableManager: React.FC = () => {
 
   const openFormForAdd = (day: number) => {
     setEditingEntry(null);
-    setFormInitialData({ day_of_week: day });
+    setFormInitialData({
+      day_of_week: day,
+      class_id: "",
+      start_time: "08:00",
+      end_time: "09:00",
+    });
     setIsFormOpen(true);
   };
 
