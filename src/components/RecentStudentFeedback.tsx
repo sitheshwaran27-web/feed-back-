@@ -34,7 +34,7 @@ const RecentStudentFeedback: React.FC = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Class</TableHead>
+                <TableHead>Subject</TableHead> {/* Renamed from Class */}
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Rating</TableHead>
               </TableRow>
@@ -42,7 +42,7 @@ const RecentStudentFeedback: React.FC = () => {
             <TableBody>
               {feedbackHistory.map((feedback) => (
                 <TableRow key={feedback.id}>
-                  <TableCell>{feedback.classes?.name}</TableCell>
+                  <TableCell>{feedback.subjects?.name}</TableCell> {/* Renamed from classes?.name */}
                   <TableCell>{new Date(feedback.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <RatingStars rating={feedback.rating} starClassName="inline-block" />

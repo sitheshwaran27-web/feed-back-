@@ -6,23 +6,46 @@ export interface Profile {
   is_admin: boolean;
   updated_at: string;
   email?: string; // Added back as optional for RPC function return
+  batch_id: string | null;
+  semester_number: number | null;
+  batches?: { // Joined batch data
+    name: string;
+  };
 }
 
-export interface Class {
-  id:string;
+export interface Batch {
+  id: string;
   name: string;
   created_at: string;
+}
+
+export interface Subject {
+  id:string;
+  name: string;
+  period: number | null;
+  batch_id: string | null;
+  semester_number: number | null;
+  created_at: string;
+  batches?: { // Joined batch data
+    name: string;
+  };
 }
 
 export interface TimetableEntry {
   id: string;
   day_of_week: number;
-  class_id: string;
+  subject_id: string; // Renamed from class_id
+  batch_id: string | null;
+  semester_number: number | null;
   created_at: string;
   start_time: string;
   end_time: string;
-  classes: { // Joined class data
+  subjects: { // Joined subject data (formerly classes)
     id: string;
+    name: string;
+    period: number | null;
+  };
+  batches?: { // Joined batch data
     name: string;
   };
 }
@@ -30,41 +53,50 @@ export interface TimetableEntry {
 export interface Feedback {
   id: string;
   student_id: string;
-  class_id: string;
+  subject_id: string; // Renamed from class_id
+  batch_id: string | null;
+  semester_number: number | null;
   rating: number;
   comment: string | null;
   admin_response: string | null;
   created_at: string;
   is_response_seen_by_student?: boolean; // Added for notifications
-  classes: { // Simplified for feedback join
+  subjects: { // Simplified for feedback join (formerly classes)
     name: string;
   };
   profiles?: { // Simplified for feedback join
     first_name: string | null;
     last_name: string | null;
+    batch_id: string | null;
+    semester_number: number | null;
+  };
+  batches?: { // Joined batch data
+    name: string;
   };
 }
 
 // Specific types for hooks/components that might need slightly different structures
-export interface DailyClass {
+export interface DailySubject { // Renamed from DailyClass
   id: string;
   name: string;
   start_time: string;
   end_time: string;
   hasSubmittedFeedback?: boolean;
+  batch_id: string | null;
+  semester_number: number | null;
 }
 
 export interface FeedbackHistoryEntry extends Feedback {
-  classes: {
+  subjects: { // Renamed from classes
     name: string;
   };
 }
 
-export interface ClassFeedbackStats {
-  class_id: string;
-  class_name: string;
+export interface SubjectFeedbackStats { // Renamed from ClassFeedbackStats
+  subject_id: string; // Renamed from class_id
+  subject_name: string; // Renamed from class_name
   average_rating: number;
-  feedback_count: number;
+  feedback_count: bigint;
   rating_counts: {
     '1': number;
     '2': number;
@@ -74,9 +106,9 @@ export interface ClassFeedbackStats {
   };
 }
 
-export interface ClassPerformanceSummary {
-  class_id: string;
-  class_name: string;
+export interface SubjectPerformanceSummary { // Renamed from ClassPerformanceSummary
+  subject_id: string; // Renamed from class_id
+  subject_name: string; // Renamed from class_name
   average_rating: number;
   feedback_count: number;
 }

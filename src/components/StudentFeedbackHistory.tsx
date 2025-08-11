@@ -48,7 +48,7 @@ const StudentFeedbackHistory: React.FC = () => {
           .from('feedback')
           .select(`
             id, rating, comment, admin_response, created_at, is_response_seen_by_student,
-            classes (name)
+            subjects (name) {/* Renamed from classes */}
           `)
           .eq('id', feedbackIdToOpen)
           .single();
@@ -108,7 +108,7 @@ const StudentFeedbackHistory: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Class</TableHead>
+                  <TableHead>Subject</TableHead> {/* Renamed from Class */}
                   <TableHead>Date</TableHead>
                   <TableHead className="text-right">Rating</TableHead>
                 </TableRow>
@@ -121,7 +121,7 @@ const StudentFeedbackHistory: React.FC = () => {
                         {feedback.admin_response && !feedback.is_response_seen_by_student && (
                           <span className="mr-2 h-2 w-2 rounded-full bg-blue-500" aria-label="New response"></span>
                         )}
-                        {feedback.classes?.name}
+                        {feedback.subjects?.name} {/* Renamed from classes?.name */}
                       </div>
                     </TableCell>
                     <TableCell>{new Date(feedback.created_at).toLocaleDateString()}</TableCell>
@@ -135,7 +135,7 @@ const StudentFeedbackHistory: React.FC = () => {
             {selectedFeedback && (
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Feedback for {selectedFeedback.classes?.name}</DialogTitle>
+                  <DialogTitle>Feedback for {selectedFeedback.subjects?.name}</DialogTitle> {/* Renamed from classes?.name */}
                   <DialogDescription>Details of your feedback submission and administrator's response.</DialogDescription> {/* Added DialogDescription */}
                 </DialogHeader>
                 <div className="space-y-4 py-4">

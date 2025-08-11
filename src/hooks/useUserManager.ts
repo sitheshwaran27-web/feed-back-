@@ -12,7 +12,7 @@ export const useUserManager = () => {
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
-    // Fetch from the new secure function
+    // Fetch from the new secure function, including batch and semester
     const { data, error } = await supabase
       .rpc('get_all_user_profiles');
 
@@ -20,6 +20,8 @@ export const useUserManager = () => {
       console.error("Error fetching users:", error);
       showError("Failed to load user list. You may not have admin privileges.");
     } else {
+      // Fetch batch names separately if needed, or modify RPC to join
+      // For now, assuming RPC returns batch_id and semester_number
       setUsers(data || []);
     }
     setLoading(false);
@@ -50,7 +52,7 @@ export const useUserManager = () => {
     setUpdatingUserId(null);
   };
 
-  const updateUser = async (userId: string, values: { first_name?: string; last_name?: string; is_admin?: boolean }) => {
+  const updateUser = async (userId: string, values: { first_name?: string; last_name?: string; is_admin?: boolean; batch_id?: string | null; semester_number?: number | null }) => { // Added batch_id, semester_number
     setUpdatingUserId(userId);
     const { data, error } = await supabase
       .from('profiles')
@@ -58,10 +60,12 @@ export const useUserManager = () => {
         first_name: values.first_name || null,
         last_name: values.last_name || null,
         is_admin: values.is_admin,
+        batch_id: values.batch_id || null, // Update batch_id
+        semester_number: values.semester_number || null, // Update semester_number
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId)
-      .select()
+      .select(`*, batches (name)`) // Select updated fields including batch name
       .single();
 
     if (error) {

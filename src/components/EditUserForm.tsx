@@ -10,17 +10,21 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Switch } from '@/components/ui/switch';
 import { Loader2 } from 'lucide-react';
 import { Profile } from '@/types/supabase';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useBatches } from '@/hooks/useBatches';
 
 const formSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
   last_name: z.string().min(1, "Last name is required").optional().or(z.literal("")),
   is_admin: z.boolean(),
+  batch_id: z.string().min(1, "Batch is required"), // New field
+  semester_number: z.coerce.number().min(1, "Semester is required").max(8, "Semester must be between 1 and 8"), // New field
 });
 
 type EditUserFormValues = z.infer<typeof formSchema>;
 
 interface EditUserFormProps {
-  initialData: Omit<Profile, 'id' | 'avatar_url' | 'updated_at' | 'email'>;
+  initialData: Omit<Profile, 'id' | 'avatar_url' | 'updated_at' | 'email' | 'batches'>; // Exclude batches
   onSubmit: (data: EditUserFormValues) => void;
   onCancel: () => void;
   isSubmitting: boolean;
@@ -28,6 +32,8 @@ interface EditUserFormProps {
 }
 
 const EditUserForm: React.FC<EditUserFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting, email }) => {
+  const { batches, loading: batchesLoading } = useBatches(); // Fetch available batches
+
   const form = useForm<EditUserFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData,
@@ -66,6 +72,50 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ initialData, onSubmit, onCa
               <FormControl>
                 <Input placeholder="User's last name" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="batch_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Batch</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value} disabled={batchesLoading}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select user's batch" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {batches.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="semester_number"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Semester</FormLabel>
+              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select user's semester" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {Array.from({ length: 8 }, (_, i) => i + 1).map((sem) => (
+                    <SelectItem key={sem} value={sem.toString()}>{sem}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

@@ -39,7 +39,7 @@ const FeedbackBreakdown: React.FC = () => {
   const { feedbackStats, loading } = useFeedbackAnalytics();
 
   const distributionChartData = feedbackStats.map(stat => ({
-    name: stat.class_name,
+    name: stat.subject_name, // Renamed property
     '1 Star': stat.rating_counts['1'],
     '2 Stars': stat.rating_counts['2'],
     '3 Stars': stat.rating_counts['3'],
@@ -48,7 +48,7 @@ const FeedbackBreakdown: React.FC = () => {
   }));
 
   const averageRatingData = feedbackStats.map(stat => ({
-    name: stat.class_name,
+    name: stat.subject_name, // Renamed property
     'Average Rating': stat.average_rating,
   }));
 
@@ -64,8 +64,8 @@ const FeedbackBreakdown: React.FC = () => {
     <div className="space-y-8">
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle>Average Class Ratings</CardTitle>
-          <CardDescription>Overall average rating for each class.</CardDescription>
+          <CardTitle>Average Subject Ratings</CardTitle> {/* Renamed title */}
+          <CardDescription>Overall average rating for each subject.</CardDescription> {/* Renamed description */}
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -94,7 +94,7 @@ const FeedbackBreakdown: React.FC = () => {
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle>Rating Distribution</CardTitle>
-          <CardDescription>Breakdown of all ratings submitted for each class.</CardDescription>
+          <CardDescription>Breakdown of all ratings submitted for each subject.</CardDescription> {/* Renamed description */}
         </CardHeader>
         <CardContent>
           {loading ? (

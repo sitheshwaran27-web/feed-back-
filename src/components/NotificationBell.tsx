@@ -54,7 +54,7 @@ const NotificationBell: React.FC = () => {
                   className="flex flex-col items-start cursor-pointer"
                   onClick={() => handleMarkAsRead(notification.id)}
                 >
-                  <p className="font-semibold">Response for {notification.classes.name}</p>
+                  <p className="font-semibold">Response for {notification.subjects.name}</p> {/* Renamed from classes.name */}
                   <p className="text-sm text-muted-foreground truncate w-full">
                     {notification.admin_response}
                   </p>

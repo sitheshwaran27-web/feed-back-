@@ -7,44 +7,37 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Loader2 } from 'lucide-react';
-import { Profile } from '@/types/supabase'; // Import Profile
-import AvatarUpload from './AvatarUpload'; // Import the new AvatarUpload component
+import { Loader2 } from 'lucide-react';
+import { Subject } from '@/types/supabase'; // Import Subject
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useBatches } from '@/hooks/useBatches'; // Import useBatches
+import { useBatches } from '@/hooks/useBatches'; // New hook for batches
 
 const formSchema = z.object({
-  first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
-  last_name: z.string().min(1, "Last name is required").optional().or(z.literal("")),
-  avatar_url: z.string().url("Invalid URL format").optional().or(z.literal("")),
-  batch_id: z.string().min(1, "Batch is required"), // New field
-  semester_number: z.coerce.number().min(1, "Semester is required").max(8, "Semester must be between 1 and 8"), // New field
+  name: z.string().min(1, "Subject name is required"),
+  period: z.coerce.number().min(1, "Period is required").optional(),
+  batch_id: z.string().min(1, "Batch is required"),
+  semester_number: z.coerce.number().min(1, "Semester is required").max(8, "Semester must be between 1 and 8"),
 });
 
-type ProfileFormValues = z.infer<typeof formSchema>;
+type SubjectFormValues = z.infer<typeof formSchema>;
 
-interface ProfileFormProps {
-  initialData?: Omit<Profile, 'id' | 'is_admin' | 'updated_at' | 'email' | 'batches'>; // Use Omit to exclude other fields
-  onSubmit: (data: ProfileFormValues) => void;
+interface SubjectFormProps {
+  initialData?: Omit<Subject, 'id' | 'created_at' | 'batches'>; // Use Omit to exclude id, created_at, and batches
+  onSubmit: (data: SubjectFormValues) => void;
   onCancel: () => void;
   isSubmitting: boolean;
-  email: string;
-  userId: string; // Add userId prop for AvatarUpload
-  disableCancel?: boolean;
 }
 
-const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting, email, userId, disableCancel = false }) => {
+const SubjectForm: React.FC<SubjectFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting }) => {
   const { batches, loading: batchesLoading } = useBatches(); // Fetch available batches
 
-  const form = useForm<ProfileFormValues>({
+  const form = useForm<SubjectFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
-      first_name: "",
-      last_name: "",
-      avatar_url: "",
-      batch_id: "", // Default empty
-      semester_number: undefined, // Default undefined
+      name: "",
+      period: undefined,
+      batch_id: "",
+      semester_number: undefined,
     },
   });
 
@@ -53,41 +46,17 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCanc
     onCancel();
   };
 
-  const handleAvatarUploadSuccess = (url: string) => {
-    form.setValue("avatar_url", url, { shouldDirty: true, shouldValidate: true });
-  };
-
-  const handleAvatarRemoveSuccess = () => {
-    form.setValue("avatar_url", null, { shouldDirty: true, shouldValidate: true });
-  };
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex flex-col items-center space-y-4 mb-6">
-          <Avatar className="h-24 w-24">
-            <AvatarImage src={form.watch("avatar_url") || undefined} alt="User Avatar" />
-            <AvatarFallback>
-              <User className="h-12 w-12 text-gray-400" />
-            </AvatarFallback>
-          </Avatar>
-          <p className="text-lg font-medium text-gray-700 dark:text-gray-300">{email}</p>
-          <AvatarUpload
-            userId={userId}
-            currentAvatarUrl={form.watch("avatar_url")}
-            onUploadSuccess={handleAvatarUploadSuccess}
-            onRemoveSuccess={handleAvatarRemoveSuccess}
-            disabled={isSubmitting}
-          />
-        </div>
         <FormField
           control={form.control}
-          name="first_name"
+          name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>First Name</FormLabel>
+              <FormLabel>Subject Name</FormLabel>
               <FormControl>
-                <Input placeholder="Your first name" {...field} />
+                <Input placeholder="e.g., Calculus I" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -95,12 +64,12 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCanc
         />
         <FormField
           control={form.control}
-          name="last_name"
+          name="period"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Last Name</FormLabel>
+              <FormLabel>Period (Optional)</FormLabel>
               <FormControl>
-                <Input placeholder="Your last name" {...field} />
+                <Input type="number" placeholder="e.g., 1" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -115,7 +84,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCanc
               <Select onValueChange={field.onChange} value={field.value} disabled={batchesLoading}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select your batch" />
+                    <SelectValue placeholder="Select a batch" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -137,7 +106,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCanc
               <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select your semester" />
+                    <SelectValue placeholder="Select a semester" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -150,14 +119,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCanc
             </FormItem>
           )}
         />
-        {/* Removed direct avatar_url input as it's now handled by AvatarUpload */}
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting || disableCancel}>
+          <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? "Saving..." : "Update Profile"}
+            {initialData ? "Update Subject" : "Add Subject"}
           </Button>
         </div>
       </form>
@@ -165,4 +133,4 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCanc
   );
 };
 
-export default ProfileForm;
+export default SubjectForm;

@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import FeedbackForm from '@/components/FeedbackForm';
 import { CheckCircle, Info } from 'lucide-react';
-import { useDailyClasses } from '@/hooks/useDailyClasses';
+import { useDailySubjects } from '@/hooks/useDailySubjects'; // Renamed hook
 import { showError, showSuccess } from '@/utils/toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProfile } from '@/hooks/useProfile';
@@ -16,15 +16,15 @@ const StudentDashboard = () => {
   const { profile, loading: profileLoading } = useProfile();
 
   const {
-    activeFeedbackClass,
-    hasSubmittedFeedbackForActiveClass,
-    loading: classesLoading,
-    fetchDailyClasses
-  } = useDailyClasses();
+    activeFeedbackSubject, // Renamed variable
+    hasSubmittedFeedbackForActiveSubject, // Renamed variable
+    loading: subjectsLoading, // Renamed variable
+    fetchDailySubjects // Renamed function
+  } = useDailySubjects(); // Renamed hook
 
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
-  if (isSessionLoading || classesLoading || profileLoading) {
+  if (isSessionLoading || subjectsLoading || profileLoading) { // Renamed variable
     return (
       <div className="flex flex-col items-center p-4 h-full space-y-8">
         {/* Header Skeleton */}
@@ -53,25 +53,27 @@ const StudentDashboard = () => {
   }
 
   const handleFeedbackSubmit = async (values: { rating: number; comment?: string }) => {
-    if (!session?.user.id || !activeFeedbackClass?.id) {
-      showError("Cannot submit feedback: User or class information missing.");
+    if (!session?.user.id || !activeFeedbackSubject?.id || !profile?.batch_id || !profile?.semester_number) { // Renamed variable, added batch/semester check
+      showError("Cannot submit feedback: User, subject, batch, or semester information missing."); // Updated error message
       return;
     }
 
     setIsSubmittingFeedback(true);
     const { error } = await supabase.from('feedback').insert({
       student_id: session.user.id,
-      class_id: activeFeedbackClass.id,
+      subject_id: activeFeedbackSubject.id, // Renamed from class_id
+      batch_id: profile.batch_id, // Pass batch_id from profile
+      semester_number: profile.semester_number, // Pass semester_number from profile
       rating: values.rating,
       comment: values.comment,
     });
 
     if (error) {
       console.error("Error submitting feedback:", error);
-      showError("Failed to submit feedback. You might have already submitted feedback for this class.");
+      showError("Failed to submit feedback. You might have already submitted feedback for this subject."); // Updated error message
     } else {
       showSuccess("Feedback submitted successfully!");
-      fetchDailyClasses();
+      fetchDailySubjects(); // Renamed function
     }
     setIsSubmittingFeedback(false);
   };
@@ -86,23 +88,23 @@ const StudentDashboard = () => {
         </p>
       </div>
 
-      {/* Class Feedback Section */}
+      {/* Subject Feedback Section */} {/* Renamed comment */}
       <div className="w-full max-w-md">
         <Card className="h-full">
           <CardHeader>
-            <CardTitle>Class Feedback</CardTitle>
+            <CardTitle>Subject Feedback</CardTitle> {/* Renamed title */}
           </CardHeader>
           <CardContent>
-            {activeFeedbackClass ? (
-              hasSubmittedFeedbackForActiveClass ? (
+            {activeFeedbackSubject ? ( // Renamed variable
+              hasSubmittedFeedbackForActiveSubject ? ( // Renamed variable
                 <div className="text-center text-green-600 dark:text-green-400 flex flex-col items-center justify-center h-full py-8">
                   <CheckCircle className="h-8 w-8 mb-2" />
-                  <p>Feedback for <strong>{activeFeedbackClass.name}</strong> submitted. Thank you!</p>
+                  <p>Feedback for <strong>{activeFeedbackSubject.name}</strong> submitted. Thank you!</p> {/* Renamed variable */}
                 </div>
               ) : (
                 <>
                   <CardDescription>
-                    Please provide your feedback for <strong>{activeFeedbackClass.name}</strong>.
+                    Please provide your feedback for <strong>{activeFeedbackSubject.name}</strong>. {/* Renamed variable */}
                   </CardDescription>
                   <div className="mt-4">
                     <FeedbackForm onSubmit={handleFeedbackSubmit} isSubmitting={isSubmittingFeedback} />
@@ -112,7 +114,7 @@ const StudentDashboard = () => {
             ) : (
               <div className="text-center text-muted-foreground flex flex-col items-center justify-center h-full py-8">
                 <Info className="h-8 w-8 mb-2" />
-                <p>No class is currently active for feedback. Feedback becomes available at the start of each class.</p>
+                <p>No subject is currently active for feedback. Feedback becomes available at the start of each subject.</p> {/* Renamed text */}
               </div>
             )}
           </CardContent>

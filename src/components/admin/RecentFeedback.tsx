@@ -72,7 +72,7 @@ const RecentFeedback: React.FC<RecentFeedbackProps> = ({ feedback, loading }) =>
                     <p className="font-semibold truncate">
                       {item.profiles?.first_name || 'Student'} {item.profiles?.last_name}
                       <span className="mx-1 font-normal text-muted-foreground">on</span>
-                      {item.classes.name}
+                      {item.subjects.name} {/* Renamed from classes.name */}
                     </p>
                     <RatingStars rating={item.rating} />
                   </div>

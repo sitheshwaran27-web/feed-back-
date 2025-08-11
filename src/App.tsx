@@ -9,7 +9,7 @@ import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboardPage from "./pages/admin/Dashboard";
-import AdminClassesPage from "./pages/admin/Classes";
+import AdminSubjectsPage from "./pages/admin/Subjects"; // Renamed import
 import AdminTimetablePage from "./pages/admin/Timetable";
 import AdminFeedbackPage from "./pages/admin/Feedback";
 import AdminUsersPage from "./pages/admin/Users";
@@ -71,7 +71,7 @@ const App = () => (
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboardPage />} />
-        <Route path="classes" element={<AdminClassesPage />} />
+        <Route path="subjects" element={<AdminSubjectsPage />} /> {/* Renamed route */}
         <Route path="timetable" element={<AdminTimetablePage />} />
         <Route path="feedback" element={<AdminFeedbackPage />} />
         <Route path="users" element={<AdminUsersPage />} />

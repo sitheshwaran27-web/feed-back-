@@ -21,9 +21,10 @@ export const useFeedbackManager = () => {
         admin_response,
         created_at,
         is_response_seen_by_student,
-        class_id,
-        classes (name, period),
-        profiles (first_name, last_name)
+        subject_id, {/* Renamed from class_id */}
+        subjects (name, period), {/* Renamed from classes */}
+        profiles (first_name, last_name),
+        batches (name) {/* New join for batch name */}
       `)
       .order('created_at', { ascending: false });
 

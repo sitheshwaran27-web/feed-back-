@@ -3,41 +3,41 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError } from '@/utils/toast';
-import { Feedback, ClassPerformanceSummary, ClassFeedbackStats } from '@/types/supabase';
+import { Feedback, SubjectPerformanceSummary, SubjectFeedbackStats } from '@/types/supabase'; // Renamed imports
 import { useSession } from '@/components/SessionContextProvider'; // Import useSession
 
 export const useAdminDashboardData = () => {
   const { isAdmin, isLoading: isSessionLoading } = useSession(); // Get isAdmin and session loading state
   const [recentFeedback, setRecentFeedback] = useState<Feedback[]>([]);
-  const [classPerformance, setClassPerformance] = useState<ClassPerformanceSummary[]>([]);
+  const [subjectPerformance, setSubjectPerformance] = useState<SubjectPerformanceSummary[]>([]); // Renamed state variable
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     if (!isAdmin) { // Only fetch if user is admin
       setRecentFeedback([]);
-      setClassPerformance([]);
+      setSubjectPerformance([]); // Renamed state variable
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      const [classStatsRes, recentFeedbackRes] = await Promise.all([
-        supabase.rpc('get_class_feedback_stats'),
-        supabase.from('feedback').select(`*, classes (name), profiles (first_name, last_name)`).order('created_at', { ascending: false }).limit(5)
+      const [subjectStatsRes, recentFeedbackRes] = await Promise.all([ // Renamed variable
+        supabase.rpc('get_subject_feedback_stats'), // Renamed RPC call
+        supabase.from('feedback').select(`*, subjects (name), profiles (first_name, last_name)`).order('created_at', { ascending: false }).limit(5) // Renamed from classes
       ]);
 
-      if (classStatsRes.error || recentFeedbackRes.error) {
-        console.error("Error fetching dashboard data:", classStatsRes.error || recentFeedbackRes.error);
+      if (subjectStatsRes.error || recentFeedbackRes.error) { // Renamed variable
+        console.error("Error fetching dashboard data:", subjectStatsRes.error || recentFeedbackRes.error); // Renamed variable
         // Do not show error if it's a permission denied, as ProtectedRoute handles it.
         // Only show if it's an unexpected error for an admin.
-        if (classStatsRes.error?.code !== '42501' && recentFeedbackRes.error?.code !== '42501') { // 42501 is permission denied
+        if (subjectStatsRes.error?.code !== '42501' && recentFeedbackRes.error?.code !== '42501') { // 42501 is permission denied
           showError("Failed to load dashboard data.");
         }
         setRecentFeedback([]);
-        setClassPerformance([]);
+        setSubjectPerformance([]); // Renamed state variable
       } else {
-        const classStats: ClassFeedbackStats[] = classStatsRes.data || [];
-        setClassPerformance(classStats);
+        const subjectStats: SubjectFeedbackStats[] = subjectStatsRes.data || []; // Renamed type and variable
+        setSubjectPerformance(subjectStats); // Renamed state variable
         setRecentFeedback(recentFeedbackRes.data || []);
       }
 
@@ -67,13 +67,13 @@ export const useAdminDashboardData = () => {
     }
   }, [fetchData, isSessionLoading]); // Add isSessionLoading to dependencies
 
-  const topClasses = [...classPerformance].sort((a, b) => b.average_rating - a.average_rating).slice(0, 3);
-  const bottomClasses = [...classPerformance].sort((a, b) => a.average_rating - b.average_rating).slice(0, 3);
+  const topSubjects = [...subjectPerformance].sort((a, b) => b.average_rating - a.average_rating).slice(0, 3); // Renamed variable
+  const bottomSubjects = [...subjectPerformance].sort((a, b) => a.average_rating - b.average_rating).slice(0, 3); // Renamed variable
 
   return {
     recentFeedback,
-    topClasses,
-    bottomClasses,
+    topSubjects, // Renamed return value
+    bottomSubjects, // Renamed return value
     loading,
     fetchData,
   };

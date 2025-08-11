@@ -34,8 +34,8 @@ const DashboardStats: React.FC = () => {
         loading={loading}
       />
       <StatCard
-        title="Total Classes"
-        value={stats?.classCount ?? 0}
+        title="Total Subjects" {/* Renamed title */}
+        value={stats?.subjectCount ?? 0} {/* Renamed value */}
         icon={BookOpen}
         loading={loading}
       />

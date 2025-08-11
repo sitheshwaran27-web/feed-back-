@@ -6,7 +6,7 @@ import { showError } from '@/utils/toast';
 
 interface DashboardStatsData {
   studentCount: number;
-  classCount: number;
+  subjectCount: number; // Renamed from classCount
   totalFeedbackCount: number;
   feedbackTodayCount: number;
 }
@@ -25,24 +25,24 @@ export const useDashboardStats = () => {
 
       const [
         { count: studentCount, error: studentError },
-        { count: classCount, error: classError },
+        { count: subjectCount, error: subjectError }, // Renamed from classCount, classError
         { count: totalFeedbackCount, error: totalFeedbackError },
         { count: feedbackTodayCount, error: feedbackTodayError },
       ] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_admin', false),
-        supabase.from('classes').select('id', { count: 'exact', head: true }),
+        supabase.from('subjects').select('id', { count: 'exact', head: true }), // Renamed from classes
         supabase.from('feedback').select('id', { count: 'exact', head: true }),
         supabase.from('feedback').select('id', { count: 'exact', head: true }).gte('created_at', today.toISOString()).lt('created_at', tomorrow.toISOString()),
       ]);
 
-      if (studentError || classError || totalFeedbackError || feedbackTodayError) {
-        console.error({ studentError, classError, totalFeedbackError, feedbackTodayError });
+      if (studentError || subjectError || totalFeedbackError || feedbackTodayError) { // Renamed error variable
+        console.error({ studentError, subjectError, totalFeedbackError, feedbackTodayError }); // Renamed error variable
         throw new Error("Failed to load one or more dashboard statistics.");
       }
 
       setStats({
         studentCount: studentCount || 0,
-        classCount: classCount || 0,
+        subjectCount: subjectCount || 0, // Renamed
         totalFeedbackCount: totalFeedbackCount || 0,
         feedbackTodayCount: feedbackTodayCount || 0,
       });

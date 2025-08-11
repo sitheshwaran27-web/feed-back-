@@ -3,26 +3,26 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
-import { Class, TimetableEntry } from '@/types/supabase'; // Import Class and TimetableEntry
+import { Subject, TimetableEntry } from '@/types/supabase'; // Renamed import
 
 export const useTimetable = () => {
   const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>([]);
-  const [availableClasses, setAvailableClasses] = useState<Class[]>([]);
+  const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]); // Renamed from availableClasses
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const { data: classesData, error: classesError } = await supabase
-      .from('classes')
+    const { data: subjectsData, error: subjectsError } = await supabase // Renamed variable
+      .from('subjects') // Renamed from classes
       .select('*')
       .order('name', { ascending: true });
 
-    if (classesError) {
-      console.error("Error fetching classes:", classesError);
-      showError("Failed to load classes for timetable.");
+    if (subjectsError) { // Renamed variable
+      console.error("Error fetching subjects:", subjectsError); // Renamed variable
+      showError("Failed to load subjects for timetable."); // Renamed message
     } else {
-      setAvailableClasses(classesData || []);
+      setAvailableSubjects(subjectsData || []); // Renamed variable
     }
 
     const { data: timetableData, error: timetableError } = await supabase
@@ -30,10 +30,13 @@ export const useTimetable = () => {
       .select(`
         id,
         day_of_week,
-        class_id,
+        subject_id, {/* Renamed from class_id */}
+        batch_id, {/* New field */}
+        semester_number, {/* New field */}
         start_time,
         end_time,
-        classes (id, name)
+        subjects (id, name, period), {/* Renamed from classes, added period */}
+        batches (name) {/* New join for batch name */}
       `)
       .order('day_of_week', { ascending: true })
       .order('start_time', { ascending: true });
@@ -42,8 +45,8 @@ export const useTimetable = () => {
       console.error("Error fetching timetable entries:", timetableError);
       showError("Failed to load timetable entries.");
     } else {
-      // Explicitly filter out entries where 'classes' is null
-      setTimetableEntries((timetableData || []).filter(entry => entry.classes !== null));
+      // Explicitly filter out entries where 'subjects' is null
+      setTimetableEntries((timetableData || []).filter(entry => entry.subjects !== null)); // Renamed from classes
     }
     setLoading(false);
   }, []);
@@ -52,13 +55,15 @@ export const useTimetable = () => {
     fetchData();
   }, [fetchData]);
 
-  const addTimetableEntry = async (values: { day_of_week: number; class_id: string; start_time: string; end_time: string }) => {
+  const addTimetableEntry = async (values: { day_of_week: number; subject_id: string; batch_id: string; semester_number: number; start_time: string; end_time: string }) => { // Renamed subject_id, added batch_id, semester_number
     setIsSubmitting(true);
 
     const { data: dayEntries, error: dayEntriesError } = await supabase
       .from('timetables')
       .select('start_time, end_time')
-      .eq('day_of_week', values.day_of_week);
+      .eq('day_of_week', values.day_of_week)
+      .eq('batch_id', values.batch_id) // Filter by batch
+      .eq('semester_number', values.semester_number); // Filter by semester
 
     if (dayEntriesError) {
       console.error("Error fetching day's schedule for conflict check:", dayEntriesError);
@@ -72,7 +77,7 @@ export const useTimetable = () => {
     });
 
     if (hasConflict) {
-      showError(`Time conflict detected. A class is already scheduled during this time.`);
+      showError(`Time conflict detected. A subject is already scheduled during this time for this batch and semester.`); // Updated message
       setIsSubmitting(false);
       return null;
     }
@@ -83,10 +88,13 @@ export const useTimetable = () => {
       .select(`
         id,
         day_of_week,
-        class_id,
+        subject_id, {/* Renamed from class_id */}
+        batch_id, {/* New field */}
+        semester_number, {/* New field */}
         start_time,
         end_time,
-        classes (id, name)
+        subjects (id, name, period), {/* Renamed from classes, added period */}
+        batches (name) {/* New join */}
       `)
       .single();
 
@@ -104,13 +112,15 @@ export const useTimetable = () => {
     }
   };
 
-  const updateTimetableEntry = async (id: string, values: { day_of_week: number; class_id: string; start_time: string; end_time: string }) => {
+  const updateTimetableEntry = async (id: string, values: { day_of_week: number; subject_id: string; batch_id: string; semester_number: number; start_time: string; end_time: string }) => { // Renamed subject_id, added batch_id, semester_number
     setIsSubmitting(true);
 
     const { data: dayEntries, error: dayEntriesError } = await supabase
       .from('timetables')
       .select('start_time, end_time')
       .eq('day_of_week', values.day_of_week)
+      .eq('batch_id', values.batch_id) // Filter by batch
+      .eq('semester_number', values.semester_number) // Filter by semester
       .not('id', 'eq', id);
 
     if (dayEntriesError) {
@@ -125,7 +135,7 @@ export const useTimetable = () => {
     });
 
     if (hasConflict) {
-      showError(`Time conflict detected. A class is already scheduled during this time.`);
+      showError(`Time conflict detected. A subject is already scheduled during this time for this batch and semester.`); // Updated message
       setIsSubmitting(false);
       return null;
     }
@@ -137,10 +147,13 @@ export const useTimetable = () => {
       .select(`
         id,
         day_of_week,
-        class_id,
+        subject_id, {/* Renamed from class_id */}
+        batch_id, {/* New field */}
+        semester_number, {/* New field */}
         start_time,
         end_time,
-        classes (id, name)
+        subjects (id, name, period), {/* Renamed from classes, added period */}
+        batches (name) {/* New join */}
       `)
       .single();
 
@@ -176,7 +189,7 @@ export const useTimetable = () => {
 
   return {
     timetableEntries,
-    availableClasses,
+    availableSubjects, // Renamed return value
     loading,
     isSubmitting,
     addTimetableEntry,

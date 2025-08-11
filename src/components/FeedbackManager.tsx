@@ -17,6 +17,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import FeedbackDetail from './admin/FeedbackDetail';
+import { useBatches } from '@/hooks/useBatches'; // Import useBatches
 
 const FeedbackManager: React.FC = () => {
   const {
@@ -26,6 +27,7 @@ const FeedbackManager: React.FC = () => {
     updateAdminResponse,
     deleteFeedback,
   } = useFeedbackManager();
+  const { batches, loading: batchesLoading } = useBatches(); // Fetch batches
   const location = useLocation();
   
   const [selectedFeedbackId, setSelectedFeedbackId] = useState<string | null>(null);
@@ -33,19 +35,23 @@ const FeedbackManager: React.FC = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
   const [ratingFilter, setRatingFilter] = useState<string[]>([]);
-  const [classFilter, setClassFilter] = useState('all');
+  const [subjectFilter, setSubjectFilter] = useState('all'); // Renamed from classFilter
+  const [batchFilter, setBatchFilter] = useState('all'); // New filter
+  const [semesterFilter, setSemesterFilter] = useState('all'); // New filter
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleClearFilters = () => {
     setStatusFilter('all');
     setRatingFilter([]);
-    setClassFilter('all');
+    setSubjectFilter('all'); // Renamed
+    setBatchFilter('all'); // New
+    setSemesterFilter('all'); // New
     setSearchTerm('');
   };
 
   useEffect(() => {
     if (location.state) {
-      const { classId, studentName, feedbackId } = location.state;
+      const { subjectId, studentName, feedbackId } = location.state; // Renamed classId to subjectId
       
       // Prioritize direct feedback ID linking
       if (feedbackId && feedbackEntries.length > 0) {
@@ -58,7 +64,7 @@ const FeedbackManager: React.FC = () => {
         }
       } else {
         // Handle older filter-based navigation
-        if (classId) setClassFilter(classId);
+        if (subjectId) setSubjectFilter(subjectId); // Renamed
         if (studentName) setSearchTerm(studentName);
       }
       
@@ -70,19 +76,26 @@ const FeedbackManager: React.FC = () => {
   const activeFilterCount = [
     statusFilter !== 'all',
     ratingFilter.length > 0,
-    classFilter !== 'all',
+    subjectFilter !== 'all', // Renamed
+    batchFilter !== 'all', // New
+    semesterFilter !== 'all', // New
     searchTerm !== '',
   ].filter(Boolean).length;
 
-  const availableClasses = useMemo(() => {
+  const availableSubjects = useMemo(() => { // Renamed
     if (!feedbackEntries) return [];
-    const uniqueClasses = new Map<string, { name: string; period: number }>();
+    const uniqueSubjects = new Map<string, { name: string; period: number | null; batchName: string | undefined; semesterNumber: number | null }>(); // Added batchName, semesterNumber
     feedbackEntries.forEach(entry => {
-      if (entry.classes && !uniqueClasses.has(entry.class_id)) {
-        uniqueClasses.set(entry.class_id, { name: entry.classes.name, period: entry.classes.period });
+      if (entry.subjects && !uniqueSubjects.has(entry.subject_id)) { // Renamed
+        uniqueSubjects.set(entry.subject_id, { // Renamed
+          name: entry.subjects.name,
+          period: entry.subjects.period,
+          batchName: entry.batches?.name, // Get batch name
+          semesterNumber: entry.semester_number, // Get semester number
+        });
       }
     });
-    return Array.from(uniqueClasses.entries()).map(([id, data]) => ({ id, ...data })).sort((a, b) => a.period - b.period);
+    return Array.from(uniqueSubjects.entries()).map(([id, data]) => ({ id, ...data })).sort((a, b) => a.name.localeCompare(b.name)); // Sort by subject name
   }, [feedbackEntries]);
 
   const filteredFeedback = useMemo(() => {
@@ -94,8 +107,14 @@ const FeedbackManager: React.FC = () => {
     if (ratingFilter.length > 0) {
       filtered = filtered.filter(entry => ratingFilter.includes(entry.rating.toString()));
     }
-    if (classFilter !== 'all') {
-      filtered = filtered.filter(entry => entry.class_id === classFilter);
+    if (subjectFilter !== 'all') { // Renamed
+      filtered = filtered.filter(entry => entry.subject_id === subjectFilter); // Renamed
+    }
+    if (batchFilter !== 'all') { // New filter
+      filtered = filtered.filter(entry => entry.batch_id === batchFilter);
+    }
+    if (semesterFilter !== 'all') { // New filter
+      filtered = filtered.filter(entry => entry.semester_number === parseInt(semesterFilter));
     }
     if (searchTerm) {
       const lowercasedSearchTerm = searchTerm.toLowerCase();
@@ -108,7 +127,7 @@ const FeedbackManager: React.FC = () => {
     filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return filtered;
-  }, [feedbackEntries, statusFilter, ratingFilter, classFilter, searchTerm]);
+  }, [feedbackEntries, statusFilter, ratingFilter, subjectFilter, batchFilter, semesterFilter, searchTerm]); // Added new filters
 
   const selectedFeedback = useMemo(() => {
     return feedbackEntries.find(f => f.id === selectedFeedbackId) || null;
@@ -158,7 +177,11 @@ const FeedbackManager: React.FC = () => {
               <div className="flex justify-between items-start">
                 <div className="flex-grow">
                   <p className="font-semibold">{feedback.profiles?.first_name} {feedback.profiles?.last_name}</p>
-                  <p className="text-sm text-muted-foreground">{feedback.classes.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {feedback.subjects.name} {/* Renamed from classes.name */}
+                    {feedback.batches?.name && ` (${feedback.batches.name})`} {/* Display batch name */}
+                    {feedback.semester_number && ` Sem ${feedback.semester_number}`} {/* Display semester number */}
+                  </p>
                 </div>
                 <RatingStars rating={feedback.rating} />
               </div>
@@ -204,25 +227,47 @@ const FeedbackManager: React.FC = () => {
         </div>
         <CollapsibleContent>
           <div className="flex flex-col gap-4 p-4 border-t">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> {/* Adjusted grid */}
               <Input
                 placeholder="Search by student name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <Select value={classFilter} onValueChange={setClassFilter}>
+              <Select value={batchFilter} onValueChange={setBatchFilter} disabled={batchesLoading}> {/* New batch filter */}
                 <SelectTrigger>
-                  <SelectValue placeholder="Filter by class..." />
+                  <SelectValue placeholder="Filter by Batch..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Classes</SelectItem>
-                  {availableClasses.map(cls => (
-                    <SelectItem key={cls.id} value={cls.id}>{cls.name} (P{cls.period})</SelectItem>
+                  <SelectItem value="all">All Batches</SelectItem>
+                  {batches.map(batch => (
+                    <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={semesterFilter} onValueChange={setSemesterFilter}> {/* New semester filter */}
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by Semester..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Semesters</SelectItem>
+                  {Array.from({ length: 8 }, (_, i) => i + 1).map(sem => (
+                    <SelectItem key={sem} value={sem.toString()}>{sem}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {/* Adjusted grid */}
+              <Select value={subjectFilter} onValueChange={setSubjectFilter}> {/* Renamed from classFilter */}
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by subject..." /> {/* Renamed */}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Subjects</SelectItem> {/* Renamed */}
+                  {availableSubjects.map(sub => ( // Renamed
+                    <SelectItem key={sub.id} value={sub.id}>{sub.name} {sub.period ? `(P${sub.period})` : ''}</SelectItem> // Display period
+                  ))}
+                </SelectContent>
+              </Select>
               <div className="flex items-center space-x-2">
                 <span className="text-sm font-medium text-muted-foreground">Status:</span>
                 <ToggleGroup type="single" value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
@@ -231,6 +276,8 @@ const FeedbackManager: React.FC = () => {
                   <ToggleGroupItem value="responded">Responded</ToggleGroupItem>
                 </ToggleGroup>
               </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center space-x-2">
                 <span className="text-sm font-medium text-muted-foreground">Ratings:</span>
                 <ToggleGroup type="multiple" value={ratingFilter} onValueChange={setRatingFilter}>

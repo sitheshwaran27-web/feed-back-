@@ -26,7 +26,7 @@ export const useStudentFeedbackHistory = (page: number, pageSize: number) => {
         admin_response,
         created_at,
         is_response_seen_by_student,
-        classes (name, period)
+        subjects (name, period) {/* Renamed from classes */}
       `, { count: 'exact' })
       .eq('student_id', userId)
       .order('created_at', { ascending: false })

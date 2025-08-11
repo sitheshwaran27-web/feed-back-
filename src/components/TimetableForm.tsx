@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
-import { Class } from '@/types/supabase'; // Import Class
+import { Subject } from '@/types/supabase'; // Import Subject
+import { useBatches } from '@/hooks/useBatches'; // Import useBatches
 
 const daysOfWeek = [
   { value: 1, label: 'Monday' },
@@ -23,7 +24,9 @@ const daysOfWeek = [
 
 const formSchema = z.object({
   day_of_week: z.coerce.number().min(1, "Day of week is required").max(7, "Invalid day of week"),
-  class_id: z.string().min(1, "Class is required"),
+  subject_id: z.string().min(1, "Subject is required"), // Renamed from class_id
+  batch_id: z.string().min(1, "Batch is required"), // New field
+  semester_number: z.coerce.number().min(1, "Semester is required").max(8, "Semester must be between 1 and 8"), // New field
   start_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid start time format (HH:MM)"),
   end_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid end time format (HH:MM)"),
 }).refine(data => data.end_time > data.start_time, {
@@ -35,18 +38,22 @@ type TimetableFormValues = z.infer<typeof formSchema>;
 
 interface TimetableFormProps {
   initialData?: Partial<TimetableFormValues>;
-  availableClasses: Class[];
+  availableSubjects: Subject[]; // Renamed from availableClasses
   onSubmit: (data: TimetableFormValues) => void;
   onCancel: () => void;
   isSubmitting: boolean;
 }
 
-const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableClasses, onSubmit, onCancel, isSubmitting }) => {
+const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableSubjects, onSubmit, onCancel, isSubmitting }) => { // Renamed prop
+  const { batches, loading: batchesLoading } = useBatches(); // Fetch available batches
+
   const form = useForm<TimetableFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
       day_of_week: 1,
-      class_id: "",
+      subject_id: "", // Renamed
+      batch_id: "", // Default empty
+      semester_number: undefined, // Default undefined
       start_time: "08:00",
       end_time: "09:00",
     },
@@ -84,19 +91,63 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableCla
         />
         <FormField
           control={form.control}
-          name="class_id"
+          name="batch_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Class</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <FormLabel>Batch</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value} disabled={batchesLoading}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a class" />
+                    <SelectValue placeholder="Select a batch" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {availableClasses.map((cls) => (
-                    <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
+                  {batches.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="semester_number"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Semester</FormLabel>
+              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a semester" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {Array.from({ length: 8 }, (_, i) => i + 1).map((sem) => (
+                    <SelectItem key={sem} value={sem.toString()}>{sem}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="subject_id" // Renamed from class_id
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Subject</FormLabel> {/* Renamed from Class */}
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a subject" /> {/* Renamed */}
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {availableSubjects.map((sub) => ( // Renamed from availableClasses
+                    <SelectItem key={sub.id} value={sub.id}>{sub.name} {sub.period ? `(P${sub.period})` : ''}</SelectItem> {/* Display period */}
                   ))}
                 </SelectContent>
               </Select>
@@ -136,7 +187,7 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableCla
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {initialData?.class_id ? "Update Entry" : "Add to Timetable"}
+            {initialData?.subject_id ? "Update Entry" : "Add to Timetable"} {/* Renamed */}
           </Button>
         </div>
       </form>

@@ -3,12 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError } from '@/utils/toast';
-import { ClassFeedbackStats } from '@/types/supabase';
+import { SubjectFeedbackStats } from '@/types/supabase'; // Renamed import
 import { useSession } from '@/components/SessionContextProvider'; // Import useSession
 
 export const useFeedbackAnalytics = () => {
   const { isAdmin, isLoading: isSessionLoading } = useSession(); // Get isAdmin and session loading state
-  const [feedbackStats, setFeedbackStats] = useState<ClassFeedbackStats[]>([]);
+  const [feedbackStats, setFeedbackStats] = useState<SubjectFeedbackStats[]>([]); // Renamed state variable
   const [loading, setLoading] = useState(true);
 
   const fetchFeedbackStats = useCallback(async () => {
@@ -18,7 +18,7 @@ export const useFeedbackAnalytics = () => {
       return;
     }
     setLoading(true);
-    const { data, error } = await supabase.rpc('get_class_feedback_stats');
+    const { data, error } = await supabase.rpc('get_subject_feedback_stats'); // Renamed RPC call
 
     if (error) {
       console.error("Error fetching feedback for analytics:", error);

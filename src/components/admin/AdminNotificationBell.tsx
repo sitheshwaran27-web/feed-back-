@@ -45,7 +45,7 @@ const AdminNotificationBell: React.FC = () => {
                   className="flex flex-col items-start cursor-pointer"
                 >
                   <p className="font-semibold">
-                    {notification.profiles?.first_name || 'Student'} on {notification.classes.name}
+                    {notification.profiles?.first_name || 'Student'} on {notification.subjects.name} {/* Renamed from classes.name */}
                   </p>
                   <p className="text-sm text-muted-foreground truncate w-full">
                     {notification.comment || "No comment provided."}

@@ -24,7 +24,7 @@ export const useAdminNotifications = () => {
         id,
         created_at,
         comment,
-        classes (name),
+        subjects (name), {/* Renamed from classes */}
         profiles (first_name, last_name)
       `)
       .is('admin_response', null)

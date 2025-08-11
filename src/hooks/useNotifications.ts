@@ -20,7 +20,7 @@ export const useNotifications = () => {
         admin_response,
         created_at,
         is_response_seen_by_student,
-        classes (name)
+        subjects (name) {/* Renamed from classes */}
       `)
       .eq('student_id', userId)
       .eq('is_response_seen_by_student', false)

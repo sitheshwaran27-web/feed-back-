@@ -65,7 +65,7 @@ const FeedbackDetail: React.FC<FeedbackDetailProps> = ({ feedback, onUpdateRespo
       <CardContent className="flex-grow overflow-y-auto space-y-4">
         <div className="p-4 border rounded-lg bg-muted/50">
           <div className="flex justify-between items-center mb-2">
-            <p className="font-semibold text-lg">{feedback.classes.name}</p>
+            <p className="font-semibold">{feedback.subjects.name} {feedback.subjects.period ? `(P${feedback.subjects.period})` : ''}</p> {/* Renamed from classes.name, added period */}
             <RatingStars rating={feedback.rating} starClassName="h-5 w-5" />
           </div>
           <Separator />

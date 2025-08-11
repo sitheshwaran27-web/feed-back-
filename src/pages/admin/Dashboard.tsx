@@ -5,13 +5,13 @@ import { useSession } from '@/components/SessionContextProvider';
 import DashboardStats from '@/components/DashboardStats';
 import { useAdminDashboardData } from '@/hooks/useAdminDashboardData';
 import RecentFeedback from '@/components/admin/RecentFeedback';
-import ClassPerformance from '@/components/admin/ClassPerformance';
+import SubjectPerformance from '@/components/admin/SubjectPerformance'; // Renamed import
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const AdminDashboardPage = () => {
   const { session, isLoading: isSessionLoading } = useSession();
-  const { recentFeedback, topClasses, bottomClasses, loading: isAdminDataLoading } = useAdminDashboardData();
+  const { recentFeedback, topSubjects, bottomSubjects, loading: isAdminDataLoading } = useAdminDashboardData(); // Renamed props
 
   const isLoading = isSessionLoading || isAdminDataLoading;
 
@@ -36,7 +36,7 @@ const AdminDashboardPage = () => {
 
         <Separator className="my-8" />
 
-        {/* ClassPerformance Skeleton */}
+        {/* SubjectPerformance Skeleton */} {/* Renamed comment */}
         <div className="w-full max-w-6xl">
           <div className="grid md:grid-cols-2 gap-8">
             <Skeleton className="h-48 w-full" />
@@ -68,7 +68,7 @@ const AdminDashboardPage = () => {
       <Separator className="my-8" />
 
       <div className="w-full max-w-6xl">
-        <ClassPerformance topClasses={topClasses} bottomClasses={bottomClasses} loading={isAdminDataLoading} />
+        <SubjectPerformance topSubjects={topSubjects} bottomSubjects={bottomSubjects} loading={isAdminDataLoading} /> {/* Renamed component and props */}
       </div>
 
       <div className="w-full max-w-6xl">

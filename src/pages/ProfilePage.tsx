@@ -18,7 +18,8 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (!isSessionLoading && profile) {
-      if (!profile.first_name || !profile.last_name) {
+      // Check if first_name, last_name, batch_id, or semester_number are missing
+      if (!profile.first_name || !profile.last_name || !profile.batch_id || !profile.semester_number) {
         setWasIncomplete(true);
       } else {
         setWasIncomplete(false);
@@ -26,7 +27,7 @@ const ProfilePage: React.FC = () => {
     }
   }, [profile, isSessionLoading]);
 
-  const handleUpdateProfile = async (values: { first_name?: string; last_name?: string; avatar_url?: string }) => {
+  const handleUpdateProfile = async (values: { first_name?: string; last_name?: string; avatar_url?: string; batch_id?: string | null; semester_number?: number | null }) => { // Added batch_id, semester_number
     const updatedProfile = await updateProfile(values);
 
     if (updatedProfile) {
@@ -66,6 +67,14 @@ const ProfilePage: React.FC = () => {
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-10 w-full" />
             </div>
+            <div className="space-y-2"> {/* New skeleton for batch/semester */}
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2"> {/* New skeleton for batch/semester */}
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
             <div className="flex justify-end space-x-2">
               <Skeleton className="h-10 w-24" />
               <Skeleton className="h-10 w-24" />
@@ -92,7 +101,7 @@ const ProfilePage: React.FC = () => {
               <Terminal className="h-4 w-4" />
               <AlertTitle>Profile Incomplete!</AlertTitle>
               <AlertDescription>
-                Please complete your first name and last name to proceed.
+                Please complete your first name, last name, batch, and semester to proceed. {/* Updated message */}
               </AlertDescription>
             </Alert>
           )}
@@ -101,6 +110,8 @@ const ProfilePage: React.FC = () => {
               first_name: profile?.first_name || "",
               last_name: profile?.last_name || "",
               avatar_url: profile?.avatar_url || "",
+              batch_id: profile?.batch_id || "", // Pass batch_id
+              semester_number: profile?.semester_number || undefined, // Pass semester_number
             }}
             onSubmit={handleUpdateProfile}
             onCancel={handleCancel}

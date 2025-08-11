@@ -36,10 +36,10 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
 
       if (currentSession) {
         setSession(currentSession);
-        // Fetch profile data, excluding email as it's not in the profiles table
+        // Fetch profile data, including batch_id and semester_number
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('first_name, last_name, is_admin') // Fetch necessary fields, removed email
+          .select('first_name, last_name, is_admin, batch_id, semester_number') // Fetch necessary fields
           .eq('id', currentSession.user.id)
           .single();
 
@@ -49,7 +49,8 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
           setIsProfileIncompleteRedirect(true); // Force redirect to profile to complete data
         } else {
           setIsAdmin(profile.is_admin || false);
-          setIsProfileIncompleteRedirect(!profile.first_name || !profile.last_name);
+          // Check for all required profile fields
+          setIsProfileIncompleteRedirect(!profile.first_name || !profile.last_name || !profile.batch_id || !profile.semester_number);
         }
       } else {
         setSession(null);
