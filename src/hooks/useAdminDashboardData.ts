@@ -3,41 +3,45 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError } from '@/utils/toast';
-import { Feedback, SubjectPerformanceSummary, SubjectFeedbackStats } from '@/types/supabase'; // Renamed imports
-import { useSession } from '@/components/SessionContextProvider'; // Import useSession
+import { Feedback, SubjectPerformanceSummary, SubjectFeedbackStats } from '@/types/supabase';
+import { useSession } from '@/components/SessionContextProvider';
 
 export const useAdminDashboardData = () => {
-  const { isAdmin, isLoading: isSessionLoading } = useSession(); // Get isAdmin and session loading state
+  const { isAdmin, isLoading: isSessionLoading } = useSession();
   const [recentFeedback, setRecentFeedback] = useState<Feedback[]>([]);
-  const [subjectPerformance, setSubjectPerformance] = useState<SubjectPerformanceSummary[]>([]); // Renamed state variable
+  const [subjectPerformance, setSubjectPerformance] = useState<SubjectPerformanceSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    if (!isAdmin) { // Only fetch if user is admin
+    if (!isAdmin) {
       setRecentFeedback([]);
-      setSubjectPerformance([]); // Renamed state variable
+      setSubjectPerformance([]);
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      const [subjectStatsRes, recentFeedbackRes] = await Promise.all([ // Renamed variable
-        supabase.rpc('get_subject_feedback_stats'), // Renamed RPC call
-        supabase.from('feedback').select(`*, subjects (name), profiles (first_name, last_name)`).order('created_at', { ascending: false }).limit(5) // Renamed from classes
+      const [subjectStatsRes, recentFeedbackRes] = await Promise.all([
+        supabase.rpc('get_subject_feedback_stats'),
+        supabase.from('feedback').select(`*, subjects (name), profiles (first_name, last_name)`).order('created_at', { ascending: false }).limit(5)
       ]);
 
-      if (subjectStatsRes.error || recentFeedbackRes.error) { // Renamed variable
-        console.error("Error fetching dashboard data:", subjectStatsRes.error || recentFeedbackRes.error); // Renamed variable
-        // Do not show error if it's a permission denied, as ProtectedRoute handles it.
-        // Only show if it's an unexpected error for an admin.
-        if (subjectStatsRes.error?.code !== '42501' && recentFeedbackRes.error?.code !== '42501') { // 42501 is permission denied
+      if (subjectStatsRes.error || recentFeedbackRes.error) {
+        console.error("Error fetching dashboard data:", subjectStatsRes.error || recentFeedbackRes.error);
+        if (subjectStatsRes.error?.code !== '42501' && recentFeedbackRes.error?.code !== '42501') {
           showError("Failed to load dashboard data.");
         }
         setRecentFeedback([]);
-        setSubjectPerformance([]); // Renamed state variable
+        setSubjectPerformance([]);
       } else {
-        const subjectStats: SubjectFeedbackStats[] = subjectStatsRes.data || []; // Renamed type and variable
-        setSubjectPerformance(subjectStats); // Renamed state variable
+        const subjectStats: SubjectFeedbackStats[] = subjectStatsRes.data || [];
+        const performanceSummary: SubjectPerformanceSummary[] = subjectStats.map(stat => ({
+          subject_id: stat.subject_id,
+          subject_name: stat.subject_name,
+          average_rating: stat.average_rating,
+          feedback_count: Number(stat.feedback_count) // Convert bigint to number
+        }));
+        setSubjectPerformance(performanceSummary);
         setRecentFeedback(recentFeedbackRes.data || []);
       }
 
@@ -46,10 +50,10 @@ export const useAdminDashboardData = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin]); // Add isAdmin to dependencies
+  }, [isAdmin]);
 
   useEffect(() => {
-    if (!isSessionLoading) { // Only fetch once session loading is complete
+    if (!isSessionLoading) {
       fetchData();
 
       const channel = supabase
@@ -65,15 +69,15 @@ export const useAdminDashboardData = () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [fetchData, isSessionLoading]); // Add isSessionLoading to dependencies
+  }, [fetchData, isSessionLoading]);
 
-  const topSubjects = [...subjectPerformance].sort((a, b) => b.average_rating - a.average_rating).slice(0, 3); // Renamed variable
-  const bottomSubjects = [...subjectPerformance].sort((a, b) => a.average_rating - b.average_rating).slice(0, 3); // Renamed variable
+  const topSubjects = [...subjectPerformance].sort((a, b) => b.average_rating - a.average_rating).slice(0, 3);
+  const bottomSubjects = [...subjectPerformance].sort((a, b) => a.average_rating - b.average_rating).slice(0, 3);
 
   return {
     recentFeedback,
-    topSubjects, // Renamed return value
-    bottomSubjects, // Renamed return value
+    topSubjects,
+    bottomSubjects,
     loading,
     fetchData,
   };
