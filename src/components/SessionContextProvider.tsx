@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { Session } from "@supabase/supabase-js";
+import React, { createContext, useContext, useEffect, useState } from "C:/Users/User/AppData/Local/Temp/dyad-temp-1722440400000/node_modules/@types/react";
+import { Session } from "C:/Users/User/AppData/Local/Temp/dyad-temp-1722440400000/node_modules/@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types/supabase"; // Import Profile type
 
@@ -36,10 +36,10 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
 
       if (currentSession) {
         setSession(currentSession);
-        // Fetch full profile data again
+        // Fetch full profile data again, including email
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('first_name, last_name, is_admin') // Fetch necessary fields
+          .select('first_name, last_name, is_admin, email') // Fetch necessary fields including email
           .eq('id', currentSession.user.id)
           .single();
 

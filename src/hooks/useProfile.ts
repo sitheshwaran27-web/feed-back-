@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "C:/Users/User/AppData/Local/Temp/dyad-temp-1722440400000/node_modules/@types/react";
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
 import { Profile } from '@/types/supabase';
@@ -20,10 +20,10 @@ export const useProfile = () => {
       return;
     }
 
-    // Fetch full profile data again
+    // Fetch full profile data again, including email
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, avatar_url, is_admin, updated_at') // Fetch all profile fields
+      .select('id, first_name, last_name, avatar_url, is_admin, updated_at, email') // Fetch all profile fields including email
       .eq('id', session.user.id)
       .single();
 
