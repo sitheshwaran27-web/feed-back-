@@ -58,8 +58,8 @@ const TimetableManager: React.FC = () => {
   const openFormForEdit = (entry: TimetableEntry) => {
     setEditingEntry(entry);
     setFormInitialData({ day_of_week: entry.day_of_week, class_id: entry.class_id });
-    // For editing, show classes of the same period
-    setFormAvailableClasses(availableClasses.filter(c => c.period === entry.classes.period));
+    // For editing, show ALL available classes, not just those of the same period
+    setFormAvailableClasses(availableClasses);
     setIsFormOpen(true);
   };
 
