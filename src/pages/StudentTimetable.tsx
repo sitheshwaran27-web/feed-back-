@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useWeeklyTimetable } from '@/hooks/useWeeklyTimetable';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -52,7 +52,7 @@ const StudentTimetable = () => {
                         {groupedTimetable[day.value].map(entry => (
                           <div key={entry.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
                             <p className="font-semibold">{entry.classes.name}</p>
-                            <p className="text-sm text-muted-foreground">{entry.classes.start_time} - {entry.classes.end_time}</p>
+                            <p className="text-sm text-muted-foreground">{entry.start_time} - {entry.end_time}</p>
                           </div>
                         ))}
                       </div>

@@ -43,10 +43,12 @@ export const useDailyClasses = () => {
       .from('timetables')
       .select(`
         class_id,
-        classes (id, name, start_time, end_time)
+        start_time,
+        end_time,
+        classes (id, name)
       `)
       .eq('day_of_week', supabaseDayOfWeek)
-      .order('start_time', { foreignTable: 'classes', ascending: true });
+      .order('start_time', { ascending: true });
 
     if (timetableError) {
       console.error("Error fetching daily timetable entries:", timetableError);
@@ -56,8 +58,13 @@ export const useDailyClasses = () => {
     }
 
     const dailyScheduledClasses: DailyClass[] = (timetableEntries || [])
-      .map(entry => entry.classes)
-      .filter((cls): cls is DailyClass => cls !== null);
+      .filter(entry => entry.classes)
+      .map(entry => ({
+        id: entry.classes!.id,
+        name: entry.classes!.name,
+        start_time: entry.start_time,
+        end_time: entry.end_time,
+      }));
 
     const { data: feedbackData, error: feedbackError } = await supabase
       .from('feedback')

@@ -24,12 +24,17 @@ const daysOfWeek = [
 const formSchema = z.object({
   day_of_week: z.coerce.number().min(1, "Day of week is required").max(7, "Invalid day of week"),
   class_id: z.string().min(1, "Class is required"),
+  start_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid start time format (HH:MM)"),
+  end_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid end time format (HH:MM)"),
+}).refine(data => data.end_time > data.start_time, {
+  message: "End time must be after start time",
+  path: ["end_time"],
 });
 
 type TimetableFormValues = z.infer<typeof formSchema>;
 
 interface TimetableFormProps {
-  initialData?: TimetableFormValues; // Added for editing
+  initialData?: Partial<TimetableFormValues>;
   availableClasses: Class[];
   onSubmit: (data: TimetableFormValues) => void;
   onCancel: () => void;
@@ -42,11 +47,13 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableCla
     defaultValues: initialData || {
       day_of_week: 1,
       class_id: "",
+      start_time: "08:00",
+      end_time: "09:00",
     },
   });
 
   const handleCancel = () => {
-    form.reset(); // Reset form fields on cancel
+    form.reset();
     onCancel();
   };
 
@@ -59,7 +66,7 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableCla
           render={({ field }) => (
             <FormItem>
               <FormLabel>Day of Week</FormLabel>
-              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value.toString()}>
+              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a day" />
@@ -89,10 +96,36 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableCla
                 </FormControl>
                 <SelectContent>
                   {availableClasses.map((cls) => (
-                    <SelectItem key={cls.id} value={cls.id}>{cls.name} (P{cls.period})</SelectItem>
+                    <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="start_time"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Start Time (HH:MM)</FormLabel>
+              <FormControl>
+                <Input type="time" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="end_time"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>End Time (HH:MM)</FormLabel>
+              <FormControl>
+                <Input type="time" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -103,7 +136,7 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableCla
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {initialData ? "Update Entry" : "Add to Timetable"}
+            {initialData?.class_id ? "Update Entry" : "Add to Timetable"}
           </Button>
         </div>
       </form>

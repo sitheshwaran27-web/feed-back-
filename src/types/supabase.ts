@@ -11,8 +11,6 @@ export interface Profile {
 export interface Class {
   id:string;
   name: string;
-  start_time: string;
-  end_time: string;
   created_at: string;
 }
 
@@ -21,7 +19,12 @@ export interface TimetableEntry {
   day_of_week: number;
   class_id: string;
   created_at: string;
-  classes: Class; // Joined class data
+  start_time: string;
+  end_time: string;
+  classes: { // Joined class data
+    id: string;
+    name: string;
+  };
 }
 
 export interface Feedback {
@@ -43,7 +46,11 @@ export interface Feedback {
 }
 
 // Specific types for hooks/components that might need slightly different structures
-export interface DailyClass extends Class {
+export interface DailyClass {
+  id: string;
+  name: string;
+  start_time: string;
+  end_time: string;
   hasSubmittedFeedback?: boolean;
 }
 

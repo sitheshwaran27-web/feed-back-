@@ -78,8 +78,6 @@ const ClassManager: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Class Name</TableHead>
-                <TableHead>Start Time</TableHead>
-                <TableHead>End Time</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -87,8 +85,6 @@ const ClassManager: React.FC = () => {
               {Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
                   <TableCell><Skeleton className="h-6 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
                       <Skeleton className="h-8 w-8" />
@@ -106,8 +102,6 @@ const ClassManager: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Class Name</TableHead>
-                <TableHead>Start Time</TableHead>
-                <TableHead>End Time</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -115,8 +109,6 @@ const ClassManager: React.FC = () => {
               {classes.map((cls: Class) => (
                 <TableRow key={cls.id}>
                   <TableCell>{cls.name}</TableCell>
-                  <TableCell>{cls.start_time}</TableCell>
-                  <TableCell>{cls.end_time}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end items-center space-x-2">
                       <Tooltip>

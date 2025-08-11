@@ -15,7 +15,7 @@ export const useClasses = () => {
     const { data, error } = await supabase
       .from('classes')
       .select('*')
-      .order('start_time', { ascending: true });
+      .order('name', { ascending: true });
 
     if (error) {
       console.error("Error fetching classes:", error);
@@ -45,7 +45,7 @@ export const useClasses = () => {
       return null;
     } else {
       showSuccess("Class added successfully!");
-      setClasses(prevClasses => [...prevClasses, data].sort((a, b) => a.start_time.localeCompare(b.start_time)));
+      setClasses(prevClasses => [...prevClasses, data].sort((a, b) => a.name.localeCompare(b.name)));
       setIsSubmitting(false);
       return data;
     }
@@ -68,7 +68,7 @@ export const useClasses = () => {
       return null;
     } else {
       showSuccess("Class updated successfully!");
-      setClasses(prevClasses => prevClasses.map(cls => cls.id === data.id ? data : cls).sort((a, b) => a.start_time.localeCompare(b.start_time)));
+      setClasses(prevClasses => prevClasses.map(cls => cls.id === data.id ? data : cls).sort((a, b) => a.name.localeCompare(b.name)));
       setIsSubmitting(false);
       return data;
     }

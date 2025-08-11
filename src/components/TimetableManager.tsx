@@ -8,7 +8,7 @@ import { Trash2, Edit, PlusCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import ConfirmAlertDialog from './ConfirmAlertDialog';
 import { useTimetable } from '@/hooks/useTimetable';
-import { TimetableEntry, Class } from '@/types/supabase';
+import { TimetableEntry } from '@/types/supabase';
 import TimetableForm from './TimetableForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -26,7 +26,7 @@ const TimetableManager: React.FC = () => {
   const { timetableEntries, availableClasses, loading, isSubmitting, addTimetableEntry, updateTimetableEntry, deleteTimetableEntry } = useTimetable();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
-  const [formInitialData, setFormInitialData] = useState<{ day_of_week: number; class_id: string } | undefined>(undefined);
+  const [formInitialData, setFormInitialData] = useState<Partial<Parameters<typeof TimetableForm>[0]['initialData']>>({});
 
   const groupedTimetable = useMemo(() => {
     const groups: { [key: number]: TimetableEntry[] } = {};
@@ -38,19 +38,19 @@ const TimetableManager: React.FC = () => {
     });
     // Sort classes within each day by start time
     Object.values(groups).forEach(dayEntries => {
-      dayEntries.sort((a, b) => a.classes.start_time.localeCompare(b.classes.start_time));
+      dayEntries.sort((a, b) => a.start_time.localeCompare(b.start_time));
     });
     return groups;
   }, [timetableEntries]);
 
-  const handleAddTimetableEntry = async (values: { day_of_week: number; class_id: string }) => {
+  const handleAddTimetableEntry = async (values: any) => {
     const newEntry = await addTimetableEntry(values);
     if (newEntry) {
       closeForm();
     }
   };
 
-  const handleUpdateTimetableEntry = async (values: { day_of_week: number; class_id: string }) => {
+  const handleUpdateTimetableEntry = async (values: any) => {
     if (!editingEntry) return;
     const updated = await updateTimetableEntry(editingEntry.id, values);
     if (updated) {
@@ -64,20 +64,20 @@ const TimetableManager: React.FC = () => {
 
   const openFormForAdd = (day: number) => {
     setEditingEntry(null);
-    setFormInitialData({ day_of_week: day, class_id: "" });
+    setFormInitialData({ day_of_week: day });
     setIsFormOpen(true);
   };
 
   const openFormForEdit = (entry: TimetableEntry) => {
     setEditingEntry(entry);
-    setFormInitialData({ day_of_week: entry.day_of_week, class_id: entry.class_id });
+    setFormInitialData({ ...entry });
     setIsFormOpen(true);
   };
 
   const closeForm = () => {
     setIsFormOpen(false);
     setEditingEntry(null);
-    setFormInitialData(undefined);
+    setFormInitialData({});
   };
 
   return (
@@ -109,7 +109,7 @@ const TimetableManager: React.FC = () => {
                         <div key={entry.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
                           <div>
                             <p className="font-semibold">{entry.classes.name}</p>
-                            <p className="text-sm text-muted-foreground">{entry.classes.start_time} - {entry.classes.end_time}</p>
+                            <p className="text-sm text-muted-foreground">{entry.start_time} - {entry.end_time}</p>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Button variant="outline" size="sm" onClick={() => openFormForEdit(entry)}>

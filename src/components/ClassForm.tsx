@@ -12,11 +12,6 @@ import { Class } from '@/types/supabase'; // Import Class
 
 const formSchema = z.object({
   name: z.string().min(1, "Class name is required"),
-  start_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid start time format (HH:MM)"),
-  end_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid end time format (HH:MM)"),
-}).refine(data => data.end_time > data.start_time, {
-  message: "End time must be after start time",
-  path: ["end_time"], // Set the error on the end_time field
 });
 
 type ClassFormValues = z.infer<typeof formSchema>;
@@ -33,8 +28,6 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel, 
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
       name: "",
-      start_time: "08:00",
-      end_time: "09:00",
     },
   });
 
@@ -54,32 +47,6 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel, 
               <FormLabel>Class Name</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Mathematics" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="start_time"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Start Time (HH:MM)</FormLabel>
-              <FormControl>
-                <Input type="time" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="end_time"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>End Time (HH:MM)</FormLabel>
-              <FormControl>
-                <Input type="time" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
