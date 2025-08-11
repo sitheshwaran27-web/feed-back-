@@ -64,6 +64,17 @@ function Login() {
                 },
               },
             }}
+            // Explicitly tell Auth component to collect first_name and last_name
+            form={{
+              signUp: {
+                email: true,
+                password: true,
+                data: {
+                  first_name: true,
+                  last_name: true,
+                },
+              },
+            }}
           />
         </CardContent>
       </Card>
