@@ -25,13 +25,13 @@ const daysOfWeek = [
 ];
 
 const TimetableManager: React.FC = () => {
-  const { timetableEntries, availableSubjects, loading, isSubmitting, addTimetableEntry, updateTimetableEntry, deleteTimetableEntry } = useTimetable(); // Renamed availableSubjects
+  const { timetableEntries, availableSubjects, loading, isSubmitting, addTimetableEntry, updateTimetableEntry, deleteTimetableEntry } = useTimetable();
   const { batches, loading: batchesLoading } = useBatches();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
   const [formInitialData, setFormInitialData] = useState<Partial<Parameters<typeof TimetableForm>[0]['initialData']>>({});
-  const [batchFilter, setBatchFilter] = useState('all'); // New filter
-  const [semesterFilter, setSemesterFilter] = useState('all'); // New filter
+  const [batchFilter, setBatchFilter] = useState('all');
+  const [semesterFilter, setSemesterFilter] = useState('all');
 
   const filteredTimetableEntries = useMemo(() => {
     let filtered = timetableEntries;
@@ -49,22 +49,20 @@ const TimetableManager: React.FC = () => {
   const groupedTimetable = useMemo(() => {
     const groups: { [key: number]: TimetableEntry[] } = {};
     daysOfWeek.forEach(day => (groups[day.value] = []));
-    filteredTimetableEntries.forEach(entry => { // Use filtered entries
-      if (entry.subjects) { // Renamed from classes
+    filteredTimetableEntries.forEach(entry => {
+      if (entry.subjects) {
         groups[entry.day_of_week].push(entry);
       }
     });
-    // Sort subjects within each day by start time
     Object.values(groups).forEach(dayEntries => {
       dayEntries.sort((a, b) => {
-        // Defensive check for null/undefined start_time
         const timeA = a.start_time || '';
         const timeB = b.start_time || '';
         return timeA.localeCompare(timeB);
       });
     });
     return groups;
-  }, [filteredTimetableEntries]); // Dependency on filtered entries
+  }, [filteredTimetableEntries]);
 
   const handleAddTimetableEntry = async (values: any) => {
     const newEntry = await addTimetableEntry(values);
@@ -89,9 +87,9 @@ const TimetableManager: React.FC = () => {
     setEditingEntry(null);
     setFormInitialData({
       day_of_week: day,
-      subject_id: "", // Renamed
-      batch_id: batchFilter !== 'all' ? batchFilter : "", // Pre-fill if filter is active
-      semester_number: semesterFilter !== 'all' ? parseInt(semesterFilter) : undefined, // Pre-fill if filter is active
+      subject_id: "",
+      batch_id: batchFilter !== 'all' ? batchFilter : "",
+      semester_number: semesterFilter !== 'all' ? parseInt(semesterFilter) : undefined,
       start_time: "08:00",
       end_time: "09:00",
     });
@@ -102,7 +100,7 @@ const TimetableManager: React.FC = () => {
     setEditingEntry(entry);
     setFormInitialData({ 
       ...entry,
-      subject_id: entry.subject_id, // Ensure subject_id is passed correctly
+      subject_id: entry.subject_id,
       batch_id: entry.batch_id || "",
       semester_number: entry.semester_number || undefined,
     });
@@ -119,7 +117,7 @@ const TimetableManager: React.FC = () => {
     <Card className="w-full max-w-5xl mx-auto mt-8">
       <CardHeader>
         <CardTitle>Manage Weekly Timetable</CardTitle>
-        <CardDescription>Add, edit, or remove subjects from the weekly schedule for specific batches and semesters.</CardDescription> {/* Updated description */}
+        <CardDescription>Add, edit, or remove subjects from the weekly schedule for specific batches and semesters.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col md:flex-row gap-4 mb-4">
@@ -160,18 +158,18 @@ const TimetableManager: React.FC = () => {
                 <div className="mt-4 space-y-4">
                   {groupedTimetable[day.value].length === 0 ? (
                     <div className="text-center text-muted-foreground py-8">
-                      <p>No subjects scheduled for {day.label} in the selected filters.</p> {/* Updated text */}
+                      <p>No subjects scheduled for {day.label} in the selected filters.</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
                       {groupedTimetable[day.value].map(entry => (
                         <div key={entry.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
                           <div>
-                            <p className="font-semibold">{entry.subjects.name} {entry.subjects.period ? `(P${entry.subjects.period})` : ''}</p> {/* Renamed from classes.name, added period */}
+                            <p className="font-semibold">{entry.subjects.name} {entry.subjects.period ? `(P${entry.subjects.period})` : ''}</p>
                             <p className="text-sm text-muted-foreground">
                               {entry.start_time} - {entry.end_time}
-                              {entry.batches?.name && ` (${entry.batches.name})`} {/* Display batch name */}
-                              {entry.semester_number && ` Sem ${entry.semester_number}`} {/* Display semester number */}
+                              {entry.batches?.name && ` (${entry.batches.name})`}
+                              {entry.semester_number && ` Sem ${entry.semester_number}`}
                             </p>
                           </div>
                           <div className="flex items-center space-x-2">
@@ -180,7 +178,7 @@ const TimetableManager: React.FC = () => {
                             </Button>
                             <ConfirmAlertDialog
                               title="Are you sure?"
-                              description="This will permanently remove this subject from the timetable for this day." {/* Updated description */}
+                              description="This will permanently remove this subject from the timetable for this day."
                               onConfirm={() => handleDeleteTimetableEntry(entry.id)}
                             >
                               <Button variant="destructive" size="sm">
@@ -193,7 +191,7 @@ const TimetableManager: React.FC = () => {
                     </div>
                   )}
                   <Button variant="outline" className="w-full" onClick={() => openFormForAdd(day.value)}>
-                    <PlusCircle className="h-4 w-4 mr-2" /> Add Subject to {day.label} {/* Updated text */}
+                    <PlusCircle className="h-4 w-4 mr-2" /> Add Subject to {day.label}
                   </Button>
                 </div>
               </TabsContent>
@@ -208,7 +206,7 @@ const TimetableManager: React.FC = () => {
           </DialogHeader>
           <TimetableForm
             initialData={formInitialData}
-            availableSubjects={availableSubjects} // Renamed prop
+            availableSubjects={availableSubjects}
             onSubmit={editingEntry ? handleUpdateTimetableEntry : handleAddTimetableEntry}
             onCancel={closeForm}
             isSubmitting={isSubmitting}
