@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { Profile } from "@/types/supabase"; // Import Profile type
 
 interface SessionContextType {
   session: Session | null;
@@ -35,21 +36,20 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
 
       if (currentSession) {
         setSession(currentSession);
-        // Temporarily fetch only ID to diagnose 406 error
+        // Fetch full profile data again
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('id') // Simplified select
+          .select('first_name, last_name, is_admin') // Fetch necessary fields
           .eq('id', currentSession.user.id)
           .single();
 
-        if (profileError || !profile) { // Check if profile exists at all
-          setIsAdmin(false); // Cannot determine admin status without profile
-          setIsProfileIncompleteRedirect(true);
-        } else {
-          // We can't determine first_name, last_name, or is_admin with just 'id'
-          // For now, assume not admin and profile incomplete if we only fetch ID
-          setIsAdmin(false); 
+        if (profileError || !profile) {
+          console.error("Error fetching profile in SessionContextProvider:", profileError);
+          setIsAdmin(false);
           setIsProfileIncompleteRedirect(true); // Force redirect to profile to complete data
+        } else {
+          setIsAdmin(profile.is_admin || false);
+          setIsProfileIncompleteRedirect(!profile.first_name || !profile.last_name);
         }
       } else {
         setSession(null);

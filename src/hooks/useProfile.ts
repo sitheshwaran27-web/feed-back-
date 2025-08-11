@@ -20,10 +20,10 @@ export const useProfile = () => {
       return;
     }
 
-    // Temporarily fetch only ID to diagnose 406 error
+    // Fetch full profile data again
     const { data, error } = await supabase
       .from('profiles')
-      .select('id') // Simplified select
+      .select('id, first_name, last_name, avatar_url, is_admin, updated_at') // Fetch all profile fields
       .eq('id', session.user.id)
       .single();
 
@@ -32,8 +32,6 @@ export const useProfile = () => {
       showError("Failed to load profile.");
       setProfile(null);
     } else {
-      // If only ID is fetched, we can't populate other profile fields here.
-      // This is just for diagnosis.
       setProfile(data as Profile); 
     }
     setLoading(false);
