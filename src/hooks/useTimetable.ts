@@ -34,7 +34,7 @@ export const useTimetable = () => {
         classes (id, name, period, start_time, end_time)
       `)
       .order('day_of_week', { ascending: true })
-      .order('classes.period', { ascending: true });
+      .order('period', { foreignTable: 'classes', ascending: true });
 
     if (timetableError) {
       console.error("Error fetching timetable entries:", timetableError);
