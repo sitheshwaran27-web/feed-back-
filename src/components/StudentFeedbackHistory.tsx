@@ -8,7 +8,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import RatingStars from './RatingStars';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'; // Import DialogDescription
 import { FeedbackHistoryEntry } from '@/types/supabase';
 import { Separator } from './ui/separator';
 import { supabase } from '@/integrations/supabase/client';
@@ -136,6 +136,7 @@ const StudentFeedbackHistory: React.FC = () => {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Feedback for {selectedFeedback.classes?.name}</DialogTitle>
+                  <DialogDescription>Details of your feedback submission and administrator's response.</DialogDescription> {/* Added DialogDescription */}
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="flex justify-between items-center">
