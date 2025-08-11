@@ -43,11 +43,10 @@ export const useDailyClasses = () => {
       .from('timetables')
       .select(`
         class_id,
-        classes (id, name, period, start_time, end_time)
+        classes (id, name, start_time, end_time)
       `)
       .eq('day_of_week', supabaseDayOfWeek)
-      .order('classes.period', { ascending: true })
-      .order('classes.start_time', { ascending: true });
+      .order('start_time', { foreignTable: 'classes', ascending: true });
 
     if (timetableError) {
       console.error("Error fetching daily timetable entries:", timetableError);

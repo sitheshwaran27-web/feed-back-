@@ -102,7 +102,7 @@ const StudentDashboard = () => {
               ) : (
                 <>
                   <CardDescription>
-                    Please provide your feedback for <strong>{activeFeedbackClass.name} (P{activeFeedbackClass.period})</strong>.
+                    Please provide your feedback for <strong>{activeFeedbackClass.name}</strong>.
                   </CardDescription>
                   <div className="mt-4">
                     <FeedbackForm onSubmit={handleFeedbackSubmit} isSubmitting={isSubmittingFeedback} />

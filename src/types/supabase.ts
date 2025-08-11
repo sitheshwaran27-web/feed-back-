@@ -11,7 +11,6 @@ export interface Profile {
 export interface Class {
   id:string;
   name: string;
-  period: number;
   start_time: string;
   end_time: string;
   created_at: string;
@@ -34,11 +33,10 @@ export interface Feedback {
   admin_response: string | null;
   created_at: string;
   is_response_seen_by_student?: boolean; // Added for notifications
-  classes: { // Simplified for feedback join, as only name and period are used
+  classes: { // Simplified for feedback join
     name: string;
-    period: number;
   };
-  profiles?: { // Simplified for feedback join, as only first/last name are used
+  profiles?: { // Simplified for feedback join
     first_name: string | null;
     last_name: string | null;
   };
@@ -52,14 +50,12 @@ export interface DailyClass extends Class {
 export interface FeedbackHistoryEntry extends Feedback {
   classes: {
     name: string;
-    period: number;
   };
 }
 
 export interface ClassFeedbackStats {
   class_id: string;
   class_name: string;
-  period: number;
   average_rating: number;
   feedback_count: number;
   rating_counts: {
@@ -74,7 +70,6 @@ export interface ClassFeedbackStats {
 export interface ClassPerformanceSummary {
   class_id: string;
   class_name: string;
-  period: number;
   average_rating: number;
   feedback_count: number;
 }

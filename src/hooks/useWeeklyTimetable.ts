@@ -27,10 +27,9 @@ export const useWeeklyTimetable = () => {
         id,
         day_of_week,
         class_id,
-        classes (id, name, period, start_time, end_time)
+        classes (id, name, start_time, end_time)
       `)
-      .order('day_of_week', { ascending: true })
-      .order('period', { foreignTable: 'classes', ascending: true });
+      .order('day_of_week', { ascending: true });
 
     if (error) {
       console.error("Error fetching timetable:", error);
@@ -53,14 +52,9 @@ export const useWeeklyTimetable = () => {
         groups[entry.day_of_week].push(entry);
       }
     });
-    // Sort classes within each day
+    // Sort classes within each day by start time
     Object.values(groups).forEach(dayEntries => {
-      dayEntries.sort((a, b) => {
-        if (a.classes.period !== b.classes.period) {
-          return a.classes.period - b.classes.period;
-        }
-        return a.classes.start_time.localeCompare(b.classes.start_time);
-      });
+      dayEntries.sort((a, b) => a.classes.start_time.localeCompare(b.classes.start_time));
     });
     return groups;
   }, [timetableEntries]);

@@ -16,7 +16,7 @@ export const useTimetable = () => {
     const { data: classesData, error: classesError } = await supabase
       .from('classes')
       .select('*')
-      .order('period', { ascending: true });
+      .order('start_time', { ascending: true });
 
     if (classesError) {
       console.error("Error fetching classes:", classesError);
@@ -31,10 +31,9 @@ export const useTimetable = () => {
         id,
         day_of_week,
         class_id,
-        classes (id, name, period, start_time, end_time)
+        classes (id, name, start_time, end_time)
       `)
-      .order('day_of_week', { ascending: true })
-      .order('period', { foreignTable: 'classes', ascending: true });
+      .order('day_of_week', { ascending: true });
 
     if (timetableError) {
       console.error("Error fetching timetable entries:", timetableError);
@@ -96,7 +95,7 @@ export const useTimetable = () => {
         id,
         day_of_week,
         class_id,
-        classes (id, name, period, start_time, end_time)
+        classes (id, name, start_time, end_time)
       `)
       .single();
 
@@ -170,7 +169,7 @@ export const useTimetable = () => {
         id,
         day_of_week,
         class_id,
-        classes (id, name, period, start_time, end_time)
+        classes (id, name, start_time, end_time)
       `)
       .single();
 
