@@ -48,7 +48,7 @@ const StudentFeedbackHistory: React.FC = () => {
           .from('feedback')
           .select(`
             id, rating, comment, admin_response, created_at, is_response_seen_by_student,
-            classes (name, period)
+            classes (name)
           `)
           .eq('id', feedbackIdToOpen)
           .single();
@@ -121,7 +121,7 @@ const StudentFeedbackHistory: React.FC = () => {
                         {feedback.admin_response && !feedback.is_response_seen_by_student && (
                           <span className="mr-2 h-2 w-2 rounded-full bg-blue-500" aria-label="New response"></span>
                         )}
-                        {feedback.classes?.name} (P{feedback.classes?.period})
+                        {feedback.classes?.name}
                       </div>
                     </TableCell>
                     <TableCell>{new Date(feedback.created_at).toLocaleDateString()}</TableCell>
@@ -136,7 +136,7 @@ const StudentFeedbackHistory: React.FC = () => {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Feedback for {selectedFeedback.classes?.name}</DialogTitle>
-                  <DialogDescription>Details of your feedback submission and administrator's response.</DialogDescription> {/* Added DialogDescription */}
+                  <DialogDescription>Details of your feedback submission and administrator's response.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="flex justify-between items-center">

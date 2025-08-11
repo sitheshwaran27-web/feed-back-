@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/components/SessionContextProvider';
 import { showError } from '@/utils/toast';
-import { DailyClass } from '@/types/supabase'; // Import DailyClass
+import { DailyClass } from '@/types/supabase';
 
 const FEEDBACK_GRACE_PERIOD_MINUTES = 15;
 
@@ -36,18 +36,19 @@ export const useDailyClasses = () => {
       return;
     }
 
-    const currentDayOfWeek = new Date().getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
-    const supabaseDayOfWeek = currentDayOfWeek === 0 ? 7 : currentDayOfWeek; // Supabase uses 1 for Monday, 7 for Sunday
+    const currentDayOfWeek = new Date().getDay();
+    const supabaseDayOfWeek = currentDayOfWeek === 0 ? 7 : currentDayOfWeek;
 
     const { data: timetableEntries, error: timetableError } = await supabase
       .from('timetables')
       .select(`
+        period,
         class_id,
-        classes (id, name, period, start_time, end_time)
+        classes (id, name, start_time, end_time)
       `)
       .eq('day_of_week', supabaseDayOfWeek)
-      .order('classes.period', { ascending: true })
-      .order('classes.start_time', { ascending: true });
+      .order('period', { ascending: true })
+      .order('start_time', { foreignTable: 'classes', ascending: true });
 
     if (timetableError) {
       console.error("Error fetching daily timetable entries:", timetableError);
@@ -57,7 +58,7 @@ export const useDailyClasses = () => {
     }
 
     const dailyScheduledClasses: DailyClass[] = (timetableEntries || [])
-      .map(entry => entry.classes)
+      .map(entry => entry.classes ? { ...entry.classes, period: entry.period } : null)
       .filter((cls): cls is DailyClass => cls !== null);
 
     const { data: feedbackData, error: feedbackError } = await supabase
@@ -94,7 +95,7 @@ export const useDailyClasses = () => {
   useEffect(() => {
     if (!isSessionLoading && session) {
       fetchDailyClasses();
-      const interval = setInterval(fetchDailyClasses, 60 * 1000); // Check every minute
+      const interval = setInterval(fetchDailyClasses, 60 * 1000);
       return () => clearInterval(interval);
     }
   }, [session, isSessionLoading, fetchDailyClasses]);
@@ -104,6 +105,6 @@ export const useDailyClasses = () => {
     activeFeedbackClass,
     hasSubmittedFeedbackForActiveClass,
     loading,
-    fetchDailyClasses // Expose for manual refresh if needed
+    fetchDailyClasses
   };
 };
