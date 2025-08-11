@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
-import { Subject } from '@/types/supabase'; // Import Subject
-import { useBatches } from '@/hooks/useBatches'; // Import useBatches
+import { Subject } from '@/types/supabase';
+import { useBatches } from '@/hooks/useBatches';
 
 const daysOfWeek = [
   { value: 1, label: 'Monday' },
@@ -24,9 +24,9 @@ const daysOfWeek = [
 
 const formSchema = z.object({
   day_of_week: z.coerce.number().min(1, "Day of week is required").max(7, "Invalid day of week"),
-  subject_id: z.string().min(1, "Subject is required"), // Renamed from class_id
-  batch_id: z.string().min(1, "Batch is required"), // New field
-  semester_number: z.coerce.number().min(1, "Semester is required").max(8, "Semester must be between 1 and 8"), // New field
+  subject_id: z.string().min(1, "Subject is required"),
+  batch_id: z.string().min(1, "Batch is required"),
+  semester_number: z.coerce.number().min(1, "Semester is required").max(8, "Semester must be between 1 and 8"),
   start_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid start time format (HH:MM)"),
   end_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid end time format (HH:MM)"),
 }).refine(data => data.end_time > data.start_time, {
@@ -38,22 +38,22 @@ type TimetableFormValues = z.infer<typeof formSchema>;
 
 interface TimetableFormProps {
   initialData?: Partial<TimetableFormValues>;
-  availableSubjects: Subject[]; // Renamed from availableClasses
+  availableSubjects: Subject[];
   onSubmit: (data: TimetableFormValues) => void;
   onCancel: () => void;
   isSubmitting: boolean;
 }
 
-const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableSubjects, onSubmit, onCancel, isSubmitting }) => { // Renamed prop
-  const { batches, loading: batchesLoading } = useBatches(); // Fetch available batches
+const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableSubjects, onSubmit, onCancel, isSubmitting }) => {
+  const { batches, loading: batchesLoading } = useBatches();
 
   const form = useForm<TimetableFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
       day_of_week: 1,
-      subject_id: "", // Renamed
-      batch_id: "", // Default empty
-      semester_number: undefined, // Default undefined
+      subject_id: "",
+      batch_id: "",
+      semester_number: undefined,
       start_time: "08:00",
       end_time: "09:00",
     },
@@ -135,19 +135,19 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableSub
         />
         <FormField
           control={form.control}
-          name="subject_id" // Renamed from class_id
+          name="subject_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Subject</FormLabel> {/* Renamed from Class */}
+              <FormLabel>Subject</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a subject" /> {/* Renamed */}
+                    <SelectValue placeholder="Select a subject" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {availableSubjects.map((sub) => ( // Renamed from availableClasses
-                    <SelectItem key={sub.id} value={sub.id}>{sub.name} {sub.period ? `(P${sub.period})` : ''}</SelectItem> {/* Display period */}
+                  {availableSubjects.map((sub) => (
+                    <SelectItem key={sub.id} value={sub.id}>{sub.name} {sub.period ? `(P${sub.period})` : ''}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -187,7 +187,7 @@ const TimetableForm: React.FC<TimetableFormProps> = ({ initialData, availableSub
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {initialData?.subject_id ? "Update Entry" : "Add to Timetable"} {/* Renamed */}
+            {initialData?.subject_id ? "Update Entry" : "Add to Timetable"}
           </Button>
         </div>
       </form>
