@@ -20,10 +20,9 @@ export const useProfile = () => {
       return;
     }
 
-    // Fetch full profile data, including batch and semester
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, avatar_url, is_admin, updated_at, batch_id, semester_number, batches (name)') // Added batch_id, semester_number, and joined batches
+      .select('id, first_name, last_name, avatar_url, is_admin, updated_at, batch_id, semester_number, batches (name)')
       .eq('id', session.user.id)
       .single();
 
@@ -46,7 +45,7 @@ export const useProfile = () => {
     }
   }, [session, isSessionLoading, fetchProfile]);
 
-  const updateProfile = async (values: { first_name?: string; last_name?: string; avatar_url?: string; batch_id?: string | null; semester_number?: number | null }) => { // Added batch_id, semester_number
+  const updateProfile = async (values: { first_name?: string; last_name?: string; avatar_url?: string; batch_id?: string | null; semester_number?: number | null }) => {
     if (!session?.user.id) {
       showError("User not authenticated.");
       return null;
@@ -59,12 +58,12 @@ export const useProfile = () => {
         first_name: values.first_name || null,
         last_name: values.last_name || null,
         avatar_url: values.avatar_url || null,
-        batch_id: values.batch_id || null, // Update batch_id
-        semester_number: values.semester_number || null, // Update semester_number
+        batch_id: values.batch_id || null,
+        semester_number: values.semester_number || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', session.user.id)
-      .select('id, first_name, last_name, avatar_url, is_admin, updated_at, batch_id, semester_number, batches (name)') // Select updated fields
+      .select('id, first_name, last_name, avatar_url, is_admin, updated_at, batch_id, semester_number, batches (name)')
       .single();
 
     if (error) {
@@ -75,9 +74,12 @@ export const useProfile = () => {
     } else {
       showSuccess("Profile updated successfully!");
       setProfile(data);
-      // Update redirect logic to include batch_id and semester_number
-      if (data?.first_name && data?.last_name && data?.batch_id && data?.semester_number) {
-        setIsProfileIncompleteRedirect(false);
+      if (data) {
+        if (data.is_admin) {
+          setIsProfileIncompleteRedirect(!data.first_name || !data.last_name);
+        } else {
+          setIsProfileIncompleteRedirect(!data.first_name || !data.last_name || !data.batch_id || !data.semester_number);
+        }
       }
       setIsSubmitting(false);
       return data;

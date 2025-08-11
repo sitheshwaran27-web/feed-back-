@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,33 +9,51 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Loader2 } from 'lucide-react';
-import { Profile } from '@/types/supabase'; // Import Profile
-import AvatarUpload from './AvatarUpload'; // Import the new AvatarUpload component
+import { Profile } from '@/types/supabase';
+import AvatarUpload from './AvatarUpload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useBatches } from '@/hooks/useBatches'; // Import useBatches
+import { useBatches } from '@/hooks/useBatches';
 
-const formSchema = z.object({
-  first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
-  last_name: z.string().min(1, "Last name is required").optional().or(z.literal("")),
-  avatar_url: z.string().url("Invalid URL format").optional().or(z.literal("")),
-  batch_id: z.string().min(1, "Batch is required"), // New field
-  semester_number: z.coerce.number().min(1, "Semester is required").max(8, "Semester must be between 1 and 8"), // New field
+// Define a base schema for fields common to all users
+const baseSchema = z.object({
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  avatar_url: z.string().url("Invalid URL format").nullable().optional(),
 });
 
-type ProfileFormValues = z.infer<typeof formSchema>;
+// Define the shape of the form values
+type ProfileFormValues = z.infer<typeof baseSchema> & {
+  batch_id?: string;
+  semester_number?: number;
+};
 
 interface ProfileFormProps {
-  initialData?: Omit<Profile, 'id' | 'is_admin' | 'updated_at' | 'email' | 'batches'>; // Use Omit to exclude other fields
+  initialData?: Omit<Profile, 'id' | 'is_admin' | 'updated_at' | 'email' | 'batches'>;
   onSubmit: (data: ProfileFormValues) => void;
   onCancel: () => void;
   isSubmitting: boolean;
   email: string;
-  userId: string; // Add userId prop for AvatarUpload
+  userId: string;
+  isAdmin: boolean; // Add isAdmin prop
   disableCancel?: boolean;
 }
 
-const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting, email, userId, disableCancel = false }) => {
-  const { batches, loading: batchesLoading } = useBatches(); // Fetch available batches
+const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCancel, isSubmitting, email, userId, isAdmin, disableCancel = false }) => {
+  const { batches, loading: batchesLoading } = useBatches();
+
+  // Create a dynamic schema based on the user's role
+  const formSchema = useMemo(() => {
+    if (isAdmin) {
+      return baseSchema.extend({
+        batch_id: z.string().optional(),
+        semester_number: z.coerce.number().optional(),
+      });
+    }
+    return baseSchema.extend({
+      batch_id: z.string().min(1, "Batch is required"),
+      semester_number: z.coerce.number().min(1, "Semester is required").max(8, "Semester must be between 1 and 8"),
+    });
+  }, [isAdmin]);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(formSchema),
@@ -43,13 +61,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCanc
       first_name: "",
       last_name: "",
       avatar_url: "",
-      batch_id: "", // Default empty
-      semester_number: undefined, // Default undefined
+      batch_id: "",
+      semester_number: undefined,
     },
   });
 
   const handleCancel = () => {
-    form.reset(); // Reset form fields on cancel
+    form.reset();
     onCancel();
   };
 
@@ -58,7 +76,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCanc
   };
 
   const handleAvatarRemoveSuccess = () => {
-    form.setValue("avatar_url", null, { shouldDirty: true, shouldValidate: true });
+    form.setValue("avatar_url", "", { shouldDirty: true, shouldValidate: true });
   };
 
   return (
@@ -106,51 +124,56 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSubmit, onCanc
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="batch_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Batch</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={batchesLoading}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your batch" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {batches.map((batch) => (
-                    <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="semester_number"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Semester</FormLabel>
-              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your semester" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {Array.from({ length: 8 }, (_, i) => i + 1).map((sem) => (
-                    <SelectItem key={sem} value={sem.toString()}>{sem}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {/* Removed direct avatar_url input as it's now handled by AvatarUpload */}
+        
+        {!isAdmin && (
+          <>
+            <FormField
+              control={form.control}
+              name="batch_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Batch</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={batchesLoading}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your batch" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {batches.map((batch) => (
+                        <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="semester_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Semester</FormLabel>
+                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your semester" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Array.from({ length: 8 }, (_, i) => i + 1).map((sem) => (
+                        <SelectItem key={sem} value={sem.toString()}>{sem}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
+
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting || disableCancel}>
             Cancel

@@ -11,15 +11,18 @@ import { useProfile } from '@/hooks/useProfile';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const ProfilePage: React.FC = () => {
-  const { session, isLoading: isSessionLoading, setIsProfileIncompleteRedirect } = useSession();
+  const { session, isLoading: isSessionLoading } = useSession();
   const navigate = useNavigate();
   const { profile, loading: loadingProfile, isSubmitting, updateProfile } = useProfile();
   const [wasIncomplete, setWasIncomplete] = useState(false);
 
   useEffect(() => {
     if (!isSessionLoading && profile) {
-      // Check if first_name, last_name, batch_id, or semester_number are missing
-      if (!profile.first_name || !profile.last_name || !profile.batch_id || !profile.semester_number) {
+      // For students, check for name, batch, and semester. For admins, just check for name.
+      const isStudentIncomplete = !profile.is_admin && (!profile.first_name || !profile.last_name || !profile.batch_id || !profile.semester_number);
+      const isAdminIncomplete = profile.is_admin && (!profile.first_name || !profile.last_name);
+
+      if (isStudentIncomplete || isAdminIncomplete) {
         setWasIncomplete(true);
       } else {
         setWasIncomplete(false);
@@ -27,7 +30,7 @@ const ProfilePage: React.FC = () => {
     }
   }, [profile, isSessionLoading]);
 
-  const handleUpdateProfile = async (values: { first_name?: string; last_name?: string; avatar_url?: string; batch_id?: string | null; semester_number?: number | null }) => { // Added batch_id, semester_number
+  const handleUpdateProfile = async (values: { first_name?: string; last_name?: string; avatar_url?: string; batch_id?: string | null; semester_number?: number | null }) => {
     const updatedProfile = await updateProfile(values);
 
     if (updatedProfile) {
@@ -67,11 +70,11 @@ const ProfilePage: React.FC = () => {
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-10 w-full" />
             </div>
-            <div className="space-y-2"> {/* New skeleton for batch/semester */}
+            <div className="space-y-2">
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-10 w-full" />
             </div>
-            <div className="space-y-2"> {/* New skeleton for batch/semester */}
+            <div className="space-y-2">
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-10 w-full" />
             </div>
@@ -101,7 +104,8 @@ const ProfilePage: React.FC = () => {
               <Terminal className="h-4 w-4" />
               <AlertTitle>Profile Incomplete!</AlertTitle>
               <AlertDescription>
-                Please complete your first name, last name, batch, and semester to proceed. {/* Updated message */}
+                Please complete your profile to continue.
+                {profile && !profile.is_admin && " Batch and semester are required."}
               </AlertDescription>
             </Alert>
           )}
@@ -110,14 +114,15 @@ const ProfilePage: React.FC = () => {
               first_name: profile?.first_name || "",
               last_name: profile?.last_name || "",
               avatar_url: profile?.avatar_url || "",
-              batch_id: profile?.batch_id || "", // Pass batch_id
-              semester_number: profile?.semester_number || undefined, // Pass semester_number
+              batch_id: profile?.batch_id || "",
+              semester_number: profile?.semester_number || undefined,
             }}
             onSubmit={handleUpdateProfile}
             onCancel={handleCancel}
             isSubmitting={isSubmitting}
             email={session.user.email || "N/A"}
             userId={session.user.id}
+            isAdmin={profile?.is_admin || false}
             disableCancel={wasIncomplete}
           />
         </CardContent>
