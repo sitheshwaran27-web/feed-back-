@@ -1,10 +1,10 @@
 "use client";
 
 import React from 'react';
-import ClassManager from '@/components/ClassManager';
+import SubjectManager from '@/components/SubjectManager';
 
-const AdminClassesPage = () => {
-  return <ClassManager />;
+const AdminSubjectsPage = () => {
+  return <SubjectManager />;
 };
 
-export default AdminClassesPage;
+export default AdminSubjectsPage;
