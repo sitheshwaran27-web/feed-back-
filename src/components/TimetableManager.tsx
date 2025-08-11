@@ -110,7 +110,7 @@ const TimetableManager: React.FC = () => {
                     <div key={day.value} className="border rounded-md p-2 min-h-[80px] flex flex-col justify-center items-center bg-muted/20">
                       {entry ? (
                         <div className="w-full text-center">
-                          <p className="font-semibold text-sm">{entry.classes.name}</p>
+                          <p className="font-semibold text-sm">{entry.classes.name} (P{entry.classes.period})</p>
                           <p className="text-xs text-muted-foreground">{entry.classes.start_time} - {entry.classes.end_time}</p>
                           <div className="mt-2 flex justify-center space-x-1">
                             <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => openFormForEdit(entry)}>
