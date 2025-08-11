@@ -20,10 +20,10 @@ export const useProfile = () => {
       return;
     }
 
-    // Fetch full profile data again, including email
+    // Fetch full profile data, excluding email as it's not in the profiles table
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, avatar_url, is_admin, updated_at, email') // Fetch all profile fields including email
+      .select('id, first_name, last_name, avatar_url, is_admin, updated_at') // Fetch all profile fields, removed email
       .eq('id', session.user.id)
       .single();
 

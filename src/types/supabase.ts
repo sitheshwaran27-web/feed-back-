@@ -5,7 +5,7 @@ export interface Profile {
   avatar_url: string | null;
   is_admin: boolean;
   updated_at: string;
-  email?: string; // Added for convenience when joining with auth.users
+  // email?: string; // Removed: email is accessed via auth.users or session.user.email
 }
 
 export interface Class {

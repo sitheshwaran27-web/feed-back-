@@ -36,10 +36,10 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
 
       if (currentSession) {
         setSession(currentSession);
-        // Fetch full profile data again, including email
+        // Fetch profile data, excluding email as it's not in the profiles table
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('first_name, last_name, is_admin, email') // Fetch necessary fields including email
+          .select('first_name, last_name, is_admin') // Fetch necessary fields, removed email
           .eq('id', currentSession.user.id)
           .single();
 
