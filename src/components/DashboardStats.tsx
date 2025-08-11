@@ -1,28 +1,9 @@
 "use client";
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Users, BookOpen, MessageSquare, MessageSquarePlus } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
-
-const StatCard = ({ title, value, icon: Icon, loading }: { title: string, value: number | string, icon: React.ElementType, loading: boolean }) => {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <Skeleton className="h-8 w-20" />
-        ) : (
-          <div className="text-2xl font-bold">{value}</div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
+import StatCard from './StatCard';
 
 const DashboardStats: React.FC = () => {
   const { stats, loading } = useDashboardStats();
@@ -36,8 +17,8 @@ const DashboardStats: React.FC = () => {
         loading={loading}
       />
       <StatCard
-        title="Total Subjects" {/* Renamed title */}
-        value={stats?.subjectCount ?? 0} {/* Renamed value */}
+        title="Total Subjects"
+        value={stats?.subjectCount ?? 0}
         icon={BookOpen}
         loading={loading}
       />
