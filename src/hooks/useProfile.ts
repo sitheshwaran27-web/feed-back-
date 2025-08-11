@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "C:/Users/User/AppData/Local/Temp/dyad-temp-1722440400000/node_modules/@types/react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
 import { Profile } from '@/types/supabase';

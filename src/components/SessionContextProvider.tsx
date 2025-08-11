@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "C:/Users/User/AppData/Local/Temp/dyad-temp-1722440400000/node_modules/@types/react";
-import { Session } from "C:/Users/User/AppData/Local/Temp/dyad-temp-1722440400000/node_modules/@supabase/supabase-js";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types/supabase"; // Import Profile type
 
