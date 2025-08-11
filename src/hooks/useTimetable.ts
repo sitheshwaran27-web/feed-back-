@@ -42,7 +42,8 @@ export const useTimetable = () => {
       console.error("Error fetching timetable entries:", timetableError);
       showError("Failed to load timetable entries.");
     } else {
-      setTimetableEntries(timetableData || []);
+      // Explicitly filter out entries where 'classes' is null
+      setTimetableEntries((timetableData || []).filter(entry => entry.classes !== null));
     }
     setLoading(false);
   }, []);

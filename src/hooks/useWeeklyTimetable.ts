@@ -38,7 +38,8 @@ export const useWeeklyTimetable = () => {
       console.error("Error fetching timetable:", error);
       showError("Failed to load weekly timetable.");
     } else {
-      setTimetableEntries(data || []);
+      // Explicitly filter out entries where 'classes' is null
+      setTimetableEntries((data || []).filter(entry => entry.classes !== null));
     }
     setLoading(false);
   }, []);
