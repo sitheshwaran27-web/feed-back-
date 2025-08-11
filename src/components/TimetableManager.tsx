@@ -114,6 +114,7 @@ const TimetableManager: React.FC = () => {
   };
 
   return (
+    // This is a test comment to trigger a file change.
     <Card className="w-full max-w-5xl mx-auto mt-8">
       <CardHeader>
         <CardTitle>Manage Weekly Timetable</CardTitle>
