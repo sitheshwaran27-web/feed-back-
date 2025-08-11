@@ -59,23 +59,32 @@ export const useTimetable = () => {
       return null;
     }
 
-    // New period-based conflict check
-    const { data: conflictingEntry, error: conflictError } = await supabase
+    // Get all entries for the target day to check for time conflicts
+    const { data: dayEntries, error: dayEntriesError } = await supabase
       .from('timetables')
-      .select('id, classes!inner(period)')
-      .eq('day_of_week', values.day_of_week)
-      .eq('classes.period', classToAdd.period)
-      .maybeSingle();
+      .select('*, classes!inner(*)')
+      .eq('day_of_week', values.day_of_week);
 
-    if (conflictError) {
-      console.error("Error checking for timetable conflicts:", conflictError);
-      showError("Could not verify timetable, please try again.");
+    if (dayEntriesError) {
+      console.error("Error fetching day's schedule for conflict check:", dayEntriesError);
+      showError("Could not verify timetable for conflicts.");
       setIsSubmitting(false);
       return null;
     }
 
-    if (conflictingEntry) {
-      showError(`Period ${classToAdd.period} on this day is already occupied.`);
+    // Check for time overlap
+    const hasConflict = dayEntries.some(existingEntry => {
+      if (!existingEntry.classes) return false;
+      const newStartTime = classToAdd.start_time;
+      const newEndTime = classToAdd.end_time;
+      const existingStartTime = existingEntry.classes.start_time;
+      const existingEndTime = existingEntry.classes.end_time;
+      // Conflict if (StartA < EndB) and (EndA > StartB)
+      return newStartTime < existingEndTime && newEndTime > existingStartTime;
+    });
+
+    if (hasConflict) {
+      showError(`Time conflict detected. A class is already scheduled during this time.`);
       setIsSubmitting(false);
       return null;
     }
@@ -114,28 +123,43 @@ export const useTimetable = () => {
       return null;
     }
 
-    const dayOfWeek = values.day_of_week || timetableEntries.find(e => e.id === id)?.day_of_week;
+    const originalEntry = timetableEntries.find(e => e.id === id);
+    const dayOfWeek = values.day_of_week || originalEntry?.day_of_week;
 
-    // New period-based conflict check for update
-    const { data: conflictingEntry, error: conflictError } = await supabase
-      .from('timetables')
-      .select('id, classes!inner(period)')
-      .eq('day_of_week', dayOfWeek)
-      .eq('classes.period', classToUpdate.period)
-      .not('id', 'eq', id) // Exclude the current entry from the check
-      .maybeSingle();
-
-    if (conflictError) {
-      console.error("Error checking for timetable conflicts:", conflictError);
-      showError("Could not verify timetable, please try again.");
-      setIsSubmitting(false);
-      return null;
+    if (!dayOfWeek) {
+        showError("Could not determine the day for the timetable entry.");
+        setIsSubmitting(false);
+        return null;
     }
 
-    if (conflictingEntry) {
-      showError(`Period ${classToUpdate.period} on this day is already occupied.`);
-      setIsSubmitting(false);
-      return null;
+    // Get all entries for the target day, excluding the one being updated
+    const { data: dayEntries, error: dayEntriesError } = await supabase
+      .from('timetables')
+      .select('*, classes!inner(*)')
+      .eq('day_of_week', dayOfWeek)
+      .not('id', 'eq', id); // Exclude self
+
+    if (dayEntriesError) {
+        console.error("Error fetching day's schedule for conflict check:", dayEntriesError);
+        showError("Could not verify timetable for conflicts.");
+        setIsSubmitting(false);
+        return null;
+    }
+
+    // Check for time overlap
+    const hasConflict = dayEntries.some(existingEntry => {
+        if (!existingEntry.classes) return false;
+        const newStartTime = classToUpdate.start_time;
+        const newEndTime = classToUpdate.end_time;
+        const existingStartTime = existingEntry.classes.start_time;
+        const existingEndTime = existingEntry.classes.end_time;
+        return newStartTime < existingEndTime && newEndTime > existingStartTime;
+    });
+
+    if (hasConflict) {
+        showError(`Time conflict detected. A class is already scheduled during this time.`);
+        setIsSubmitting(false);
+        return null;
     }
 
     const { data, error } = await supabase

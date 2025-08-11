@@ -16,15 +16,21 @@ const StudentTimetable = () => {
   const navigate = useNavigate();
 
   const timetableGrid = useMemo(() => {
-    const grid: (TimetableEntry | null)[][] = Array(periods.length).fill(null).map(() => Array(daysOfWeek.length).fill(null));
+    const grid: (TimetableEntry[])[][] = Array(periods.length).fill(null).map(() => Array(daysOfWeek.length).fill(null).map(() => []));
     Object.values(groupedTimetable).flat().forEach(entry => {
       if (entry.classes) {
         const dayIndex = entry.day_of_week - 1;
         const periodIndex = entry.classes.period - 1;
         if (dayIndex >= 0 && dayIndex < daysOfWeek.length && periodIndex >= 0 && periodIndex < periods.length) {
-          grid[periodIndex][dayIndex] = entry;
+          grid[periodIndex][dayIndex].push(entry);
         }
       }
+    });
+    // Sort entries within each cell by start time
+    grid.forEach(row => {
+        row.forEach(cellEntries => {
+            cellEntries.sort((a, b) => a.classes.start_time.localeCompare(b.classes.start_time));
+        });
     });
     return grid;
   }, [groupedTimetable, daysOfWeek]);
@@ -85,17 +91,15 @@ const StudentTimetable = () => {
                 <React.Fragment key={period}>
                   <div className="text-center font-semibold p-2 self-center">P{period}</div>
                   {daysOfWeek.map((day, dayIndex) => {
-                    const entry = timetableGrid[periodIndex][dayIndex];
+                    const entries = timetableGrid[periodIndex][dayIndex];
                     return (
-                      <div key={day.value} className="border rounded-md p-2 min-h-[80px] flex flex-col justify-center items-center bg-muted/20">
-                        {entry ? (
-                          <div className="w-full text-center">
-                            <p className="font-semibold text-sm">{entry.classes.name} (P{entry.classes.period})</p>
+                      <div key={day.value} className="border rounded-md p-1 min-h-[80px] flex flex-col justify-start items-center bg-muted/20 space-y-1">
+                        {entries.map(entry => (
+                          <div key={entry.id} className="w-full text-center bg-card p-1 rounded-md">
+                            <p className="font-semibold text-sm truncate">{entry.classes.name}</p>
                             <p className="text-xs text-muted-foreground">{entry.classes.start_time} - {entry.classes.end_time}</p>
                           </div>
-                        ) : (
-                          <div /> // Empty cell
-                        )}
+                        ))}
                       </div>
                     );
                   })}
