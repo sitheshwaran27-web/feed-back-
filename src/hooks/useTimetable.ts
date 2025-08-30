@@ -30,7 +30,7 @@ export const useTimetable = () => {
       .select(`
         id,
         day_of_week,
-        class_id:subject_id,
+        subject_id:class_id,
         batch_id,
         semester_number,
         start_time,
@@ -97,7 +97,7 @@ export const useTimetable = () => {
       .select(`
         id,
         day_of_week,
-        class_id:subject_id,
+        subject_id:class_id,
         batch_id,
         semester_number,
         start_time,
@@ -165,7 +165,7 @@ export const useTimetable = () => {
       .select(`
         id,
         day_of_week,
-        class_id:subject_id,
+        subject_id:class_id,
         batch_id,
         semester_number,
         start_time,
