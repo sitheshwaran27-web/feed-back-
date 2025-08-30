@@ -80,6 +80,7 @@ const FeedbackManager: React.FC = () => {
     subjectFilter !== 'all', // Renamed
     batchFilter !== 'all', // New
     semesterFilter !== 'all', // New
+    periodFilter.length > 0,
     searchTerm !== '',
   ].filter(Boolean).length;
 
