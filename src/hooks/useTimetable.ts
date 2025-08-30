@@ -30,13 +30,13 @@ export const useTimetable = () => {
       .select(`
         id,
         day_of_week,
-        subject_id, {/* Renamed from class_id */}
-        batch_id, {/* New field */}
-        semester_number, {/* New field */}
+        subject_id,
+        batch_id,
+        semester_number,
         start_time,
         end_time,
-        subjects (id, name, period), {/* Renamed from classes, added period */}
-        batches (name) {/* New join for batch name */}
+        subjects (id, name, period),
+        batches (name)
       `)
       .order('day_of_week', { ascending: true })
       .order('start_time', { ascending: true });
@@ -88,13 +88,13 @@ export const useTimetable = () => {
       .select(`
         id,
         day_of_week,
-        subject_id, {/* Renamed from class_id */}
-        batch_id, {/* New field */}
-        semester_number, {/* New field */}
+        subject_id,
+        batch_id,
+        semester_number,
         start_time,
         end_time,
-        subjects (id, name, period), {/* Renamed from classes, added period */}
-        batches (name) {/* New join */}
+        subjects (id, name, period),
+        batches (name)
       `)
       .single();
 
@@ -147,13 +147,13 @@ export const useTimetable = () => {
       .select(`
         id,
         day_of_week,
-        subject_id, {/* Renamed from class_id */}
-        batch_id, {/* New field */}
-        semester_number, {/* New field */}
+        subject_id,
+        batch_id,
+        semester_number,
         start_time,
         end_time,
-        subjects (id, name, period), {/* Renamed from classes, added period */}
-        batches (name) {/* New join */}
+        subjects (id, name, period),
+        batches (name)
       `)
       .single();
 
