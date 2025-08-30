@@ -71,8 +71,12 @@ export const useAdminDashboardData = () => {
     }
   }, [fetchData, isSessionLoading]);
 
-  const topSubjects = [...subjectPerformance].sort((a, b) => b.average_rating - a.average_rating).slice(0, 3);
-  const bottomSubjects = [...subjectPerformance].sort((a, b) => a.average_rating - b.average_rating).slice(0, 3);
+  const topSubjects = [...subjectPerformance]
+    .sort((a, b) => (b.average_rating ?? 0) - (a.average_rating ?? 0))
+    .slice(0, 3);
+  const bottomSubjects = [...subjectPerformance]
+    .sort((a, b) => (a.average_rating ?? 0) - (b.average_rating ?? 0))
+    .slice(0, 3);
 
   return {
     recentFeedback,
