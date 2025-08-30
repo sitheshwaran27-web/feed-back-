@@ -1,7 +1,7 @@
 "use client";
 
 import { Auth } from '@supabase/auth-ui-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, isSupabaseConfigured } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSession } from '@/components/SessionContextProvider';
 import { customAuthTheme } from '@/lib/supabaseAuthTheme';
@@ -39,6 +39,22 @@ function Login() {
     return null;
   }
 
+  if (!isSupabaseConfigured) {
+    return (
+      <div className="flex items-center justify-center h-full p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Configuration required</CardTitle>
+            <CardDescription>Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">Once configured, refresh this page to sign in.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center justify-center h-full p-4">
       <Card className="w-full max-w-md">
@@ -49,11 +65,11 @@ function Login() {
         <CardContent>
           <Auth
             supabaseClient={supabase}
-            providers={[]} // No third-party providers unless specified
+            providers={[]}
             appearance={{
-              theme: customAuthTheme, // Use the custom theme
+              theme: customAuthTheme,
             }}
-            redirectTo={window.location.origin} // Redirect to root after auth, SessionContextProvider handles further redirect
+            redirectTo={window.location.origin}
             localization={{
               variables: {
                 sign_up: {
@@ -64,7 +80,6 @@ function Login() {
                 },
               },
             }}
-            // Explicitly tell Auth component to collect first_name and last_name
             form={{
               signUp: {
                 email: true,
