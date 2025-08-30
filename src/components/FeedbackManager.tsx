@@ -112,6 +112,12 @@ const FeedbackManager: React.FC = () => {
     if (subjectFilter !== 'all') { // Renamed
       filtered = filtered.filter(entry => entry.subject_id === subjectFilter); // Renamed
     }
+    if (periodFilter.length > 0) {
+      filtered = filtered.filter(entry => {
+        const p = entry.subjects?.period == null ? '' : String(entry.subjects.period);
+        return periodFilter.includes(p);
+      });
+    }
     if (batchFilter !== 'all') { // New filter
       filtered = filtered.filter(entry => entry.batch_id === batchFilter);
     }
