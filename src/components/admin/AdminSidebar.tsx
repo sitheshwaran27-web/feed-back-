@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, BookOpen, Calendar, MessageSquare, BarChart2 } from 'lucide-react';
+import { Home, BookOpen, Calendar, MessageSquare, BarChart2, IdCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
@@ -10,6 +10,7 @@ const navLinks = [
   { to: '/admin/subjects', icon: BookOpen, label: 'Subjects' },
   { to: '/admin/timetable', icon: Calendar, label: 'Timetable' },
   { to: '/admin/feedback', icon: MessageSquare, label: 'Feedback' },
+  { to: '/admin/users', icon: IdCard, label: 'Student Details' },
   { to: '/admin/analytics', icon: BarChart2, label: 'Analytics' },
 ];
 
