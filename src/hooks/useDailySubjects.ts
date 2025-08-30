@@ -50,7 +50,7 @@ export const useDailySubjects = () => { // Renamed hook
     const { data: timetableEntries, error: timetableError } = await supabase
       .from('timetables')
       .select(`
-        class_id:subject_id,
+        subject_id:class_id,
         start_time,
         end_time,
         subjects (id, name, period)
