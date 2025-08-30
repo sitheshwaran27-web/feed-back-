@@ -1,15 +1,7 @@
 import * as React from "react";
 
 import { forwardRef, Children } from "react";
-import type {
-  HTMLAttributes,
-  HTMLTableElement,
-  HTMLTableSectionElement,
-  HTMLTableCellElement,
-  ThHTMLAttributes,
-  TdHTMLAttributes,
-  HTMLTableCaptionElement,
-} from "react";
+import type { HTMLAttributes, ThHTMLAttributes, TdHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 function sanitizeChildren(children: any) {
