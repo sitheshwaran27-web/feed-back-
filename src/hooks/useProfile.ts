@@ -27,7 +27,7 @@ export const useProfile = () => {
       .single();
 
     if (error) {
-      console.error("Error fetching profile:", error);
+      console.error("Error fetching profile:", (error as any)?.message || error);
       showError("Failed to load profile.");
       setProfile(null);
     } else {
