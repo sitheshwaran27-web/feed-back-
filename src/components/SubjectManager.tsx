@@ -86,6 +86,135 @@ const SubjectManager: React.FC = () => {
     return filtered;
   }, [subjects, searchTerm, batchFilter, semesterFilter]);
 
+  // Minimal robust CSV parser (handles quoted fields and commas)
+  const parseCSV = (text: string): string[][] => {
+    const rows: string[][] = [];
+    let row: string[] = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      const next = text[i + 1];
+      if (inQuotes) {
+        if (ch === '"' && next === '"') { cur += '"'; i++; }
+        else if (ch === '"') { inQuotes = false; }
+        else { cur += ch; }
+      } else {
+        if (ch === '"') { inQuotes = true; }
+        else if (ch === ',') { row.push(cur); cur = ''; }
+        else if (ch === '\n' || ch === '\r') {
+          if (ch === '\r' && next === '\n') { i++; }
+          row.push(cur); cur = '';
+          if (row.length && row.some(c => c !== '')) { rows.push(row); }
+          row = [];
+        } else { cur += ch; }
+      }
+    }
+    // push last cell
+    if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+    // trim trailing empty rows
+    return rows.filter(r => r.some(c => c.trim() !== ''));
+  };
+
+  const handleTemplateDownload = () => {
+    const sample = 'name,period,batch,semester\nData Structures,1,2024-2028,3\nAlgorithms,,2024-2028,3\n';
+    const blob = new Blob([sample], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'subjects-template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    const rows = parseCSV(text);
+    if (rows.length === 0) {
+      setParseErrors(['Empty CSV file.']);
+      setParsedRows([]);
+      return;
+    }
+    const header = rows[0].map(h => h.trim().toLowerCase());
+    const nameIdx = header.indexOf('name');
+    const periodIdx = header.indexOf('period');
+    const batchIdx = header.indexOf('batch');
+    const batchIdIdx = header.indexOf('batch_id');
+    const semIdx = header.indexOf('semester');
+    const semesterNumIdx = header.indexOf('semester_number');
+
+    if (nameIdx === -1 || (batchIdx === -1 && batchIdIdx === -1)) {
+      setParseErrors(['CSV must include columns: name, and either batch or batch_id. Optional: period, semester or semester_number.']);
+      setParsedRows([]);
+      return;
+    }
+
+    const errors: string[] = [];
+    const valid: BulkRow[] = [];
+    const batchByName = new Map(batches.map(b => [b.name.toLowerCase(), b.id]));
+    const batchIds = new Set(batches.map(b => b.id));
+
+    rows.slice(1).forEach((r, idx) => {
+      const line = idx + 2; // account for header
+      const name = (r[nameIdx] || '').trim();
+      if (!name) { errors.push(`Row ${line}: name is required.`); return; }
+      const periodRaw = periodIdx !== -1 ? (r[periodIdx] || '').trim() : '';
+      const period = periodRaw === '' ? null : Number(periodRaw);
+      if (period !== null && (isNaN(period) || period < 0)) { errors.push(`Row ${line}: invalid period.`); return; }
+
+      let batch_id = '';
+      if (batchIdIdx !== -1) {
+        const val = (r[batchIdIdx] || '').trim();
+        if (!val) { errors.push(`Row ${line}: batch_id is required or provide batch.`); return; }
+        if (!batchIds.has(val)) { errors.push(`Row ${line}: batch_id '${val}' not found.`); return; }
+        batch_id = val;
+      } else if (batchIdx !== -1) {
+        const val = (r[batchIdx] || '').trim().toLowerCase();
+        if (!val) { errors.push(`Row ${line}: batch is required.`); return; }
+        const id = batchByName.get(val);
+        if (!id) { errors.push(`Row ${line}: batch '${r[batchIdx]}' not found.`); return; }
+        batch_id = id;
+      }
+
+      const semVal = semIdx !== -1 ? (r[semIdx] || '').trim() : (semesterNumIdx !== -1 ? (r[semesterNumIdx] || '').trim() : '');
+      const semester_number = semVal === '' ? null : Number(semVal);
+      if (semester_number !== null && (isNaN(semester_number) || semester_number < 1 || semester_number > 12)) {
+        errors.push(`Row ${line}: invalid semester.`); return;
+      }
+
+      valid.push({ name, period, batch_id, semester_number });
+    });
+
+    setParseErrors(errors);
+    setParsedRows(valid);
+  };
+
+  const handleBulkUpload = async () => {
+    if (parsedRows.length === 0) { showError('No valid rows to upload.'); return; }
+    setIsUploading(true);
+    const payload = parsedRows.map(r => ({
+      name: r.name,
+      period: r.period,
+      batch_id: r.batch_id,
+      semester_number: r.semester_number,
+    }));
+    const { error } = await supabase.from('subjects').insert(payload);
+    if (error) {
+      console.error('Bulk upload error:', error);
+      showError('Bulk upload failed.');
+    } else {
+      showSuccess(`Uploaded ${payload.length} subjects.`);
+      await fetchSubjects();
+      setIsBulkOpen(false);
+      setParsedRows([]);
+      setParseErrors([]);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+    setIsUploading(false);
+  };
+
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between">
