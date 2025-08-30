@@ -39,6 +39,7 @@ const FeedbackManager: React.FC = () => {
   const [batchFilter, setBatchFilter] = useState('all'); // New filter
   const [semesterFilter, setSemesterFilter] = useState('all'); // New filter
   const [searchTerm, setSearchTerm] = useState('');
+  const [periodFilter, setPeriodFilter] = useState<string[]>([]);
 
   const handleClearFilters = () => {
     setStatusFilter('all');
