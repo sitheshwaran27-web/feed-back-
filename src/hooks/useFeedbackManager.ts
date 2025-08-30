@@ -21,7 +21,7 @@ export const useFeedbackManager = () => {
         admin_response,
         created_at,
         is_response_seen_by_student,
-        subject_id,
+        subject_id:class_id,
         subjects (name, period),
         profiles (first_name, last_name),
         batches (name)
