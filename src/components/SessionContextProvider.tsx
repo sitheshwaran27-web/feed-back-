@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { Profile } from "@/types/supabase"; // Import Profile type
 
 interface SessionContextType {
@@ -22,6 +22,14 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
   const [isProfileIncompleteRedirect, setIsProfileIncompleteRedirect] = useState(false);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setSession(null);
+      setIsAdmin(false);
+      setIsProfileIncompleteRedirect(false);
+      setIsLoading(false);
+      return;
+    }
+
     const checkSessionAndProfile = async () => {
       const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
 
@@ -48,7 +56,6 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
           setIsProfileIncompleteRedirect(true);
         } else {
           setIsAdmin(profile.is_admin || false);
-          // Admins only need a name, students need name, batch, and semester
           if (profile.is_admin) {
             setIsProfileIncompleteRedirect(!profile.first_name || !profile.last_name);
           } else {
@@ -65,7 +72,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
 
     checkSessionAndProfile();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       setIsLoading(true);
       checkSessionAndProfile();
     });
