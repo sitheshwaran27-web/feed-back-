@@ -1,21 +1,23 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import SubjectForm from './SubjectForm'; // Renamed import
-import { Trash2, Edit, MessageSquare } from 'lucide-react';
+import SubjectForm from './SubjectForm';
+import { Trash2, Edit, MessageSquare, Upload } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import ConfirmAlertDialog from './ConfirmAlertDialog';
-import { useSubjects } from '@/hooks/useSubjects'; // Renamed import
-import { Subject } from '@/types/supabase'; // Renamed import
+import { useSubjects } from '@/hooks/useSubjects';
+import { Subject } from '@/types/supabase';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useBatches } from '@/hooks/useBatches';
+import { supabase } from '@/integrations/supabase/client';
+import { showError, showSuccess } from '@/utils/toast';
 
 const SubjectManager: React.FC = () => {
   const { subjects, loading, isSubmitting, addSubject, updateSubject, deleteSubject } = useSubjects(); // Renamed hook functions
