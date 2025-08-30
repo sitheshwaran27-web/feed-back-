@@ -219,29 +219,96 @@ const SubjectManager: React.FC = () => {
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Manage Subjects</CardTitle>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { setEditingSubject(null); setIsFormOpen(true); }}>Add New Subject</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{editingSubject ? "Edit Subject" : "Add New Subject"}</DialogTitle>
-            </DialogHeader>
-            {isFormOpen && (
-              <SubjectForm
-                initialData={editingSubject ? {
-                  name: editingSubject.name,
-                  period: editingSubject.period || undefined,
-                  batch_id: editingSubject.batch_id || "",
-                  semester_number: editingSubject.semester_number || undefined,
-                } : undefined}
-                onSubmit={editingSubject ? handleUpdateSubject : handleAddSubject}
-                onCancel={closeForm}
-                isSubmitting={isSubmitting}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2">
+          <Dialog open={isBulkOpen} onOpenChange={setIsBulkOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Upload className="h-4 w-4 mr-2" /> Bulk Upload
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Bulk Upload Subjects</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Upload a CSV with columns: name, period (optional), batch or batch_id, semester (optional).
+                </p>
+                <div className="flex items-center gap-2">
+                  <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleFileChange} />
+                  <Button type="button" variant="ghost" onClick={handleTemplateDownload}>Download template</Button>
+                </div>
+                {parseErrors.length > 0 && (
+                  <div className="rounded-md border border-destructive/50 p-3 text-sm text-destructive">
+                    <p className="font-medium mb-1">Found {parseErrors.length} issue(s):</p>
+                    <ul className="list-disc pl-5 space-y-1 max-h-40 overflow-auto">
+                      {parseErrors.map((e, i) => (<li key={i}>{e}</li>))}
+                    </ul>
+                  </div>
+                )}
+                {parsedRows.length > 0 && (
+                  <div className="rounded-md border p-3">
+                    <p className="text-sm mb-2">Ready to upload: {parsedRows.length} subject(s).</p>
+                    <div className="max-h-48 overflow-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Subject Name</TableHead>
+                            <TableHead>Period</TableHead>
+                            <TableHead>Batch</TableHead>
+                            <TableHead>Semester</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {parsedRows.slice(0, 10).map((r, i) => (
+                            <TableRow key={i}>
+                              <TableCell>{r.name}</TableCell>
+                              <TableCell>{r.period ?? ''}</TableCell>
+                              <TableCell>{batches.find(b => b.id === r.batch_id)?.name || r.batch_id}</TableCell>
+                              <TableCell>{r.semester_number ?? ''}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    {parsedRows.length > 10 && (
+                      <p className="text-xs text-muted-foreground mt-2">Showing first 10 rows.</p>
+                    )}
+                  </div>
+                )}
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsBulkOpen(false)} disabled={isUploading}>Cancel</Button>
+                  <Button onClick={handleBulkUpload} disabled={isUploading || parsedRows.length === 0}>
+                    {isUploading ? 'Uploading...' : `Upload ${parsedRows.length} subject(s)`}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => { setEditingSubject(null); setIsFormOpen(true); }}>Add New Subject</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>{editingSubject ? "Edit Subject" : "Add New Subject"}</DialogTitle>
+              </DialogHeader>
+              {isFormOpen && (
+                <SubjectForm
+                  initialData={editingSubject ? {
+                    name: editingSubject.name,
+                    period: editingSubject.period || undefined,
+                    batch_id: editingSubject.batch_id || "",
+                    semester_number: editingSubject.semester_number || undefined,
+                  } : undefined}
+                  onSubmit={editingSubject ? handleUpdateSubject : handleAddSubject}
+                  onCancel={closeForm}
+                  isSubmitting={isSubmitting}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col md:flex-row gap-4 mb-4">
