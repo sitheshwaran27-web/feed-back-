@@ -43,7 +43,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
           .single();
 
         if (profileError || !profile) {
-          console.error("Error fetching profile in SessionContextProvider:", profileError);
+          console.error("Error fetching profile in SessionContextProvider:", (profileError as any)?.message || profileError);
           setIsAdmin(false);
           setIsProfileIncompleteRedirect(true);
         } else {
