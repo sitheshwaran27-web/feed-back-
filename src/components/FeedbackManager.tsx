@@ -184,11 +184,12 @@ const FeedbackManager: React.FC = () => {
             >
               <div className="flex justify-between items-start">
                 <div className="flex-grow">
-                  <p className="font-semibold">{feedback.profiles?.first_name} {feedback.profiles?.last_name}</p>
+                  <p className="font-semibold">{new Date(feedback.created_at).toLocaleDateString()}</p>
                   <p className="text-sm text-muted-foreground">
-                    {feedback.subjects.name} {/* Renamed from classes.name */}
-                    {feedback.batches?.name && ` (${feedback.batches.name})`} {/* Display batch name */}
-                    {feedback.semester_number && ` Sem ${feedback.semester_number}`} {/* Display semester number */}
+                    {feedback.subjects.name}
+                    {feedback.subjects.period ? ` (P${feedback.subjects.period})` : ''}
+                    {feedback.batches?.name && ` (${feedback.batches.name})`}
+                    {feedback.semester_number && ` Sem ${feedback.semester_number}`}
                   </p>
                 </div>
                 <RatingStars rating={feedback.rating} />
