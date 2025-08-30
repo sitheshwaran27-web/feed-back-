@@ -42,7 +42,7 @@ export const useTimetable = () => {
       .order('start_time', { ascending: true });
 
     if (timetableError) {
-      console.error("Error fetching timetable entries:", timetableError);
+      console.error("Error fetching timetable entries:", timetableError?.message || timetableError);
       showError("Failed to load timetable entries.");
     } else {
       // Explicitly filter out entries where 'subjects' is null
