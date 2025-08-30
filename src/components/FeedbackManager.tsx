@@ -286,6 +286,14 @@ const FeedbackManager: React.FC = () => {
                   ))}
                 </ToggleGroup>
               </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-muted-foreground">Periods:</span>
+                <ToggleGroup type="multiple" value={periodFilter} onValueChange={setPeriodFilter}>
+                  {[1,2,3,4,5,6,7].map(p => (
+                    <ToggleGroupItem key={p} value={String(p)} className="px-2 py-1">P{p}</ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
             </div>
           </div>
         </CollapsibleContent>
