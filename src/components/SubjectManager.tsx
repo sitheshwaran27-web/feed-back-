@@ -20,13 +20,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
 
 const SubjectManager: React.FC = () => {
-  const { subjects, loading, isSubmitting, addSubject, updateSubject, deleteSubject } = useSubjects(); // Renamed hook functions
+  const { subjects, loading, isSubmitting, addSubject, updateSubject, deleteSubject, fetchSubjects } = useSubjects();
   const { batches, loading: batchesLoading } = useBatches();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [batchFilter, setBatchFilter] = useState('all');
   const [semesterFilter, setSemesterFilter] = useState('all');
+
+  // Bulk upload state
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  type BulkRow = { name: string; period?: number | null; batch_id: string; semester_number: number | null };
+  const [parsedRows, setParsedRows] = useState<BulkRow[]>([]);
+  const [parseErrors, setParseErrors] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleAddSubject = async (values: Omit<Subject, 'id' | 'created_at' | 'batches'>) => {
     const newSubject = await addSubject(values);
