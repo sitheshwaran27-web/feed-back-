@@ -18,7 +18,7 @@ export const useBatches = () => {
       .order('name', { ascending: true });
 
     if (error) {
-      console.error("Error fetching batches:", error);
+      console.error("Error fetching batches:", (error as any)?.message || error);
       showError("Failed to load batches.");
     } else {
       setBatches(data || []);
