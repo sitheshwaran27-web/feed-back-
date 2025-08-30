@@ -40,7 +40,7 @@ export const useWeeklyTimetable = () => {
       .select(`
         id,
         day_of_week,
-        class_id:subject_id,
+        subject_id:class_id,
         batch_id,
         semester_number,
         start_time,
