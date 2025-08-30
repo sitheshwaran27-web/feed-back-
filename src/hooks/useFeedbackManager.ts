@@ -29,7 +29,7 @@ export const useFeedbackManager = () => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error("Error fetching feedback:", error);
+      console.error("Error fetching feedback:", error?.message || error);
       showError("Failed to load feedback entries.");
     } else {
       setFeedbackEntries(data || []);
