@@ -95,7 +95,7 @@ export interface FeedbackHistoryEntry extends Feedback {
 export interface SubjectFeedbackStats { // Renamed from ClassFeedbackStats
   subject_id: string; // Renamed from class_id
   subject_name: string; // Renamed from class_name
-  average_rating: number;
+  average_rating: number | null;
   feedback_count: bigint;
   rating_counts: {
     '1': number;
@@ -109,7 +109,7 @@ export interface SubjectFeedbackStats { // Renamed from ClassFeedbackStats
 export interface SubjectPerformanceSummary { // Renamed from ClassPerformanceSummary
   subject_id: string; // Renamed from class_id
   subject_name: string; // Renamed from class_name
-  average_rating: number;
+  average_rating: number | null;
   feedback_count: number;
 }
 

@@ -30,19 +30,19 @@ export const useTimetable = () => {
       .select(`
         id,
         day_of_week,
-        subject_id, {/* Renamed from class_id */}
-        batch_id, {/* New field */}
-        semester_number, {/* New field */}
+        subject_id:class_id,
+        batch_id,
+        semester_number,
         start_time,
         end_time,
-        subjects (id, name, period), {/* Renamed from classes, added period */}
-        batches (name) {/* New join for batch name */}
+        subjects (id, name, period),
+        batches (name)
       `)
       .order('day_of_week', { ascending: true })
       .order('start_time', { ascending: true });
 
     if (timetableError) {
-      console.error("Error fetching timetable entries:", timetableError);
+      console.error("Error fetching timetable entries:", timetableError?.message || timetableError);
       showError("Failed to load timetable entries.");
     } else {
       // Explicitly filter out entries where 'subjects' is null
@@ -82,19 +82,28 @@ export const useTimetable = () => {
       return null;
     }
 
+    const insertPayload = {
+      day_of_week: values.day_of_week,
+      class_id: values.subject_id,
+      batch_id: values.batch_id,
+      semester_number: values.semester_number,
+      start_time: values.start_time,
+      end_time: values.end_time,
+    };
+
     const { data, error } = await supabase
       .from('timetables')
-      .insert(values)
+      .insert(insertPayload)
       .select(`
         id,
         day_of_week,
-        subject_id, {/* Renamed from class_id */}
-        batch_id, {/* New field */}
-        semester_number, {/* New field */}
+        subject_id:class_id,
+        batch_id,
+        semester_number,
         start_time,
         end_time,
-        subjects (id, name, period), {/* Renamed from classes, added period */}
-        batches (name) {/* New join */}
+        subjects (id, name, period),
+        batches (name)
       `)
       .single();
 
@@ -140,20 +149,29 @@ export const useTimetable = () => {
       return null;
     }
 
+    const updatePayload = {
+      day_of_week: values.day_of_week,
+      class_id: values.subject_id,
+      batch_id: values.batch_id,
+      semester_number: values.semester_number,
+      start_time: values.start_time,
+      end_time: values.end_time,
+    };
+
     const { data, error } = await supabase
       .from('timetables')
-      .update(values)
+      .update(updatePayload)
       .eq('id', id)
       .select(`
         id,
         day_of_week,
-        subject_id, {/* Renamed from class_id */}
-        batch_id, {/* New field */}
-        semester_number, {/* New field */}
+        subject_id:class_id,
+        batch_id,
+        semester_number,
         start_time,
         end_time,
-        subjects (id, name, period), {/* Renamed from classes, added period */}
-        batches (name) {/* New join */}
+        subjects (id, name, period),
+        batches (name)
       `)
       .single();
 

@@ -30,7 +30,7 @@ const PerformanceList = ({ title, subjects, icon: Icon, iconColor }: { title: st
                   <p className="text-sm text-muted-foreground">{sub.feedback_count} submissions</p>
                 </div>
                 <div className="flex items-center">
-                  <span className="font-bold mr-2">{sub.average_rating.toFixed(1)}</span>
+                  <span className="font-bold mr-2">{(sub.average_rating ?? 0).toFixed(1)}</span>
                   <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                 </div>
               </Link>

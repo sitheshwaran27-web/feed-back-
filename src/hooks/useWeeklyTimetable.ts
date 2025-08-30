@@ -40,12 +40,12 @@ export const useWeeklyTimetable = () => {
       .select(`
         id,
         day_of_week,
-        subject_id, {/* Renamed from class_id */}
-        batch_id, {/* New field */}
-        semester_number, {/* New field */}
+        subject_id:class_id,
+        batch_id,
+        semester_number,
         start_time,
         end_time,
-        subjects (id, name, period) {/* Renamed from classes, added period */}
+        subjects (id, name, period)
       `)
       .eq('batch_id', studentBatchId) // Filter by student's batch
       .eq('semester_number', studentSemesterNumber) // Filter by student's semester

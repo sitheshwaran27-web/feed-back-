@@ -50,10 +50,10 @@ export const useDailySubjects = () => { // Renamed hook
     const { data: timetableEntries, error: timetableError } = await supabase
       .from('timetables')
       .select(`
-        subject_id, {/* Renamed from class_id */}
+        subject_id:class_id,
         start_time,
         end_time,
-        subjects (id, name, period) {/* Renamed from classes, added period */}
+        subjects (id, name, period)
       `)
       .eq('day_of_week', supabaseDayOfWeek)
       .eq('batch_id', studentBatchId) // Filter by student's batch
