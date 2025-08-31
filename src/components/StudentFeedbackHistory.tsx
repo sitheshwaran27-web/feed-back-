@@ -63,7 +63,7 @@ const StudentFeedbackHistory: React.FC = () => {
 
     findAndOpenFeedback();
 
-  }, [location.state, feedbackHistory, loading, navigate, markAsSeen, refetch]);
+  }, [location.state, feedbackHistory, loading, navigate, location.pathname, markAsSeen, refetch]);
 
   const pageCount = Math.ceil(totalCount / PAGE_SIZE);
 

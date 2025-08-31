@@ -10,6 +10,22 @@ import ConfirmAlertDialog from './ConfirmAlertDialog';
 import { useTimetable } from '@/hooks/useTimetable';
 import { TimetableEntry } from '@/types/supabase';
 import TimetableForm from './TimetableForm';
+import * as z from 'zod';
+
+// Import the form schema to use its type
+const formSchema = z.object({
+  day_of_week: z.coerce.number().min(1, "Day of week is required").max(7, "Invalid day of week"),
+  subject_id: z.string().min(1, "Subject is required"),
+  batch_id: z.string().min(1, "Batch is required"),
+  semester_number: z.coerce.number().min(1, "Semester is required").max(8, "Semester must be between 1 and 8"),
+  start_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid start time format (HH:MM)"),
+  end_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid end time format (HH:MM)"),
+}).refine(data => data.end_time > data.start_time, {
+  message: "End time must be after start time",
+  path: ["end_time"],
+});
+
+type TimetableFormValues = z.infer<typeof formSchema>;
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useBatches } from '@/hooks/useBatches';
@@ -64,14 +80,14 @@ const TimetableManager: React.FC = () => {
     return groups;
   }, [filteredTimetableEntries]);
 
-  const handleAddTimetableEntry = async (values: any) => {
+  const handleAddTimetableEntry = async (values: TimetableFormValues) => {
     const newEntry = await addTimetableEntry(values);
     if (newEntry) {
       closeForm();
     }
   };
 
-  const handleUpdateTimetableEntry = async (values: any) => {
+  const handleUpdateTimetableEntry = async (values: TimetableFormValues) => {
     if (!editingEntry) return;
     const updated = await updateTimetableEntry(editingEntry.id, values);
     if (updated) {

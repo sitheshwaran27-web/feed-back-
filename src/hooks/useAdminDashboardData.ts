@@ -45,8 +45,8 @@ export const useAdminDashboardData = () => {
         setRecentFeedback(recentFeedbackRes.data || []);
       }
 
-    } catch (error: any) {
-      showError(error.message);
+    } catch (error: unknown) {
+      showError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setLoading(false);
     }

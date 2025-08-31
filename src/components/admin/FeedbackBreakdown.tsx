@@ -14,15 +14,25 @@ const RATING_COLORS = {
   '5': '#22c55e', // green-500
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
   if (active && payload && payload.length) {
-    const total = payload.reduce((sum: number, entry: any) => sum + entry.value, 0);
+    const total = payload.reduce((sum: number, entry) => sum + entry.value, 0);
     return (
       <div className="p-2 bg-background border rounded-md shadow-md">
         <p className="font-bold">{label}</p>
         <p className="text-sm text-muted-foreground">Total Submissions: {total}</p>
         <div className="mt-2">
-          {payload.slice().reverse().map((entry: any) => (
+          {payload.slice().reverse().map((entry) => (
             <div key={entry.name} style={{ color: entry.color }} className="flex justify-between text-sm">
               <span>{entry.name}:</span>
               <span className="ml-4 font-semibold">{entry.value}</span>

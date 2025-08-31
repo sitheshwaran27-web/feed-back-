@@ -62,9 +62,9 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
       onUploadSuccess(publicUrlData.publicUrl);
       showSuccess("Avatar uploaded successfully!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error uploading avatar:", error);
-      showError(`Failed to upload avatar: ${error.message}`);
+      showError(`Failed to upload avatar: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -91,9 +91,9 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       }
       onRemoveSuccess();
       showSuccess("Avatar removed successfully!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error removing avatar:", error);
-      showError(`Failed to remove avatar: ${error.message}`);
+      showError(`Failed to remove avatar: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploading(false);
     }

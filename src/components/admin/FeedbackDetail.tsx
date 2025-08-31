@@ -22,8 +22,8 @@ type FeedbackResponseFormValues = z.infer<typeof formSchema>;
 
 interface FeedbackDetailProps {
   feedback: Feedback;
-  onUpdateResponse: (feedbackId: string, response: string | null) => Promise<any>;
-  onDelete: (feedbackId: string) => Promise<any>;
+  onUpdateResponse: (feedbackId: string, response: string | null) => Promise<unknown>;
+  onDelete: (feedbackId: string) => Promise<unknown>;
   isSubmitting: boolean;
   onClearSelection: () => void;
 }

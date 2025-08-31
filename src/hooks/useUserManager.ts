@@ -101,9 +101,9 @@ export const useUserManager = () => {
       showSuccess("User deleted successfully!");
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error deleting user:", error);
-      showError(`Failed to delete user: ${error.message}`);
+      showError(`Failed to delete user: ${error instanceof Error ? error.message : 'Unknown error'}`);
       return false;
     } finally {
       setUpdatingUserId(null);
